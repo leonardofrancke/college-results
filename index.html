@@ -162,7 +162,9 @@ const PILL_CLASS = { Accepted:'pill-accepted', Rejected:'pill-rejected', Waitlis
 
 const COLLEGE_ACCEPT_RATES = {
   'Harvard':3,'Princeton':4,'MIT':4,'Yale':5,'Columbia':4,'Stanford':4,'Caltech':4,
-  'Penn':7,'Brown':6,'Dartmouth':6,'Cornell':8,'Duke':7,'Northwestern':7,'Johns Hopkins':7,
+  'Penn':7,'UPenn':7,'University of Pennsylvania':7,
+  'Brown':6,'Dartmouth':6,'Cornell':8,'Duke':7,'Northwestern':7,'Johns Hopkins':7,
+  'Harvey Mudd College':10,
   'Vanderbilt':7,'Rice':9,'WashU':11,'Notre Dame':13,'Georgetown':13,
   'Emory':14,'Carnegie Mellon':14,'Tufts':11,'Northeastern':6,'Tulane':13,
   'Wake Forest':25,'USC':13,'NYU':12,'Boston College':19,'Boston University':18,
@@ -233,9 +235,16 @@ function normalizeName(name){
 
 function getAcceptRate(name){
   if(COLLEGE_ACCEPT_RATES[name]) return COLLEGE_ACCEPT_RATES[name];
-  const norm=normalizeName(name);
-  const match=Object.keys(COLLEGE_ACCEPT_RATES).find(k=>normalizeName(k).toLowerCase()===norm.toLowerCase());
-  return match?COLLEGE_ACCEPT_RATES[match]:100;
+  const norm=normalizeName(name).toLowerCase();
+  // exact normalized match
+  const match=Object.keys(COLLEGE_ACCEPT_RATES).find(k=>normalizeName(k).toLowerCase()===norm);
+  if(match) return COLLEGE_ACCEPT_RATES[match];
+  // partial match — if name contains a key or key contains name
+  const partial=Object.keys(COLLEGE_ACCEPT_RATES).find(k=>{
+    const kn=normalizeName(k).toLowerCase();
+    return norm.includes(kn)||kn.includes(norm);
+  });
+  return partial?COLLEGE_ACCEPT_RATES[partial]:100;
 }
 
 const SESSION_ID = localStorage.getItem('cr_sid') || (()=>{ const id=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('cr_sid',id); return id; })();
