@@ -255,8 +255,7 @@ function buildChart(data,animate){
     borderColor: DOT_COLORS[dec],
     borderWidth: 1.5,
     pointRadius: 7,
-    pointHoverRadius: 10,
-    showLine: false
+    pointHoverRadius: 10
   })).filter(ds=>ds.data.length>0);
 
   if(mainChart){mainChart.destroy();}
@@ -269,7 +268,7 @@ function buildChart(data,animate){
     : {reverse:true, ticks:{stepSize:5}};
 
   mainChart = new Chart(document.getElementById('chart-main').getContext('2d'),{
-    type:'line',
+    type:'scatter',
     data:{datasets},
     options:{
       animation: animate?{duration:900,easing:'easeOutBounce'}:{duration:250},
