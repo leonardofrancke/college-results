@@ -160,37 +160,74 @@ const DECISION_ORDER = ['Accepted','Waitlisted','Deferred','Rejected','Withdrawn
 const DOT_COLORS = { Accepted:'#16a34a', Rejected:'#dc2626', Waitlisted:'#ca8a04', Deferred:'#2563eb', Withdrawn:'#64748b', Pending:'#db2777' };
 const PILL_CLASS = { Accepted:'pill-accepted', Rejected:'pill-rejected', Waitlisted:'pill-waitlisted', Deferred:'pill-deferred', Withdrawn:'pill-withdrawn', Pending:'pill-pending' };
 
-// Acceptance rates (%) — used for sorting when submission counts are tied
 const COLLEGE_ACCEPT_RATES = {
-  'MIT':4,'Harvard University':3,'Columbia University':4,'Princeton University':4,'Yale University':5,
-  'Brown University':6,'Dartmouth College':6,'Cornell University':8,'Duke University':7,'Vanderbilt University':7,
-  'Rice University':9,'Washington University in St. Louis':11,'Notre Dame':13,'Georgetown University':13,
-  'Emory University':14,'Carnegie Mellon University':14,'UC Berkeley':14,'UCLA':14,'USC':13,
-  'University of Michigan':18,'Boston College':19,'Tufts University':11,'Northeastern University':6,
-  'NYU':12,'Boston University':18,'UNC Chapel Hill':19,'University of Virginia':21,
-  'Wake Forest University':25,'Tulane University':13,'University of Florida':24,'Georgia Tech':17,
-  'University of Wisconsin':49,'University of Texas Austin':31,'Penn State':55,'Ohio State':53,
-  'University of Illinois':45,'Purdue University':53,'University of Washington':48,'University of Maryland':44,
-  'University of Georgia':42,'Michigan State':76,'Indiana University':80,'University of Iowa':85,
-  'Arizona State':88,'University of Arizona':85,'Colorado State':90,'University of Alabama':80,
-  'University of South Carolina':67,'University of Tennessee':67,'University of Kentucky':95,
-  'Penn (UPenn)':7,'Stanford University':4,'Caltech':4,'Northwestern University':7,'Johns Hopkins':7,
-  'Swarthmore College':7,'Amherst College':9,'Williams College':9,'Middlebury College':15,
-  'Bowdoin College':9,'Colby College':11,'Bates College':13,'Hamilton College':14,'Colgate University':22,
-  'Davidson College':19,'Furman University':65,'College of Charleston':79,'Clemson University':47,
+  'Harvard':3,'Princeton':4,'MIT':4,'Yale':5,'Columbia':4,'Stanford':4,'Caltech':4,
+  'Penn':7,'Brown':6,'Dartmouth':6,'Cornell':8,'Duke':7,'Northwestern':7,'Johns Hopkins':7,
+  'Vanderbilt':7,'Rice':9,'WashU':11,'Notre Dame':13,'Georgetown':13,
+  'Emory':14,'Carnegie Mellon':14,'Tufts':11,'Northeastern':6,'Tulane':13,
+  'Wake Forest':25,'USC':13,'NYU':12,'Boston College':19,'Boston University':18,
+  'Case Western':30,'University of Rochester':30,'Lehigh':34,
+  'University of Miami':27,'Villanova':28,'University of Richmond':28,
+  'William & Mary':37,'SMU':50,'TCU':48,'Baylor':45,
+  'Harvey Mudd':10,'Olin College':10,
+  'UC Berkeley':14,'UCLA':14,'Michigan':18,'UVA':21,'UNC Chapel Hill':19,
+  'Georgia Tech':17,'University of Florida':24,'Wisconsin':49,'Ohio State':53,
+  'Penn State':55,'UT Austin':31,'UIUC':45,'Purdue':53,
+  'University of Washington':48,'University of Maryland':44,'University of Georgia':42,
+  'Michigan State':76,'Indiana University':80,'University of Iowa':85,
+  'Arizona State':88,'University of Arizona':85,'Colorado State':90,
+  'University of Alabama':80,'University of South Carolina':67,
+  'University of Tennessee':67,'University of Kentucky':95,
+  'University of Pittsburgh':49,'Virginia Tech':65,'Clemson':47,
+  'University of Delaware':65,'UConn':56,'UMass Amherst':58,
+  'University of Vermont':63,'UNH':80,'Rutgers':61,
+  'Stony Brook':49,'University at Buffalo':58,'George Mason':82,
+  'JMU':71,'University of Oregon':82,'Oregon State':77,
+  'Colorado':77,'University of Denver':60,'Texas A&M':63,'UT Dallas':45,
   'UCSD':24,'UC Santa Barbara':29,'UC Davis':39,'UC Irvine':26,'UC Santa Cruz':47,
   'Cal Poly SLO':30,'San Jose State':68,'Sacramento State':73,'Fresno State':77,
-  'Pepperdine University':37,'Loyola Marymount':50,'University of San Diego':52,'Santa Clara University':44,
-  'University of San Francisco':67,'Chapman University':63,'Cal State Long Beach':33,
-  'James Madison University':71,'University of Richmond':28,'George Mason':82,'Virginia Tech':65,
-  'William & Mary':37,'Villanova University':28,'Fordham University':46,'Syracuse University':60,
-  'Drexel University':68,'Temple University':68,'Rutgers University':61,'University of Connecticut':56,
-  'University of Delaware':65,'University of Vermont':63,'University of New Hampshire':80,
-  'University of Massachusetts Amherst':58,'Stony Brook University':49,'University at Buffalo':58,
-  'Rensselaer Polytechnic':57,'Rochester Institute of Technology':57,'Lehigh University':34,
-  'Case Western Reserve':30,'University of Rochester':30,'Wake Forest':25,'Elon University':72,
-  'American University':35,'George Washington University':41,'Howard University':37,
-  'Spelman College':37,'Morehouse College':48
+  'LMU':50,'Santa Clara':44,'University of San Diego':52,'Pepperdine':37,
+  'University of San Francisco':67,'Chapman':63,'Cal State Long Beach':33,
+  'RPI':57,'RIT':57,'WPI':49,'Drexel':68,'Temple':68,
+  'Syracuse':60,'Fordham':46,'American University':35,'GWU':41,
+  'Howard':37,'Spelman':37,'Morehouse':48,
+  'Elon':72,'Furman':65,'College of Charleston':79,
+  'Gonzaga':72,'Seattle University':75,
+  'Swarthmore':7,'Amherst':9,'Williams':9,'Pomona':8,'Bowdoin':9,
+  'Middlebury':15,'Colby':11,'Bates':13,'Hamilton':14,'Colgate':22,
+  'Vassar':24,'Wesleyan':17,'Haverford':15,'Bryn Mawr':31,
+  'Wellesley':20,'Barnard':11,'Smith':33,'Mount Holyoke':52,
+  'Davidson':19,'Oberlin':33,'Kenyon':36,'Grinnell':12,'Carleton':19,
+  'Macalester':36,'St Olaf':56,'Reed':35,'Whitman':42,
+  'Bucknell':38,'Lafayette':36,'Dickinson':47,'Gettysburg':60,
+  'Skidmore':42,'Trinity':34,'Connecticut College':35,'Sarah Lawrence':55,
+  'Loyola Chicago':68,'DePaul':70,'Marquette':82,'Creighton':70,
+  'University of Dayton':72,'Butler':73,'Xavier':61,
+  'Loyola Marymount':50,'Loyola New Orleans':58,
+  'Quinnipiac':75,'Fairfield':60,'Providence College':58,
+  'Siena College':76,'Saint Joseph\'s':77,'Iona':82,
+  'Rochester Institute of Technology':57,'Stevens Institute of Technology':49,
+  'Illinois Tech':58,'University of Tulsa':67,
+  'Georgia State':57,'Kennesaw State':87,'Mercer':72,
+  'Auburn':79,'University of Mississippi':98,'Mississippi State':60,
+  'University of Arkansas':79,'University of Missouri':77,
+  'Kansas State':94,'University of Kansas':93,'Iowa State':88,
+  'University of Nebraska':77,'University of Oklahoma':69,
+  'Oklahoma State':72,'University of Utah':82,'Utah State':97,
+  'Colorado School of Mines':42,'University of Wyoming':96,
+  'Montana State':96,'University of Montana':94,
+  'University of Idaho':78,'Boise State':72,'University of Nevada':85,
+  'UNLV':82,'New Mexico State':50,'University of New Mexico':46,
+  'University of Hawaii':64,'University of Alaska':67,
+  'DePaul':70,'Loyola Chicago':68,'Marquette':82,
+  'Fordham':46,'Seton Hall':78,'Fairleigh Dickinson':85,
+  'Drew University':65,'Rider University':80,
+  'University of Hartford':73,'Sacred Heart':73,
+  'Long Island University':82,'Hofstra':68,'Adelphi':72,
+  'Pace University':77,'Manhattan College':78,
+  'Saint Peter\'s':98,'Monmouth':78,
+  'Marist':55,'Le Moyne':73,'Niagara':78,
+  'Canisius':79,'D\'Youville':85,
 };
 
 const ALL_COLLEGES = Object.keys(COLLEGE_ACCEPT_RATES).sort();
@@ -267,8 +304,8 @@ function buildChart(data){
     const aTotal=data.filter(r=>r.college_name===a).length;
     const bTotal=data.filter(r=>r.college_name===b).length;
     if(bTotal!==aTotal) return bTotal-aTotal;
-    const aRate=COLLEGE_ACCEPT_RATES[a]??50;
-    const bRate=COLLEGE_ACCEPT_RATES[b]??50;
+    const aRate=COLLEGE_ACCEPT_RATES[a]??100;
+    const bRate=COLLEGE_ACCEPT_RATES[b]??100;
     return aRate-bRate; // lower acceptance rate = harder = first
   });
   const cols=searchFilter?allCols.filter(c=>c.toLowerCase().includes(searchFilter)):allCols;
@@ -403,7 +440,7 @@ function addCollege(name='',decision='Accepted'){
   div.innerHTML=`
     <div style="flex:2;position:relative;">
       <input placeholder="College name" id="cn-${id}" value="${name}" autocomplete="off"
-        oninput="showSuggestions('cn-${id}')" onblur="setTimeout(()=>hideSuggestions('cn-${id}'),200)"
+        oninput="showSuggestions('cn-${id}')" onblur="setTimeout(()=>hideSuggestions('cn-${id}'),400)"
         style="width:100%;padding:9px 12px;border:1px solid #e0ddd8;border-radius:7px;font-size:0.875rem;font-family:inherit;background:#fafaf9;box-sizing:border-box;" />
       <div id="sug-${id}" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e0ddd8;border-radius:7px;z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:2px;"></div>
     </div>
@@ -418,7 +455,7 @@ function showSuggestions(inputId){
   const sug=document.getElementById(sugId);
   const val=input.value.toLowerCase().trim();
   if(!val){sug.style.display='none';return;}
-  const matches=getKnownColleges().filter(c=>c.toLowerCase().includes(val)&&c.toLowerCase()!==val);
+  const matches=getKnownColleges().filter(c=>c.toLowerCase().includes(val));
   if(!matches.length){sug.style.display='none';return;}
   sug.innerHTML=matches.slice(0,6).map(c=>
     `<div onclick="selectSuggestion('${inputId}','${c.replace(/'/g,"\\'")}');event.preventDefault();"
