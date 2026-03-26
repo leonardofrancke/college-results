@@ -103,13 +103,6 @@
             <option>2026</option><option>2025</option><option>2024</option><option>2023</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>GPA type</label>
-          <div class="radio-group" style="margin-top:10px;">
-            <label><input type="radio" name="gpa-type" value="unweighted" checked /> Unweighted</label>
-            <label><input type="radio" name="gpa-type" value="weighted" /> Weighted</label>
-          </div>
-        </div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -117,7 +110,7 @@
           <input type="number" id="f-gpa" step="0.1" min="1" max="4" placeholder="1.0 – 4.0" />
         </div>
         <div class="form-group">
-          <label>Weighted GPA (optional)</label>
+          <label>Weighted GPA (required)</label>
           <input type="number" id="f-gpa-w" step="0.1" min="1" max="5" placeholder="1.0 – 5.0" />
         </div>
       </div>
@@ -360,7 +353,7 @@ async function loadExistingSubmission(){
 async function submitForm(){
   const gpa=parseFloat(document.getElementById('f-gpa').value);
   const year=parseInt(document.getElementById('f-year').value);
-  if(!gpa||!year){alert('GPA and graduation year are required!');return;}
+  if(!gpa||!gpaW||!year){alert('Unweighted GPA, weighted GPA, and graduation year are required!');return;}
   const gpaW=parseFloat(document.getElementById('f-gpa-w').value)||null;
   const rows=[];
   for(let i=0;i<collegeCount;i++){
