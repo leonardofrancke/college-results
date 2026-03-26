@@ -87,7 +87,7 @@
           style="padding:6px 12px;border:1px solid #e0ddd8;border-radius:6px;font-size:0.82rem;font-family:inherit;width:200px;background:#fafaf9;" />
       </div>
       <div id="legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1rem;"></div>
-      <canvas id="chart-main" height="260"></canvas>
+      <div id="chart-main" style="width:100%;overflow-x:auto;"></div>
     </div>
     <div id="dot-tooltip"></div>
     <div class="entries" id="entries"></div>
@@ -216,95 +216,86 @@ function renderStats(data){
     <div class="stat-card"><div class="num">${g}</div><div class="label">Avg GPA</div></div>`;
 }
 
-function renderCharts(data){scatterData=data;buildChart(data,false);}
-function filterChart(val){searchFilter=val.toLowerCase().trim();buildChart(scatterData,false);}
+function renderCharts(data){scatterData=data;buildChart(data);}
+function filterChart(val){searchFilter=val.toLowerCase().trim();buildChart(scatterData);}
 function switchChart(type,btn){
   activeChartType=type;
   document.querySelectorAll('.chart-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  buildChart(scatterData,false);
+  buildChart(scatterData);
 }
 
-function buildChart(data,animate){
+function buildChart(data){
   const all=[...new Set(data.map(r=>r.college_name).filter(Boolean))].sort();
   const cols=searchFilter?all.filter(c=>c.toLowerCase().includes(searchFilter)):all;
+  const el=document.getElementById('chart-main');
+  el.innerHTML='';
 
   if(!cols.length){
-    if(mainChart){mainChart.destroy();mainChart=null;}
     document.getElementById('legend').innerHTML='';
     return;
   }
 
-  // Pick y value based on active chart type
-  const yKey = activeChartType==='gpa'?'gpa': activeChartType==='sat'?'sat':'class_rank';
-  const yLabel = activeChartType==='gpa'?'GPA': activeChartType==='sat'?'SAT Score':'Class Rank';
+  const yKey=activeChartType==='gpa'?'gpa':'sat';
+  const yLabel=activeChartType==='gpa'?'GPA':'SAT Score';
+  const yMin=activeChartType==='gpa'?1:400;
+  const yMax=activeChartType==='gpa'?5:1600;
 
-  // Filter to only rows that have the y value
-  const filtered = data.filter(r=>r[yKey]!=null && cols.includes(r.college_name));
+  const filtered=data.filter(r=>r[yKey]!=null&&cols.includes(r.college_name));
 
-  // Build datasets — one per decision
-  const datasets = DECISION_ORDER.map(dec=>({
-    label:dec,
-    data: filtered.filter(r=>r.decision===dec).map(r=>({
-      x: cols.indexOf(r.college_name) + 1, // +1 so first college is at x=1 not x=0
-      y: parseFloat(r[yKey]),
-      raw: r
-    })),
-    backgroundColor: DOT_COLORS[dec]+'cc',
-    borderColor: DOT_COLORS[dec],
-    borderWidth: 1.5,
-    pointRadius: 7,
-    pointHoverRadius: 10
-  })).filter(ds=>ds.data.length>0);
+  const W=el.parentElement.clientWidth-40||800;
+  const H=260;
+  const PAD={top:20,right:20,bottom:90,left:50};
+  const plotW=W-PAD.left-PAD.right;
+  const plotH=H-PAD.top-PAD.bottom;
+  const colW=plotW/cols.length;
 
-  if(mainChart){mainChart.destroy();}
+  let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">`;
 
-  // Y axis config per chart type
-  const yConfig = activeChartType==='gpa'
-    ? {min:1, max:5, ticks:{stepSize:1}}
-    : activeChartType==='sat'
-    ? {min:400, max:1600, ticks:{stepSize:200}}
-    : {reverse:true, ticks:{stepSize:5}};
-
-  mainChart = new Chart(document.getElementById('chart-main').getContext('2d'),{
-    type:'scatter',
-    data:{datasets},
-    options:{
-      animation: animate?{duration:900,easing:'easeOutBounce'}:{duration:250},
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
-      scales:{
-        x:{
-          type:'linear',
-          min:0.5,
-          max:cols.length+0.5,
-          afterBuildTicks: axis => { axis.ticks = cols.map((_,i)=>({value:i+1})); },
-          ticks:{
-            font:{size:10},
-            callback: v => { const i=Math.round(v)-1; return (i>=0&&i<cols.length)?cols[i]:''; },
-            maxRotation:45,
-            minRotation:30,
-            autoSkip:false
-          },
-          grid:{color:'#f0ede8'}
-        },
-        y:{
-          title:{display:true,text:yLabel,font:{size:11},color:'#999'},
-          grid:{color:'#f0ede8'},
-          ...yConfig,
-          ticks:{...yConfig.ticks, font:{size:11}}
-        }
-      },
-      onClick:(evt,els)=>{
-        if(!els.length){document.getElementById('dot-tooltip').style.display='none';return;}
-        showTooltip(evt,mainChart.data.datasets[els[0].datasetIndex].data[els[0].index].raw);
-      },
-      onHover:(evt,els)=>{evt.native.target.style.cursor=els.length?'pointer':'default';}
-    }
+  // Y grid lines and labels
+  const ySteps=activeChartType==='gpa'?[1,2,3,4,5]:[400,600,800,1000,1200,1400,1600];
+  ySteps.forEach(v=>{
+    const y=PAD.top+plotH-(v-yMin)/(yMax-yMin)*plotH;
+    svg+=`<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+plotW}" y2="${y}" stroke="#f0ede8" stroke-width="1"/>`;
+    svg+=`<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="10" fill="#999" font-family="Inter,sans-serif">${v}</text>`;
   });
 
-  document.getElementById('legend').innerHTML=DECISION_ORDER.filter(d=>datasets.find(ds=>ds.label===d)).map(d=>
+  // Y axis label
+  svg+=`<text x="${14}" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="11" fill="#999" font-family="Inter,sans-serif" transform="rotate(-90,14,${PAD.top+plotH/2})">${yLabel}</text>`;
+
+  // X axis line
+  svg+=`<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="#e0ddd8" stroke-width="1"/>`;
+
+  // X labels
+  cols.forEach((col,i)=>{
+    const x=PAD.left+i*colW+colW/2;
+    const y=PAD.top+plotH+10;
+    svg+=`<text x="${x}" y="${y}" text-anchor="end" font-size="10" fill="#666" font-family="Inter,sans-serif" transform="rotate(-35,${x},${y})">${col}</text>`;
+  });
+
+  // Dots
+  filtered.forEach(r=>{
+    const i=cols.indexOf(r.college_name);
+    const x=PAD.left+i*colW+colW/2;
+    const y=PAD.top+plotH-(parseFloat(r[yKey])-yMin)/(yMax-yMin)*plotH;
+    const col=DOT_COLORS[r.decision]||'#888';
+    const sid=encodeURIComponent(r.session_id||'');
+    svg+=`<circle cx="${x}" cy="${y}" r="6" fill="${col}cc" stroke="${col}" stroke-width="1.5" style="cursor:pointer" data-sid="${sid}" data-idx="${data.indexOf(r)}" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
+  });
+
+  svg+=`</svg>`;
+  el.innerHTML=svg;
+
+  // Legend
+  const used=DECISION_ORDER.filter(d=>filtered.find(r=>r.decision===d));
+  document.getElementById('legend').innerHTML=used.map(d=>
     `<span style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:#555;"><span style="width:10px;height:10px;border-radius:50%;background:${DOT_COLORS[d]};display:inline-block;"></span>${d}</span>`
   ).join('');
+}
+
+function handleDotClick(evt,idx){
+  evt.stopPropagation();
+  showTooltip(evt,scatterData[idx]);
 }
 
 function showTooltip(evt,r){
@@ -319,14 +310,15 @@ function showTooltip(evt,r){
   const decisions=sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
   tip.innerHTML=`${gpaLine}${testLine}${rankLine}${majorLine}${ecsLine}<div style="border-top:1px solid #333;margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
   tip.style.display='block';
-  tip.style.left=Math.min(evt.native.clientX+16,window.innerWidth-270)+'px';
-  tip.style.top=Math.max(evt.native.clientY-10,10)+'px';
+  const clientX=evt.clientX||evt.native?.clientX||0;
+  const clientY=evt.clientY||evt.native?.clientY||0;
+  tip.style.left=Math.min(clientX+16,window.innerWidth-270)+'px';
+  tip.style.top=Math.max(clientY-10,10)+'px';
 }
 
 document.addEventListener('click',e=>{
-  const c=document.getElementById('chart-main');
   const t=document.getElementById('dot-tooltip');
-  if(t&&c&&!c.contains(e.target)&&!t.contains(e.target)) t.style.display='none';
+  if(t&&!e.target.closest('circle')) t.style.display='none';
 });
 
 function renderEntries(data){
