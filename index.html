@@ -226,8 +226,16 @@ function switchChart(type,btn){
 }
 
 function buildChart(data){
-  const all=[...new Set(data.map(r=>r.college_name).filter(Boolean))].sort();
-  const cols=searchFilter?all.filter(c=>c.toLowerCase().includes(searchFilter)):all;
+  // Sort colleges by acceptance rate (highest = easiest = left)
+  const allCols=[...new Set(data.map(r=>r.college_name).filter(Boolean))];
+  allCols.sort((a,b)=>{
+    const aTotal=data.filter(r=>r.college_name===a).length;
+    const bTotal=data.filter(r=>r.college_name===b).length;
+    const aAcc=data.filter(r=>r.college_name===a&&r.decision==='Accepted').length/aTotal;
+    const bAcc=data.filter(r=>r.college_name===b&&r.decision==='Accepted').length/bTotal;
+    return bAcc-aAcc; // highest acceptance rate first
+  });
+  const cols=searchFilter?allCols.filter(c=>c.toLowerCase().includes(searchFilter)):allCols;
   const el=document.getElementById('chart-main');
   el.innerHTML='';
 
@@ -345,12 +353,51 @@ function renderEntries(data){
     </div>`).join('');
 }
 
+function getKnownColleges(){
+  return [...new Set(allData.map(r=>r.college_name).filter(Boolean))].sort();
+}
+
 function addCollege(name='',decision='Accepted'){
   const id=collegeCount++;
   const div=document.createElement('div');
   div.className='college-row'; div.id=`cr-${id}`;
-  div.innerHTML=`<input placeholder="College name" id="cn-${id}" value="${name}" /><select id="cd-${id}">${DECISIONS.map(d=>`<option${d===decision?' selected':''}>${d}</option>`).join('')}</select><button type="button" onclick="document.getElementById('cr-${id}').remove()">×</button>`;
+  div.innerHTML=`
+    <div style="flex:2;position:relative;">
+      <input placeholder="College name" id="cn-${id}" value="${name}" autocomplete="off"
+        oninput="showSuggestions('cn-${id}')" onblur="setTimeout(()=>hideSuggestions('cn-${id}'),150)"
+        style="width:100%;padding:9px 12px;border:1px solid #e0ddd8;border-radius:7px;font-size:0.875rem;font-family:inherit;background:#fafaf9;" />
+      <div id="sug-${id}" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e0ddd8;border-radius:7px;z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);"></div>
+    </div>
+    <select id="cd-${id}" style="flex:1;padding:9px 12px;border:1px solid #e0ddd8;border-radius:7px;font-size:0.875rem;font-family:inherit;background:#fafaf9;">${DECISIONS.map(d=>`<option${d===decision?' selected':''}>${d}</option>`).join('')}</select>
+    <button type="button" onclick="document.getElementById('cr-${id}').remove()" style="background:none;border:1px solid #e0ddd8;border-radius:7px;padding:8px 12px;cursor:pointer;color:#bbb;font-size:1rem;flex-shrink:0;">×</button>`;
   document.getElementById('college-inputs').appendChild(div);
+}
+
+function showSuggestions(inputId){
+  const input=document.getElementById(inputId);
+  const sugId=inputId.replace('cn-','sug-');
+  const sug=document.getElementById(sugId);
+  const val=input.value.toLowerCase().trim();
+  if(!val){sug.style.display='none';return;}
+  const matches=getKnownColleges().filter(c=>c.toLowerCase().includes(val)&&c.toLowerCase()!==val);
+  if(!matches.length){sug.style.display='none';return;}
+  sug.innerHTML=matches.slice(0,6).map(c=>
+    `<div onclick="selectSuggestion('${inputId}','${c.replace(/'/g,"\\'")}');event.preventDefault();"
+      style="padding:8px 12px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid #f0ede8;"
+      onmouseenter="this.style.background='#f8f7f4'" onmouseleave="this.style.background=''">${c}</div>`
+  ).join('');
+  sug.style.display='block';
+}
+
+function selectSuggestion(inputId,val){
+  document.getElementById(inputId).value=val;
+  hideSuggestions(inputId);
+}
+
+function hideSuggestions(inputId){
+  const sugId=inputId.replace('cn-','sug-');
+  const sug=document.getElementById(sugId);
+  if(sug) sug.style.display='none';
 }
 
 async function loadExistingSubmission(){
