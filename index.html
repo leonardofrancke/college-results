@@ -46,6 +46,7 @@
     .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; color: #1a1a1a; background: #fafaf9; }
     .form-group textarea { resize: vertical; min-height: 72px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
     .college-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
     .college-row input { flex: 2; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; background: #fafaf9; }
     .college-row select { flex: 1; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; background: #fafaf9; }
@@ -54,10 +55,13 @@
     .submit-btn { width: 100%; padding: 11px; background: #1a1a1a; color: #fff; border: none; border-radius: 7px; font-size: 0.875rem; font-weight: 500; cursor: pointer; font-family: inherit; }
     .submit-btn:hover { background: #333; }
     .success-msg { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 7px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; display: none; }
+    .radio-group { display: flex; gap: 12px; }
+    .radio-group label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #444; font-weight: 400; cursor: pointer; }
     .page { display: none; }
     .page.active { display: block; }
-    #dot-tooltip { display: none; position: fixed; background: #1a1a1a; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 0.78rem; line-height: 1.6; max-width: 240px; pointer-events: none; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    #dot-tooltip { display: none; position: fixed; background: #1a1a1a; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 0.78rem; line-height: 1.7; max-width: 260px; pointer-events: none; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .tip-label { color: #888; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    @media (max-width: 600px) { .form-row, .form-row-3 { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
   </style>
 </head>
 <body>
@@ -80,7 +84,7 @@
           style="padding:6px 12px;border:1px solid #e0ddd8;border-radius:6px;font-size:0.82rem;font-family:inherit;width:220px;background:#fafaf9;" />
       </div>
       <div id="legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1rem;"></div>
-      <canvas id="chart-scatter" height="220"></canvas>
+      <canvas id="chart-scatter" height="260"></canvas>
     </div>
     <div id="dot-tooltip"></div>
     <div class="entries" id="entries"></div>
@@ -93,15 +97,28 @@
       <div class="success-msg" id="success-msg">Saved!</div>
       <div class="form-row">
         <div class="form-group">
-          <label>GPA (required)</label>
-          <input type="number" id="f-gpa" step="1" min="1" max="5" placeholder="1–5" />
-        </div>
-        <div class="form-group">
           <label>Graduation year (required)</label>
           <select id="f-year">
             <option value="">Select year</option>
             <option>2026</option><option>2025</option><option>2024</option><option>2023</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>GPA type</label>
+          <div class="radio-group" style="margin-top:10px;">
+            <label><input type="radio" name="gpa-type" value="unweighted" checked /> Unweighted</label>
+            <label><input type="radio" name="gpa-type" value="weighted" /> Weighted</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Unweighted GPA (required)</label>
+          <input type="number" id="f-gpa" step="0.1" min="1" max="4" placeholder="1.0 – 4.0" />
+        </div>
+        <div class="form-group">
+          <label>Weighted GPA (optional)</label>
+          <input type="number" id="f-gpa-w" step="0.1" min="1" max="5" placeholder="1.0 – 5.0" />
         </div>
       </div>
       <div class="form-row">
@@ -144,8 +161,14 @@ const DOT_COLORS = { Accepted:'#16a34a', Rejected:'#dc2626', Waitlisted:'#ca8a04
 const PILL_CLASS = { Accepted:'pill-accepted', Rejected:'pill-rejected', Waitlisted:'pill-waitlisted', Deferred:'pill-deferred', Withdrawn:'pill-withdrawn', Pending:'pill-pending' };
 
 const SESSION_ID = localStorage.getItem('cr_sid') || (()=>{ const id=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('cr_sid',id); return id; })();
+const HAS_SUBMITTED = () => localStorage.getItem('cr_submitted') === '1';
 
 let activeYear=2026, allData=[], scatterChart=null, scatterData=[], searchFilter='', collegeCount=0;
+
+function updateNavForSubmitStatus() {
+  const navSubmit = document.getElementById('nav-submit');
+  navSubmit.textContent = HAS_SUBMITTED() ? 'Edit yours' : 'Submit yours';
+}
 
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -200,6 +223,11 @@ function filterChart(val){searchFilter=val.toLowerCase().trim();buildScatter(sca
 function buildScatter(data,animate){
   const all=[...new Set(data.map(r=>r.college_name).filter(Boolean))].sort();
   const cols=searchFilter?all.filter(c=>c.toLowerCase().includes(searchFilter)):all;
+  if(!cols.length){
+    if(scatterChart) scatterChart.destroy(); scatterChart=null;
+    document.getElementById('legend').innerHTML=''; return;
+  }
+
   const datasets=DECISION_ORDER.map(dec=>({
     label:dec,
     data:data.filter(r=>r.decision===dec&&cols.includes(r.college_name)).map(r=>({x:cols.indexOf(r.college_name),y:r.gpa,raw:r})),
@@ -213,11 +241,23 @@ function buildScatter(data,animate){
       animation:animate?{duration:900,easing:'easeOutBounce'}:{duration:250},
       plugins:{legend:{display:false},tooltip:{enabled:false}},
       scales:{
-        x:{type:'linear',min:-0.5,max:Math.max(cols.length-0.5,0.5),
-          ticks:{stepSize:1,font:{size:10},callback:v=>cols[Math.round(v)]||'',maxRotation:45,minRotation:30},
-          grid:{color:'#f0ede8'}},
-        y:{title:{display:true,text:'GPA',font:{size:11},color:'#999'},min:1,max:5,
-          ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0ede8'}}
+        x:{
+          type:'linear', min:-0.5, max:cols.length-0.5,
+          ticks:{
+            stepSize:1, font:{size:10},
+            callback:(v)=>{
+              const i=Math.round(v);
+              return (Number.isInteger(v) && i>=0 && i<cols.length) ? cols[i] : '';
+            },
+            maxRotation:40, minRotation:30, autoSkip:false
+          },
+          grid:{color:'#f0ede8'},
+          offset:false
+        },
+        y:{
+          title:{display:true,text:'GPA',font:{size:11},color:'#999'},
+          min:1,max:5,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0ede8'}
+        }
       },
       onClick:(evt,els)=>{
         if(!els.length){document.getElementById('dot-tooltip').style.display='none';return;}
@@ -236,9 +276,19 @@ function showTooltip(evt,r){
   const key=r.session_id||`${r.gpa}|${r.sat}|${r.act}`;
   const sibs=scatterData.filter(x=>(x.session_id||`${x.gpa}|${x.sat}|${x.act}`)===key);
   const tip=document.getElementById('dot-tooltip');
-  tip.innerHTML=`<div style="font-weight:600;margin-bottom:6px;">GPA ${r.gpa}${r.sat?` · SAT ${r.sat}`:''}${r.act?` · ACT ${r.act}`:''}${r.major?`<br><span style="font-weight:400;color:#aaa">${r.major}</span>`:''}</div>${r.extracurriculars?`<div style="color:#888;margin-bottom:6px;font-size:0.73rem;">${r.extracurriculars}</div>`:''}<div style="border-top:1px solid #333;padding-top:6px;line-height:1.8;">${sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>')}</div>`;
+
+  const gpaLine = `<div><span class="tip-label">Unweighted GPA</span><br>${r.gpa}${r.gpa_weighted ? ` &nbsp;·&nbsp; <span class="tip-label">Weighted</span> ${r.gpa_weighted}` : ''}</div>`;
+  const testLine = (r.sat||r.act) ? `<div style="margin-top:4px;">${r.sat?`<span class="tip-label">SAT</span> ${r.sat}`:''}${r.sat&&r.act?' &nbsp;·&nbsp; ':''}${r.act?`<span class="tip-label">ACT</span> ${r.act}`:''}</div>` : '';
+  const majorLine = r.major ? `<div style="margin-top:4px;"><span class="tip-label">Major</span><br>${r.major}</div>` : '';
+  const ecsLine = r.extracurriculars ? `<div style="margin-top:4px;"><span class="tip-label">Extracurriculars</span><br><span style="color:#aaa;font-size:0.73rem;">${r.extracurriculars}</span></div>` : '';
+  const decisions = sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
+
+  tip.innerHTML = `
+    ${gpaLine}${testLine}${majorLine}${ecsLine}
+    <div style="border-top:1px solid #333;margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>
+  `;
   tip.style.display='block';
-  tip.style.left=Math.min(evt.native.clientX+16,window.innerWidth-260)+'px';
+  tip.style.left=Math.min(evt.native.clientX+16,window.innerWidth-270)+'px';
   tip.style.top=Math.max(evt.native.clientY-10,10)+'px';
 }
 
@@ -260,12 +310,13 @@ function renderEntries(data){
   el.innerHTML=groups.map(g=>`
     <div class="entry-card">
       <div class="entry-top">
-        <span class="pill pill-gray">GPA ${g.gpa}</span>
+        <span class="pill pill-gray">UW GPA ${g.gpa}</span>
+        ${g.gpa_weighted?`<span class="pill pill-gray">W GPA ${g.gpa_weighted}</span>`:''}
         ${g.sat?`<span class="pill pill-gray">SAT ${g.sat}</span>`:''}
         ${g.act?`<span class="pill pill-gray">ACT ${g.act}</span>`:''}
         ${g.major?`<span class="pill pill-gray">${g.major}</span>`:''}
       </div>
-      ${g.extracurriculars?`<div class="ecs">${g.extracurriculars}</div>`:''}
+      ${g.extracurriculars?`<div class="ecs"><strong style="font-size:0.7rem;color:#aaa;text-transform:uppercase;letter-spacing:0.04em;">ECs</strong> ${g.extracurriculars}</div>`:''}
       <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}">${c.name} — ${c.decision}</span>`).join('')}</div>
     </div>`).join('');
 }
@@ -284,6 +335,7 @@ async function loadExistingSubmission(){
   if(data&&data.length>0){
     const r=data[0];
     document.getElementById('f-gpa').value=r.gpa||'';
+    document.getElementById('f-gpa-w').value=r.gpa_weighted||'';
     document.getElementById('f-sat').value=r.sat||'';
     document.getElementById('f-act').value=r.act||'';
     document.getElementById('f-major').value=r.major||'';
@@ -294,9 +346,10 @@ async function loadExistingSubmission(){
     document.getElementById('form-title').textContent='Edit your submission';
     document.getElementById('form-subtitle').textContent='Update your results below.';
   } else {
-    document.getElementById('f-gpa').value=''; document.getElementById('f-sat').value='';
-    document.getElementById('f-act').value=''; document.getElementById('f-major').value='';
-    document.getElementById('f-ecs').value=''; document.getElementById('f-year').value='';
+    document.getElementById('f-gpa').value=''; document.getElementById('f-gpa-w').value='';
+    document.getElementById('f-sat').value=''; document.getElementById('f-act').value='';
+    document.getElementById('f-major').value=''; document.getElementById('f-ecs').value='';
+    document.getElementById('f-year').value='';
     addCollege();
     document.getElementById('submit-btn').textContent='Submit';
     document.getElementById('form-title').textContent='Add your college results';
@@ -308,11 +361,12 @@ async function submitForm(){
   const gpa=parseFloat(document.getElementById('f-gpa').value);
   const year=parseInt(document.getElementById('f-year').value);
   if(!gpa||!year){alert('GPA and graduation year are required!');return;}
+  const gpaW=parseFloat(document.getElementById('f-gpa-w').value)||null;
   const rows=[];
   for(let i=0;i<collegeCount;i++){
     const cn=document.getElementById(`cn-${i}`), cd=document.getElementById(`cd-${i}`);
     if(cn&&cn.value.trim()) rows.push({
-      gpa, grad_year:year,
+      gpa, grad_year:year, gpa_weighted:gpaW,
       sat:parseInt(document.getElementById('f-sat').value)||null,
       act:parseInt(document.getElementById('f-act').value)||null,
       major:document.getElementById('f-major').value.trim()||null,
@@ -324,13 +378,13 @@ async function submitForm(){
   await db.from('submissions').delete().eq('session_id',SESSION_ID);
   const {error}=await db.from('submissions').insert(rows);
   if(error){alert('Something went wrong. Try again.');console.error(error);return;}
+  localStorage.setItem('cr_submitted','1');
+  updateNavForSubmitStatus();
   document.getElementById('success-msg').style.display='block';
-  setTimeout(()=>{
-    showPage('results');
-    loadData();
-  },800);
+  setTimeout(()=>{ showPage('results'); loadData(); },800);
 }
 
+updateNavForSubmitStatus();
 loadData();
 </script>
 </body>
