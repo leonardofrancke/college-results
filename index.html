@@ -226,14 +226,15 @@ function switchChart(type,btn){
 }
 
 function buildChart(data){
-  // Sort colleges by acceptance rate (highest = easiest = left)
+  // Sort by most submissions first, then hardest to get in (lowest accept rate) first on ties
   const allCols=[...new Set(data.map(r=>r.college_name).filter(Boolean))];
   allCols.sort((a,b)=>{
     const aTotal=data.filter(r=>r.college_name===a).length;
     const bTotal=data.filter(r=>r.college_name===b).length;
+    if(bTotal!==aTotal) return bTotal-aTotal; // most submissions first
     const aAcc=data.filter(r=>r.college_name===a&&r.decision==='Accepted').length/aTotal;
     const bAcc=data.filter(r=>r.college_name===b&&r.decision==='Accepted').length/bTotal;
-    return bAcc-aAcc; // highest acceptance rate first
+    return aAcc-bAcc; // lowest accept rate first on tie
   });
   const cols=searchFilter?allCols.filter(c=>c.toLowerCase().includes(searchFilter)):allCols;
   const el=document.getElementById('chart-main');
@@ -251,25 +252,26 @@ function buildChart(data){
 
   const filtered=data.filter(r=>r[yKey]!=null&&cols.includes(r.college_name));
 
-  const W=el.parentElement.clientWidth-40||800;
-  const H=260;
-  const PAD={top:20,right:20,bottom:90,left:50};
+  // Use chart-card width for proper sizing
+  const W=Math.max(el.closest('.chart-card').clientWidth-40, cols.length*60, 400);
+  const H=280;
+  const PAD={top:20,right:20,bottom:100,left:55};
   const plotW=W-PAD.left-PAD.right;
   const plotH=H-PAD.top-PAD.bottom;
   const colW=plotW/cols.length;
 
-  let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">`;
+  let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;">`;
 
   // Y grid lines and labels
   const ySteps=activeChartType==='gpa'?[1,2,3,4,5]:[400,600,800,1000,1200,1400,1600];
   ySteps.forEach(v=>{
     const y=PAD.top+plotH-(v-yMin)/(yMax-yMin)*plotH;
     svg+=`<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+plotW}" y2="${y}" stroke="#f0ede8" stroke-width="1"/>`;
-    svg+=`<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="10" fill="#999" font-family="Inter,sans-serif">${v}</text>`;
+    svg+=`<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#999" font-family="Inter,sans-serif">${v}</text>`;
   });
 
   // Y axis label
-  svg+=`<text x="${14}" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="11" fill="#999" font-family="Inter,sans-serif" transform="rotate(-90,14,${PAD.top+plotH/2})">${yLabel}</text>`;
+  svg+=`<text x="14" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="11" fill="#999" font-family="Inter,sans-serif" transform="rotate(-90,14,${PAD.top+plotH/2})">${yLabel}</text>`;
 
   // X axis line
   svg+=`<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="#e0ddd8" stroke-width="1"/>`;
@@ -277,8 +279,8 @@ function buildChart(data){
   // X labels
   cols.forEach((col,i)=>{
     const x=PAD.left+i*colW+colW/2;
-    const y=PAD.top+plotH+10;
-    svg+=`<text x="${x}" y="${y}" text-anchor="end" font-size="10" fill="#666" font-family="Inter,sans-serif" transform="rotate(-35,${x},${y})">${col}</text>`;
+    const y=PAD.top+plotH+12;
+    svg+=`<text x="${x}" y="${y}" text-anchor="end" font-size="10" fill="#555" font-family="Inter,sans-serif" transform="rotate(-40,${x},${y})">${col}</text>`;
   });
 
   // Dots
@@ -287,8 +289,7 @@ function buildChart(data){
     const x=PAD.left+i*colW+colW/2;
     const y=PAD.top+plotH-(parseFloat(r[yKey])-yMin)/(yMax-yMin)*plotH;
     const col=DOT_COLORS[r.decision]||'#888';
-    const sid=encodeURIComponent(r.session_id||'');
-    svg+=`<circle cx="${x}" cy="${y}" r="6" fill="${col}cc" stroke="${col}" stroke-width="1.5" style="cursor:pointer" data-sid="${sid}" data-idx="${data.indexOf(r)}" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
+    svg+=`<circle cx="${x}" cy="${y}" r="6" fill="${col}cc" stroke="${col}" stroke-width="1.5" style="cursor:pointer" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
   });
 
   svg+=`</svg>`;
@@ -360,13 +361,14 @@ function getKnownColleges(){
 function addCollege(name='',decision='Accepted'){
   const id=collegeCount++;
   const div=document.createElement('div');
-  div.className='college-row'; div.id=`cr-${id}`;
+  div.id=`cr-${id}`;
+  div.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center;';
   div.innerHTML=`
     <div style="flex:2;position:relative;">
       <input placeholder="College name" id="cn-${id}" value="${name}" autocomplete="off"
-        oninput="showSuggestions('cn-${id}')" onblur="setTimeout(()=>hideSuggestions('cn-${id}'),150)"
-        style="width:100%;padding:9px 12px;border:1px solid #e0ddd8;border-radius:7px;font-size:0.875rem;font-family:inherit;background:#fafaf9;" />
-      <div id="sug-${id}" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e0ddd8;border-radius:7px;z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);"></div>
+        oninput="showSuggestions('cn-${id}')" onblur="setTimeout(()=>hideSuggestions('cn-${id}'),200)"
+        style="width:100%;padding:9px 12px;border:1px solid #e0ddd8;border-radius:7px;font-size:0.875rem;font-family:inherit;background:#fafaf9;box-sizing:border-box;" />
+      <div id="sug-${id}" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e0ddd8;border-radius:7px;z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:2px;"></div>
     </div>
     <select id="cd-${id}" style="flex:1;padding:9px 12px;border:1px solid #e0ddd8;border-radius:7px;font-size:0.875rem;font-family:inherit;background:#fafaf9;">${DECISIONS.map(d=>`<option${d===decision?' selected':''}>${d}</option>`).join('')}</select>
     <button type="button" onclick="document.getElementById('cr-${id}').remove()" style="background:none;border:1px solid #e0ddd8;border-radius:7px;padding:8px 12px;cursor:pointer;color:#bbb;font-size:1rem;flex-shrink:0;">×</button>`;
