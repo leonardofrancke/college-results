@@ -220,7 +220,7 @@ function buildScatter(data,animate){
 
   const datasets=DECISION_ORDER.map(dec=>({
     label:dec,
-    data:data.filter(r=>r.decision===dec&&cols.includes(r.college_name)).map(r=>({x:cols.indexOf(r.college_name),y:r.gpa,raw:r})),
+    data:data.filter(r=>r.decision===dec&&cols.includes(r.college_name)).map(r=>({x:r.college_name,y:r.gpa,raw:r})),
     backgroundColor:DOT_COLORS[dec]+'cc', borderColor:DOT_COLORS[dec], borderWidth:1.5, pointRadius:7, pointHoverRadius:10
   })).filter(ds=>ds.data.length>0);
 
@@ -234,21 +234,9 @@ function buildScatter(data,animate){
       plugins:{legend:{display:false},tooltip:{enabled:false}},
       scales:{
         x:{
-          type:'linear',
-          min:-0.5,
-          max:cols.length-0.5,
-          ticks:{
-            stepSize:1,
-            font:{size:10},
-            callback: function(val) {
-              const i = Math.round(val);
-              if(i >= 0 && i < cols.length && Math.abs(val - i) < 0.01) return cols[i];
-              return '';
-            },
-            maxRotation:45,
-            minRotation:30,
-            autoSkip:false
-          },
+          type:'category',
+          labels:cols,
+          ticks:{font:{size:10},maxRotation:45,minRotation:30},
           grid:{color:'#f0ede8'}
         },
         y:{
@@ -260,7 +248,7 @@ function buildScatter(data,animate){
       },
       onClick:(evt,els)=>{
         if(!els.length){document.getElementById('dot-tooltip').style.display='none';return;}
-        showTooltip(evt,scatterChart.data.datasets[els[0].datasetIndex].data[els[0].index].raw);
+      showTooltip(evt,scatterChart.data.datasets[els[0].datasetIndex].data[els[0].index].raw);
       },
       onHover:(evt,els)=>{evt.native.target.style.cursor=els.length?'pointer':'default';}
     }
