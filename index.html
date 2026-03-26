@@ -46,7 +46,6 @@
     .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; color: #1a1a1a; background: #fafaf9; }
     .form-group textarea { resize: vertical; min-height: 72px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
     .college-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
     .college-row input { flex: 2; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; background: #fafaf9; }
     .college-row select { flex: 1; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; background: #fafaf9; }
@@ -55,13 +54,11 @@
     .submit-btn { width: 100%; padding: 11px; background: #1a1a1a; color: #fff; border: none; border-radius: 7px; font-size: 0.875rem; font-weight: 500; cursor: pointer; font-family: inherit; }
     .submit-btn:hover { background: #333; }
     .success-msg { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 7px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; display: none; }
-    .radio-group { display: flex; gap: 12px; }
-    .radio-group label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #444; font-weight: 400; cursor: pointer; }
     .page { display: none; }
     .page.active { display: block; }
     #dot-tooltip { display: none; position: fixed; background: #1a1a1a; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 0.78rem; line-height: 1.7; max-width: 260px; pointer-events: none; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
     .tip-label { color: #888; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    @media (max-width: 600px) { .form-row, .form-row-3 { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
   </style>
 </head>
 <body>
@@ -107,11 +104,11 @@
       <div class="form-row">
         <div class="form-group">
           <label>Unweighted GPA (required)</label>
-          <input type="number" id="f-gpa" step="0.1" min="1" max="4" placeholder="1.0 – 4.0" />
+          <input type="number" id="f-gpa" step="0.01" min="1" max="4" placeholder="1.0 – 4.0" />
         </div>
         <div class="form-group">
           <label>Weighted GPA (required)</label>
-          <input type="number" id="f-gpa-w" step="0.1" min="1" max="5" placeholder="1.0 – 5.0" />
+          <input type="number" id="f-gpa-w" step="0.01" min="1" max="5" placeholder="1.0 – 5.0" />
         </div>
       </div>
       <div class="form-row">
@@ -159,8 +156,7 @@ const HAS_SUBMITTED = () => localStorage.getItem('cr_submitted') === '1';
 let activeYear=2026, allData=[], scatterChart=null, scatterData=[], searchFilter='', collegeCount=0;
 
 function updateNavForSubmitStatus() {
-  const navSubmit = document.getElementById('nav-submit');
-  navSubmit.textContent = HAS_SUBMITTED() ? 'Edit yours' : 'Submit yours';
+  document.getElementById('nav-submit').textContent = HAS_SUBMITTED() ? 'Edit yours' : 'Submit yours';
 }
 
 function showPage(name) {
@@ -217,8 +213,9 @@ function buildScatter(data,animate){
   const all=[...new Set(data.map(r=>r.college_name).filter(Boolean))].sort();
   const cols=searchFilter?all.filter(c=>c.toLowerCase().includes(searchFilter)):all;
   if(!cols.length){
-    if(scatterChart) scatterChart.destroy(); scatterChart=null;
-    document.getElementById('legend').innerHTML=''; return;
+    if(scatterChart){scatterChart.destroy();scatterChart=null;}
+    document.getElementById('legend').innerHTML='';
+    return;
   }
 
   const datasets=DECISION_ORDER.map(dec=>({
@@ -227,29 +224,38 @@ function buildScatter(data,animate){
     backgroundColor:DOT_COLORS[dec]+'cc', borderColor:DOT_COLORS[dec], borderWidth:1.5, pointRadius:7, pointHoverRadius:10
   })).filter(ds=>ds.data.length>0);
 
-  if(scatterChart) scatterChart.destroy();
+  if(scatterChart){scatterChart.destroy();}
+
   scatterChart=new Chart(document.getElementById('chart-scatter').getContext('2d'),{
-    type:'scatter', data:{datasets},
+    type:'scatter',
+    data:{datasets},
     options:{
       animation:animate?{duration:900,easing:'easeOutBounce'}:{duration:250},
       plugins:{legend:{display:false},tooltip:{enabled:false}},
       scales:{
         x:{
-          type:'linear', min:-0.5, max:cols.length-0.5,
+          type:'linear',
+          min:-0.5,
+          max:cols.length-0.5,
           ticks:{
-            stepSize:1, font:{size:10},
-            callback:(v)=>{
-              const i=Math.round(v);
-              return (Number.isInteger(v) && i>=0 && i<cols.length) ? cols[i] : '';
+            stepSize:1,
+            font:{size:10},
+            callback: function(val) {
+              const i = Math.round(val);
+              if(i >= 0 && i < cols.length && Math.abs(val - i) < 0.01) return cols[i];
+              return '';
             },
-            maxRotation:40, minRotation:30, autoSkip:false
+            maxRotation:45,
+            minRotation:30,
+            autoSkip:false
           },
-          grid:{color:'#f0ede8'},
-          offset:false
+          grid:{color:'#f0ede8'}
         },
         y:{
           title:{display:true,text:'GPA',font:{size:11},color:'#999'},
-          min:1,max:5,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0ede8'}
+          min:1,max:5,
+          ticks:{stepSize:1,font:{size:11}},
+          grid:{color:'#f0ede8'}
         }
       },
       onClick:(evt,els)=>{
@@ -269,17 +275,12 @@ function showTooltip(evt,r){
   const key=r.session_id||`${r.gpa}|${r.sat}|${r.act}`;
   const sibs=scatterData.filter(x=>(x.session_id||`${x.gpa}|${x.sat}|${x.act}`)===key);
   const tip=document.getElementById('dot-tooltip');
-
-  const gpaLine = `<div><span class="tip-label">Unweighted GPA</span><br>${r.gpa}${r.gpa_weighted ? ` &nbsp;·&nbsp; <span class="tip-label">Weighted</span> ${r.gpa_weighted}` : ''}</div>`;
-  const testLine = (r.sat||r.act) ? `<div style="margin-top:4px;">${r.sat?`<span class="tip-label">SAT</span> ${r.sat}`:''}${r.sat&&r.act?' &nbsp;·&nbsp; ':''}${r.act?`<span class="tip-label">ACT</span> ${r.act}`:''}</div>` : '';
-  const majorLine = r.major ? `<div style="margin-top:4px;"><span class="tip-label">Major</span><br>${r.major}</div>` : '';
-  const ecsLine = r.extracurriculars ? `<div style="margin-top:4px;"><span class="tip-label">Extracurriculars</span><br><span style="color:#aaa;font-size:0.73rem;">${r.extracurriculars}</span></div>` : '';
-  const decisions = sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
-
-  tip.innerHTML = `
-    ${gpaLine}${testLine}${majorLine}${ecsLine}
-    <div style="border-top:1px solid #333;margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>
-  `;
+  const gpaLine=`<div><span class="tip-label">UW GPA</span> ${r.gpa}${r.gpa_weighted?` &nbsp;·&nbsp; <span class="tip-label">W GPA</span> ${r.gpa_weighted}`:''}</div>`;
+  const testLine=(r.sat||r.act)?`<div style="margin-top:4px;">${r.sat?`<span class="tip-label">SAT</span> ${r.sat}`:''}${r.sat&&r.act?' &nbsp;·&nbsp; ':''}${r.act?`<span class="tip-label">ACT</span> ${r.act}`:''}</div>`:'';
+  const majorLine=r.major?`<div style="margin-top:4px;"><span class="tip-label">Major</span> ${r.major}</div>`:'';
+  const ecsLine=r.extracurriculars?`<div style="margin-top:4px;color:#aaa;font-size:0.73rem;">${r.extracurriculars}</div>`:'';
+  const decisions=sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
+  tip.innerHTML=`${gpaLine}${testLine}${majorLine}${ecsLine}<div style="border-top:1px solid #333;margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
   tip.style.display='block';
   tip.style.left=Math.min(evt.native.clientX+16,window.innerWidth-270)+'px';
   tip.style.top=Math.max(evt.native.clientY-10,10)+'px';
@@ -309,7 +310,7 @@ function renderEntries(data){
         ${g.act?`<span class="pill pill-gray">ACT ${g.act}</span>`:''}
         ${g.major?`<span class="pill pill-gray">${g.major}</span>`:''}
       </div>
-      ${g.extracurriculars?`<div class="ecs"><strong style="font-size:0.7rem;color:#aaa;text-transform:uppercase;letter-spacing:0.04em;">ECs</strong> ${g.extracurriculars}</div>`:''}
+      ${g.extracurriculars?`<div class="ecs">${g.extracurriculars}</div>`:''}
       <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}">${c.name} — ${c.decision}</span>`).join('')}</div>
     </div>`).join('');
 }
@@ -370,7 +371,7 @@ async function submitForm(){
   if(!rows.length){alert('Add at least one college!');return;}
   await db.from('submissions').delete().eq('session_id',SESSION_ID);
   const {error}=await db.from('submissions').insert(rows);
-  if(error){alert('Something went wrong. Try again.');console.error(error);document.getElementById('submit-btn').disabled=false;return;}
+  if(error){alert('Something went wrong. Try again.');console.error(error);return;}
   localStorage.setItem('cr_submitted','1');
   updateNavForSubmitStatus();
   document.getElementById('success-msg').style.display='block';
