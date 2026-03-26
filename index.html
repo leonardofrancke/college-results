@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>College Results — Live Oak</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
@@ -105,7 +105,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>GPA (required)</label>
-          <input type="number" id="f-gpa" step="1" min="1" max="5.0" placeholder="e.g. 3" />
+          <input type="number" id="f-gpa" step="0.01" min="1" max="5.0" placeholder="e.g. 3.85" />
         </div>
         <div class="form-group">
           <label>Graduation year (required)</label>
@@ -171,7 +171,7 @@ const DOT_COLORS = {
 const PILL_CLASS = { Accepted:'pill-accepted', Rejected:'pill-rejected', Waitlisted:'pill-waitlisted', Deferred:'pill-deferred', Withdrawn:'pill-withdrawn', Pending:'pill-pending' };
 
 async function loadData() {
-  const { data } = await client.from('submissions').select('*').order('id', { ascending: false });
+  const { data } = await client.from('submissions').select('*');
   allData = data || [];
   renderResults();
 }
@@ -419,7 +419,7 @@ async function submitForm() {
   setTimeout(async () => {
     const navResults = document.querySelector('nav a');
     showPage('results', navResults);
-    const { data } = await client.from('submissions').select('*').order('id', { ascending: false });
+    const { data } = await client.from('submissions').select('*');
     allData = data || [];
     renderTabs();
     const yearData = allData.filter(r => r.grad_year == activeYear);
