@@ -352,9 +352,9 @@ async function loadExistingSubmission(){
 
 async function submitForm(){
   const gpa=parseFloat(document.getElementById('f-gpa').value);
+  const gpaW=parseFloat(document.getElementById('f-gpa-w').value)||null;
   const year=parseInt(document.getElementById('f-year').value);
   if(!gpa||!gpaW||!year){alert('Unweighted GPA, weighted GPA, and graduation year are required!');return;}
-  const gpaW=parseFloat(document.getElementById('f-gpa-w').value)||null;
   const rows=[];
   for(let i=0;i<collegeCount;i++){
     const cn=document.getElementById(`cn-${i}`), cd=document.getElementById(`cd-${i}`);
@@ -370,7 +370,7 @@ async function submitForm(){
   if(!rows.length){alert('Add at least one college!');return;}
   await db.from('submissions').delete().eq('session_id',SESSION_ID);
   const {error}=await db.from('submissions').insert(rows);
-  if(error){alert('Something went wrong. Try again.');console.error(error);return;}
+  if(error){alert('Something went wrong. Try again.');console.error(error);document.getElementById('submit-btn').disabled=false;return;}
   localStorage.setItem('cr_submitted','1');
   updateNavForSubmitStatus();
   document.getElementById('success-msg').style.display='block';
