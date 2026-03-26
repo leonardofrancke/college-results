@@ -160,6 +160,41 @@ const DECISION_ORDER = ['Accepted','Waitlisted','Deferred','Rejected','Withdrawn
 const DOT_COLORS = { Accepted:'#16a34a', Rejected:'#dc2626', Waitlisted:'#ca8a04', Deferred:'#2563eb', Withdrawn:'#64748b', Pending:'#db2777' };
 const PILL_CLASS = { Accepted:'pill-accepted', Rejected:'pill-rejected', Waitlisted:'pill-waitlisted', Deferred:'pill-deferred', Withdrawn:'pill-withdrawn', Pending:'pill-pending' };
 
+// Acceptance rates (%) — used for sorting when submission counts are tied
+const COLLEGE_ACCEPT_RATES = {
+  'MIT':4,'Harvard University':3,'Columbia University':4,'Princeton University':4,'Yale University':5,
+  'Brown University':6,'Dartmouth College':6,'Cornell University':8,'Duke University':7,'Vanderbilt University':7,
+  'Rice University':9,'Washington University in St. Louis':11,'Notre Dame':13,'Georgetown University':13,
+  'Emory University':14,'Carnegie Mellon University':14,'UC Berkeley':14,'UCLA':14,'USC':13,
+  'University of Michigan':18,'Boston College':19,'Tufts University':11,'Northeastern University':6,
+  'NYU':12,'Boston University':18,'UNC Chapel Hill':19,'University of Virginia':21,
+  'Wake Forest University':25,'Tulane University':13,'University of Florida':24,'Georgia Tech':17,
+  'University of Wisconsin':49,'University of Texas Austin':31,'Penn State':55,'Ohio State':53,
+  'University of Illinois':45,'Purdue University':53,'University of Washington':48,'University of Maryland':44,
+  'University of Georgia':42,'Michigan State':76,'Indiana University':80,'University of Iowa':85,
+  'Arizona State':88,'University of Arizona':85,'Colorado State':90,'University of Alabama':80,
+  'University of South Carolina':67,'University of Tennessee':67,'University of Kentucky':95,
+  'Penn (UPenn)':7,'Stanford University':4,'Caltech':4,'Northwestern University':7,'Johns Hopkins':7,
+  'Swarthmore College':7,'Amherst College':9,'Williams College':9,'Middlebury College':15,
+  'Bowdoin College':9,'Colby College':11,'Bates College':13,'Hamilton College':14,'Colgate University':22,
+  'Davidson College':19,'Furman University':65,'College of Charleston':79,'Clemson University':47,
+  'UCSD':24,'UC Santa Barbara':29,'UC Davis':39,'UC Irvine':26,'UC Santa Cruz':47,
+  'Cal Poly SLO':30,'San Jose State':68,'Sacramento State':73,'Fresno State':77,
+  'Pepperdine University':37,'Loyola Marymount':50,'University of San Diego':52,'Santa Clara University':44,
+  'University of San Francisco':67,'Chapman University':63,'Cal State Long Beach':33,
+  'James Madison University':71,'University of Richmond':28,'George Mason':82,'Virginia Tech':65,
+  'William & Mary':37,'Villanova University':28,'Fordham University':46,'Syracuse University':60,
+  'Drexel University':68,'Temple University':68,'Rutgers University':61,'University of Connecticut':56,
+  'University of Delaware':65,'University of Vermont':63,'University of New Hampshire':80,
+  'University of Massachusetts Amherst':58,'Stony Brook University':49,'University at Buffalo':58,
+  'Rensselaer Polytechnic':57,'Rochester Institute of Technology':57,'Lehigh University':34,
+  'Case Western Reserve':30,'University of Rochester':30,'Wake Forest':25,'Elon University':72,
+  'American University':35,'George Washington University':41,'Howard University':37,
+  'Spelman College':37,'Morehouse College':48
+};
+
+const ALL_COLLEGES = Object.keys(COLLEGE_ACCEPT_RATES).sort();
+
 const SESSION_ID = localStorage.getItem('cr_sid') || (()=>{ const id=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('cr_sid',id); return id; })();
 const HAS_SUBMITTED = () => localStorage.getItem('cr_submitted') === '1';
 
@@ -226,15 +261,15 @@ function switchChart(type,btn){
 }
 
 function buildChart(data){
-  // Sort by most submissions first, then hardest to get in (lowest accept rate) first on ties
+  // Sort by most submissions first, then hardest to get in (lowest accept rate) on ties
   const allCols=[...new Set(data.map(r=>r.college_name).filter(Boolean))];
   allCols.sort((a,b)=>{
     const aTotal=data.filter(r=>r.college_name===a).length;
     const bTotal=data.filter(r=>r.college_name===b).length;
-    if(bTotal!==aTotal) return bTotal-aTotal; // most submissions first
-    const aAcc=data.filter(r=>r.college_name===a&&r.decision==='Accepted').length/aTotal;
-    const bAcc=data.filter(r=>r.college_name===b&&r.decision==='Accepted').length/bTotal;
-    return aAcc-bAcc; // lowest accept rate first on tie
+    if(bTotal!==aTotal) return bTotal-aTotal;
+    const aRate=COLLEGE_ACCEPT_RATES[a]??50;
+    const bRate=COLLEGE_ACCEPT_RATES[b]??50;
+    return aRate-bRate; // lower acceptance rate = harder = first
   });
   const cols=searchFilter?allCols.filter(c=>c.toLowerCase().includes(searchFilter)):allCols;
   const el=document.getElementById('chart-main');
@@ -355,7 +390,9 @@ function renderEntries(data){
 }
 
 function getKnownColleges(){
-  return [...new Set(allData.map(r=>r.college_name).filter(Boolean))].sort();
+  const submitted=allData.map(r=>r.college_name).filter(Boolean);
+  const combined=[...new Set([...ALL_COLLEGES,...submitted])].sort();
+  return combined;
 }
 
 function addCollege(name='',decision='Accepted'){
