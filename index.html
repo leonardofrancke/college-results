@@ -82,7 +82,6 @@
         <div class="chart-tabs">
           <button class="chart-tab active" onclick="switchChart('gpa',this)">GPA</button>
           <button class="chart-tab" onclick="switchChart('sat',this)">SAT</button>
-          <button class="chart-tab" onclick="switchChart('rank',this)">Class rank</button>
         </div>
         <input type="text" id="college-search" placeholder="Search a college..." oninput="filterChart(this.value)"
           style="padding:6px 12px;border:1px solid #e0ddd8;border-radius:6px;font-size:0.82rem;font-family:inherit;width:200px;background:#fafaf9;" />
@@ -278,13 +277,10 @@ function buildChart(data,animate){
           type:'linear',
           min:0.5,
           max:cols.length+0.5,
+          afterBuildTicks: axis => { axis.ticks = cols.map((_,i)=>({value:i+1})); },
           ticks:{
-            stepSize:1,
             font:{size:10},
-            callback: v => {
-              const i = Math.round(v) - 1;
-              return (i>=0 && i<cols.length && Math.abs(v - Math.round(v)) < 0.01) ? cols[i] : '';
-            },
+            callback: v => { const i=Math.round(v)-1; return (i>=0&&i<cols.length)?cols[i]:''; },
             maxRotation:45,
             minRotation:30,
             autoSkip:false
