@@ -23,7 +23,9 @@
     .stat-card .num { font-size: 2rem; font-weight: 600; color: #1a1a1a; }
     .stat-card .label { font-size: 0.72rem; color: #999; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
     .chart-card { background: #fff; border: 1px solid #e8e5e0; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; }
-    .chart-card h3 { font-size: 0.75rem; color: #999; margin-bottom: 1rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+    .chart-tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
+    .chart-tab { padding: 5px 14px; border-radius: 5px; border: 1px solid #e0ddd8; background: transparent; cursor: pointer; font-size: 0.78rem; color: #888; font-family: inherit; }
+    .chart-tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
     .entries { display: flex; flex-direction: column; gap: 10px; }
     .entry-card { background: #fff; border: 1px solid #e8e5e0; border-radius: 10px; padding: 1rem 1.25rem; }
     .entry-top { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -46,6 +48,7 @@
     .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; color: #1a1a1a; background: #fafaf9; }
     .form-group textarea { resize: vertical; min-height: 72px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
     .college-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
     .college-row input { flex: 2; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; background: #fafaf9; }
     .college-row select { flex: 1; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; background: #fafaf9; }
@@ -58,7 +61,7 @@
     .page.active { display: block; }
     #dot-tooltip { display: none; position: fixed; background: #1a1a1a; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 0.78rem; line-height: 1.7; max-width: 260px; pointer-events: none; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
     .tip-label { color: #888; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .form-row, .form-row-3 { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
   </style>
 </head>
 <body>
@@ -76,12 +79,16 @@
     <div class="stats-row" id="stats-row"></div>
     <div class="chart-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
-        <h3 style="margin:0;">GPA by college</h3>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchChart('gpa',this)">GPA</button>
+          <button class="chart-tab" onclick="switchChart('sat',this)">SAT</button>
+          <button class="chart-tab" onclick="switchChart('rank',this)">Class rank</button>
+        </div>
         <input type="text" id="college-search" placeholder="Search a college..." oninput="filterChart(this.value)"
-          style="padding:6px 12px;border:1px solid #e0ddd8;border-radius:6px;font-size:0.82rem;font-family:inherit;width:220px;background:#fafaf9;" />
+          style="padding:6px 12px;border:1px solid #e0ddd8;border-radius:6px;font-size:0.82rem;font-family:inherit;width:200px;background:#fafaf9;" />
       </div>
       <div id="legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1rem;"></div>
-      <canvas id="chart-scatter" height="260"></canvas>
+      <canvas id="chart-main" height="260"></canvas>
     </div>
     <div id="dot-tooltip"></div>
     <div class="entries" id="entries"></div>
@@ -111,7 +118,7 @@
           <input type="number" id="f-gpa-w" step="0.01" min="1" max="5" placeholder="1.0 – 5.0" />
         </div>
       </div>
-      <div class="form-row">
+      <div class="form-row-3">
         <div class="form-group">
           <label>SAT score (optional)</label>
           <input type="number" id="f-sat" placeholder="e.g. 1480" />
@@ -119,6 +126,10 @@
         <div class="form-group">
           <label>ACT score (optional)</label>
           <input type="number" id="f-act" placeholder="e.g. 33" />
+        </div>
+        <div class="form-group">
+          <label>Class rank (optional)</label>
+          <input type="number" id="f-rank" placeholder="e.g. 15" />
         </div>
       </div>
       <div class="form-group">
@@ -153,7 +164,7 @@ const PILL_CLASS = { Accepted:'pill-accepted', Rejected:'pill-rejected', Waitlis
 const SESSION_ID = localStorage.getItem('cr_sid') || (()=>{ const id=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('cr_sid',id); return id; })();
 const HAS_SUBMITTED = () => localStorage.getItem('cr_submitted') === '1';
 
-let activeYear=2026, allData=[], scatterChart=null, scatterData=[], searchFilter='', collegeCount=0;
+let activeYear=2026, allData=[], mainChart=null, scatterData=[], searchFilter='', collegeCount=0, activeChartType='gpa';
 
 function updateNavForSubmitStatus() {
   document.getElementById('nav-submit').textContent = HAS_SUBMITTED() ? 'Edit yours' : 'Submit yours';
@@ -206,49 +217,91 @@ function renderStats(data){
     <div class="stat-card"><div class="num">${g}</div><div class="label">Avg GPA</div></div>`;
 }
 
-function renderCharts(data){scatterData=data;buildScatter(data,false);}
-function filterChart(val){searchFilter=val.toLowerCase().trim();buildScatter(scatterData,false);}
+function renderCharts(data){scatterData=data;buildChart(data,false);}
+function filterChart(val){searchFilter=val.toLowerCase().trim();buildChart(scatterData,false);}
+function switchChart(type,btn){
+  activeChartType=type;
+  document.querySelectorAll('.chart-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildChart(scatterData,false);
+}
 
-function buildScatter(data,animate){
+function buildChart(data,animate){
   const all=[...new Set(data.map(r=>r.college_name).filter(Boolean))].sort();
   const cols=searchFilter?all.filter(c=>c.toLowerCase().includes(searchFilter)):all;
+
   if(!cols.length){
-    if(scatterChart){scatterChart.destroy();scatterChart=null;}
+    if(mainChart){mainChart.destroy();mainChart=null;}
     document.getElementById('legend').innerHTML='';
     return;
   }
 
-  const datasets=DECISION_ORDER.map(dec=>({
+  // Pick y value based on active chart type
+  const yKey = activeChartType==='gpa'?'gpa': activeChartType==='sat'?'sat':'class_rank';
+  const yLabel = activeChartType==='gpa'?'GPA': activeChartType==='sat'?'SAT Score':'Class Rank';
+
+  // Filter to only rows that have the y value
+  const filtered = data.filter(r=>r[yKey]!=null && cols.includes(r.college_name));
+
+  // Build datasets — one per decision
+  const datasets = DECISION_ORDER.map(dec=>({
     label:dec,
-    data:data.filter(r=>r.decision===dec&&cols.includes(r.college_name)).map(r=>({x:r.college_name,y:r.gpa,raw:r})),
-    backgroundColor:DOT_COLORS[dec]+'cc', borderColor:DOT_COLORS[dec], borderWidth:1.5, pointRadius:7, pointHoverRadius:10
+    data: filtered.filter(r=>r.decision===dec).map(r=>({
+      x: cols.indexOf(r.college_name) + 1, // +1 so first college is at x=1 not x=0
+      y: parseFloat(r[yKey]),
+      raw: r
+    })),
+    backgroundColor: DOT_COLORS[dec]+'cc',
+    borderColor: DOT_COLORS[dec],
+    borderWidth: 1.5,
+    pointRadius: 7,
+    pointHoverRadius: 10,
+    showLine: false
   })).filter(ds=>ds.data.length>0);
 
-  if(scatterChart){scatterChart.destroy();}
+  if(mainChart){mainChart.destroy();}
 
-  scatterChart=new Chart(document.getElementById('chart-scatter').getContext('2d'),{
-    type:'scatter',
+  // Y axis config per chart type
+  const yConfig = activeChartType==='gpa'
+    ? {min:1, max:5, ticks:{stepSize:1}}
+    : activeChartType==='sat'
+    ? {min:400, max:1600, ticks:{stepSize:200}}
+    : {reverse:true, ticks:{stepSize:5}};
+
+  mainChart = new Chart(document.getElementById('chart-main').getContext('2d'),{
+    type:'line',
     data:{datasets},
     options:{
-      animation:animate?{duration:900,easing:'easeOutBounce'}:{duration:250},
+      animation: animate?{duration:900,easing:'easeOutBounce'}:{duration:250},
       plugins:{legend:{display:false},tooltip:{enabled:false}},
       scales:{
         x:{
-          type:'category',
-          labels:cols,
-          ticks:{font:{size:10},maxRotation:45,minRotation:30},
+          type:'linear',
+          min:0.5,
+          max:cols.length+0.5,
+          ticks:{
+            stepSize:1,
+            font:{size:10},
+            callback: v => {
+              const i = Math.round(v) - 1;
+              return (i>=0 && i<cols.length && Math.abs(v - Math.round(v)) < 0.01) ? cols[i] : '';
+            },
+            maxRotation:45,
+            minRotation:30,
+            autoSkip:false
+          },
           grid:{color:'#f0ede8'}
         },
         y:{
-          title:{display:true,text:'GPA',font:{size:11},color:'#999'},
-          min:1,max:5,
-          ticks:{stepSize:1,font:{size:11}},
-          grid:{color:'#f0ede8'}
+          title:{display:true,text:yLabel,font:{size:11},color:'#999'},
+          grid:{color:'#f0ede8'},
+          ...yConfig,
+          ticks:{...yConfig.ticks, font:{size:11}}
         }
       },
       onClick:(evt,els)=>{
         if(!els.length){document.getElementById('dot-tooltip').style.display='none';return;}
-      showTooltip(evt,scatterChart.data.datasets[els[0].datasetIndex].data[els[0].index].raw);
+        showTooltip(evt,mainChart.data.datasets[els[0].datasetIndex].data[els[0].index].raw);
       },
       onHover:(evt,els)=>{evt.native.target.style.cursor=els.length?'pointer':'default';}
     }
@@ -263,19 +316,20 @@ function showTooltip(evt,r){
   const key=r.session_id||`${r.gpa}|${r.sat}|${r.act}`;
   const sibs=scatterData.filter(x=>(x.session_id||`${x.gpa}|${x.sat}|${x.act}`)===key);
   const tip=document.getElementById('dot-tooltip');
-  const gpaLine=`<div><span class="tip-label">UW GPA</span> ${r.gpa}${r.gpa_weighted?` &nbsp;·&nbsp; <span class="tip-label">W GPA</span> ${r.gpa_weighted}`:''}</div>`;
-  const testLine=(r.sat||r.act)?`<div style="margin-top:4px;">${r.sat?`<span class="tip-label">SAT</span> ${r.sat}`:''}${r.sat&&r.act?' &nbsp;·&nbsp; ':''}${r.act?`<span class="tip-label">ACT</span> ${r.act}`:''}</div>`:'';
-  const majorLine=r.major?`<div style="margin-top:4px;"><span class="tip-label">Major</span> ${r.major}</div>`:'';
+  const gpaLine=`<div><span class="tip-label">UW GPA</span> ${r.gpa}${r.gpa_weighted?` &nbsp;·&nbsp; <span class="tip-label">W</span> ${r.gpa_weighted}`:''}</div>`;
+  const testLine=(r.sat||r.act)?`<div style="margin-top:3px;">${r.sat?`<span class="tip-label">SAT</span> ${r.sat}`:''}${r.sat&&r.act?' · ':''}${r.act?`<span class="tip-label">ACT</span> ${r.act}`:''}</div>`:'';
+  const rankLine=r.class_rank?`<div style="margin-top:3px;"><span class="tip-label">Rank</span> #${r.class_rank}</div>`:'';
+  const majorLine=r.major?`<div style="margin-top:3px;"><span class="tip-label">Major</span> ${r.major}</div>`:'';
   const ecsLine=r.extracurriculars?`<div style="margin-top:4px;color:#aaa;font-size:0.73rem;">${r.extracurriculars}</div>`:'';
   const decisions=sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
-  tip.innerHTML=`${gpaLine}${testLine}${majorLine}${ecsLine}<div style="border-top:1px solid #333;margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
+  tip.innerHTML=`${gpaLine}${testLine}${rankLine}${majorLine}${ecsLine}<div style="border-top:1px solid #333;margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
   tip.style.display='block';
   tip.style.left=Math.min(evt.native.clientX+16,window.innerWidth-270)+'px';
   tip.style.top=Math.max(evt.native.clientY-10,10)+'px';
 }
 
 document.addEventListener('click',e=>{
-  const c=document.getElementById('chart-scatter');
+  const c=document.getElementById('chart-main');
   const t=document.getElementById('dot-tooltip');
   if(t&&c&&!c.contains(e.target)&&!t.contains(e.target)) t.style.display='none';
 });
@@ -292,10 +346,11 @@ function renderEntries(data){
   el.innerHTML=groups.map(g=>`
     <div class="entry-card">
       <div class="entry-top">
-        <span class="pill pill-gray">UW GPA ${g.gpa}</span>
-        ${g.gpa_weighted?`<span class="pill pill-gray">W GPA ${g.gpa_weighted}</span>`:''}
+        <span class="pill pill-gray">UW ${g.gpa}</span>
+        ${g.gpa_weighted?`<span class="pill pill-gray">W ${g.gpa_weighted}</span>`:''}
         ${g.sat?`<span class="pill pill-gray">SAT ${g.sat}</span>`:''}
         ${g.act?`<span class="pill pill-gray">ACT ${g.act}</span>`:''}
+        ${g.class_rank?`<span class="pill pill-gray">Rank #${g.class_rank}</span>`:''}
         ${g.major?`<span class="pill pill-gray">${g.major}</span>`:''}
       </div>
       ${g.extracurriculars?`<div class="ecs">${g.extracurriculars}</div>`:''}
@@ -320,6 +375,7 @@ async function loadExistingSubmission(){
     document.getElementById('f-gpa-w').value=r.gpa_weighted||'';
     document.getElementById('f-sat').value=r.sat||'';
     document.getElementById('f-act').value=r.act||'';
+    document.getElementById('f-rank').value=r.class_rank||'';
     document.getElementById('f-major').value=r.major||'';
     document.getElementById('f-ecs').value=r.extracurriculars||'';
     document.getElementById('f-year').value=r.grad_year||'';
@@ -328,10 +384,7 @@ async function loadExistingSubmission(){
     document.getElementById('form-title').textContent='Edit your submission';
     document.getElementById('form-subtitle').textContent='Update your results below.';
   } else {
-    document.getElementById('f-gpa').value=''; document.getElementById('f-gpa-w').value='';
-    document.getElementById('f-sat').value=''; document.getElementById('f-act').value='';
-    document.getElementById('f-major').value=''; document.getElementById('f-ecs').value='';
-    document.getElementById('f-year').value='';
+    ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs','f-year'].forEach(id=>document.getElementById(id).value='');
     addCollege();
     document.getElementById('submit-btn').textContent='Submit';
     document.getElementById('form-title').textContent='Add your college results';
@@ -351,6 +404,7 @@ async function submitForm(){
       gpa, grad_year:year, gpa_weighted:gpaW,
       sat:parseInt(document.getElementById('f-sat').value)||null,
       act:parseInt(document.getElementById('f-act').value)||null,
+      class_rank:parseInt(document.getElementById('f-rank').value)||null,
       major:document.getElementById('f-major').value.trim()||null,
       extracurriculars:document.getElementById('f-ecs').value.trim()||null,
       college_name:cn.value.trim(), decision:cd.value, session_id:SESSION_ID
