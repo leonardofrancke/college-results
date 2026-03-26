@@ -253,7 +253,7 @@ const HAS_SUBMITTED = () => localStorage.getItem('cr_submitted') === '1';
 let activeYear=2026, allData=[], mainChart=null, scatterData=[], searchFilter='', collegeCount=0, activeChartType='gpa';
 
 function updateNavForSubmitStatus() {
-  document.getElementById('nav-submit').textContent = HAS_SUBMITTED() ? 'Edit yours' : 'Submit yours';
+  document.getElementById('nav-submit').textContent = HAS_SUBMITTED() ? 'Edit submission' : 'Submit yours';
 }
 
 function showPage(name) {
@@ -341,7 +341,7 @@ function buildChart(data){
 
   // Use chart-card width for proper sizing
   const W=Math.max(el.closest('.chart-card').clientWidth-40, cols.length*60, 400);
-  const H=280;
+  const H=340;
   const PAD={top:20,right:20,bottom:100,left:55};
   const plotW=W-PAD.left-PAD.right;
   const plotH=H-PAD.top-PAD.bottom;
