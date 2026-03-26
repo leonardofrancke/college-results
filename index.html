@@ -170,7 +170,30 @@ const COLLEGE_ACCEPT_RATES = {
   'University of Miami':27,'Villanova':28,'University of Richmond':28,
   'William & Mary':37,'SMU':50,'TCU':48,'Baylor':45,
   'Harvey Mudd':10,'Olin College':10,
-  'UC Berkeley':14,'UCLA':14,'Michigan':18,'UVA':21,'UNC Chapel Hill':19,
+  // UC System
+  'UC Berkeley':14,'UCLA':14,'UCSD':24,'UC Santa Barbara':29,'UC Davis':39,
+  'UC Irvine':26,'UC Santa Cruz':47,'UC Riverside':57,'UC Merced':69,
+  // California State System
+  'Cal Poly SLO':30,'Cal Poly Pomona':55,'Cal State Long Beach':33,
+  'San Jose State':68,'San Francisco State':58,'Fresno State':77,
+  'Sacramento State':73,'Cal State Fullerton':67,'Cal State Northridge':55,
+  'Sonoma State':90,'Cal State East Bay':73,'Cal State Stanislaus':82,
+  'Chico State':76,'Cal State San Bernardino':75,'Cal State Dominguez Hills':63,
+  'Cal State Los Angeles':64,'Cal State Monterey Bay':71,'Cal State Channel Islands':79,
+  'Cal State San Marcos':79,'Cal State Bakersfield':78,'Humboldt State':80,
+  'Cal Maritime':72,
+  // California Privates
+  'LMU':50,'Santa Clara':44,'University of San Diego':52,'Pepperdine':37,
+  'University of San Francisco':67,'Chapman':63,'Occidental':38,
+  'University of the Pacific':60,'Whittier College':73,'Azusa Pacific':72,
+  'Biola University':61,'Point Loma Nazarene':72,'Westmont':75,
+  'Cal Lutheran':68,'La Sierra':62,'Vanguard':65,
+  'Mills College':78,'Dominican University':72,'Notre Dame de Namur':72,
+  'Holy Names':72,'Saint Mary\'s College of California':71,
+  'University of La Verne':62,'Concordia Irvine':68,
+  'Claremont McKenna':9,'Scripps':22,'Pitzer':14,'Mudd Harvey':10,
+  // Public flagships
+  'Michigan':18,'UVA':21,'UNC Chapel Hill':19,
   'Georgia Tech':17,'University of Florida':24,'Wisconsin':49,'Ohio State':53,
   'Penn State':55,'UT Austin':31,'UIUC':45,'Purdue':53,
   'University of Washington':48,'University of Maryland':44,'University of Georgia':42,
@@ -184,15 +207,7 @@ const COLLEGE_ACCEPT_RATES = {
   'Stony Brook':49,'University at Buffalo':58,'George Mason':82,
   'JMU':71,'University of Oregon':82,'Oregon State':77,
   'Colorado':77,'University of Denver':60,'Texas A&M':63,'UT Dallas':45,
-  'UCSD':24,'UC Santa Barbara':29,'UC Davis':39,'UC Irvine':26,'UC Santa Cruz':47,
-  'Cal Poly SLO':30,'San Jose State':68,'Sacramento State':73,'Fresno State':77,
-  'LMU':50,'Santa Clara':44,'University of San Diego':52,'Pepperdine':37,
-  'University of San Francisco':67,'Chapman':63,'Cal State Long Beach':33,
-  'RPI':57,'RIT':57,'WPI':49,'Drexel':68,'Temple':68,
-  'Syracuse':60,'Fordham':46,'American University':35,'GWU':41,
-  'Howard':37,'Spelman':37,'Morehouse':48,
-  'Elon':72,'Furman':65,'College of Charleston':79,
-  'Gonzaga':72,'Seattle University':75,
+  // Liberal Arts
   'Swarthmore':7,'Amherst':9,'Williams':9,'Pomona':8,'Bowdoin':9,
   'Middlebury':15,'Colby':11,'Bates':13,'Hamilton':14,'Colgate':22,
   'Vassar':24,'Wesleyan':17,'Haverford':15,'Bryn Mawr':31,
@@ -200,37 +215,28 @@ const COLLEGE_ACCEPT_RATES = {
   'Davidson':19,'Oberlin':33,'Kenyon':36,'Grinnell':12,'Carleton':19,
   'Macalester':36,'St Olaf':56,'Reed':35,'Whitman':42,
   'Bucknell':38,'Lafayette':36,'Dickinson':47,'Gettysburg':60,
-  'Skidmore':42,'Trinity':34,'Connecticut College':35,'Sarah Lawrence':55,
-  'Loyola Chicago':68,'DePaul':70,'Marquette':82,'Creighton':70,
-  'University of Dayton':72,'Butler':73,'Xavier':61,
-  'Loyola Marymount':50,'Loyola New Orleans':58,
-  'Quinnipiac':75,'Fairfield':60,'Providence College':58,
-  'Siena College':76,'Saint Joseph\'s':77,'Iona':82,
-  'Rochester Institute of Technology':57,'Stevens Institute of Technology':49,
-  'Illinois Tech':58,'University of Tulsa':67,
-  'Georgia State':57,'Kennesaw State':87,'Mercer':72,
-  'Auburn':79,'University of Mississippi':98,'Mississippi State':60,
-  'University of Arkansas':79,'University of Missouri':77,
-  'Kansas State':94,'University of Kansas':93,'Iowa State':88,
-  'University of Nebraska':77,'University of Oklahoma':69,
-  'Oklahoma State':72,'University of Utah':82,'Utah State':97,
-  'Colorado School of Mines':42,'University of Wyoming':96,
-  'Montana State':96,'University of Montana':94,
-  'University of Idaho':78,'Boise State':72,'University of Nevada':85,
-  'UNLV':82,'New Mexico State':50,'University of New Mexico':46,
-  'University of Hawaii':64,'University of Alaska':67,
-  'DePaul':70,'Loyola Chicago':68,'Marquette':82,
-  'Fordham':46,'Seton Hall':78,'Fairleigh Dickinson':85,
-  'Drew University':65,'Rider University':80,
-  'University of Hartford':73,'Sacred Heart':73,
-  'Long Island University':82,'Hofstra':68,'Adelphi':72,
-  'Pace University':77,'Manhattan College':78,
-  'Saint Peter\'s':98,'Monmouth':78,
-  'Marist':55,'Le Moyne':73,'Niagara':78,
-  'Canisius':79,'D\'Youville':85,
+  'Skidmore':42,'Trinity':34,'Connecticut College':35,
+  // Other well-known
+  'RPI':57,'RIT':57,'WPI':49,'Drexel':68,'Temple':68,
+  'Syracuse':60,'Fordham':46,'American University':35,'GWU':41,
+  'Howard':37,'Spelman':37,'Morehouse':48,
+  'Elon':72,'Furman':65,'College of Charleston':79,
+  'Gonzaga':72,'Loyola Chicago':68,'Marquette':82,'Butler':73,
 };
 
 const ALL_COLLEGES = Object.keys(COLLEGE_ACCEPT_RATES).sort();
+
+// Normalize college name for lookup — strips common suffixes
+function normalizeName(name){
+  return name.replace(/\b(university|college|institute of technology|state university)\b/gi,'').replace(/\s+/g,' ').trim();
+}
+
+function getAcceptRate(name){
+  if(COLLEGE_ACCEPT_RATES[name]) return COLLEGE_ACCEPT_RATES[name];
+  const norm=normalizeName(name);
+  const match=Object.keys(COLLEGE_ACCEPT_RATES).find(k=>normalizeName(k).toLowerCase()===norm.toLowerCase());
+  return match?COLLEGE_ACCEPT_RATES[match]:100;
+}
 
 const SESSION_ID = localStorage.getItem('cr_sid') || (()=>{ const id=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('cr_sid',id); return id; })();
 const HAS_SUBMITTED = () => localStorage.getItem('cr_submitted') === '1';
@@ -304,8 +310,8 @@ function buildChart(data){
     const aTotal=data.filter(r=>r.college_name===a).length;
     const bTotal=data.filter(r=>r.college_name===b).length;
     if(bTotal!==aTotal) return bTotal-aTotal;
-    const aRate=COLLEGE_ACCEPT_RATES[a]??100;
-    const bRate=COLLEGE_ACCEPT_RATES[b]??100;
+    const aRate=getAcceptRate(a);
+    const bRate=getAcceptRate(b);
     return aRate-bRate; // lower acceptance rate = harder = first
   });
   const cols=searchFilter?allCols.filter(c=>c.toLowerCase().includes(searchFilter)):allCols;
