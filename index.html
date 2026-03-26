@@ -90,7 +90,7 @@
       <div id="legend" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:1rem;"></div>
       <div style="position:relative;">
         <canvas id="chart-scatter" height="220"></canvas>
-        <div id="dot-tooltip" style="display:none; position:fixed; background:#1a1a1a; color:#fff; border-radius:8px; padding:12px 14px; font-size:0.78rem; line-height:1.6; max-width:240px; pointer-events:none; z-index:999; box-shadow:0 4px 20px rgba(0,0,0,0.2);"></div>
+        <div id="dot-tooltip" style="display:none; position:fixed; background:#1a1a1a; color:#fff; border-radius:8px; padding:12px 14px; font-size:0.78rem; line-height:1.6; max-width:240px; pointer-events:none; z-index:99; box-shadow:0 4px 20px rgba(0,0,0,0.2);"></div>
       </div>
     </div>
     <div class="entries" id="entries"></div>
@@ -476,7 +476,6 @@ async function submitForm() {
 
 // Init
 loadData();
-loadExistingSubmission();
 </script>
 </body>
 </html>
