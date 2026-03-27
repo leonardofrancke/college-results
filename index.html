@@ -183,11 +183,72 @@
     .page.slide-in-right  { display:block; animation:slideInRight  0.28s cubic-bezier(0.16,1,0.3,1) forwards; }
     @keyframes countUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
     @media (max-width:600px) {
+      /* Layout */
+      .container { margin:1rem auto; padding:0 0.75rem; }
       .form-row,.form-row-3 { grid-template-columns:1fr; }
-      .stats-row { grid-template-columns:repeat(2,1fr); }
+      .stats-row { grid-template-columns:repeat(2,1fr); gap:8px; }
       .modal-stats { grid-template-columns:1fr 1fr; }
       .compare-grid { grid-template-columns:1fr; }
-      .footer-inner { flex-direction:column; align-items:flex-start; }
+      .footer-inner { flex-direction:column; align-items:flex-start; gap:0.75rem; }
+
+      /* Header — stack title above nav */
+      header { height:auto; padding:0.6rem 1rem; flex-wrap:wrap; gap:0.4rem; }
+      header h1 { font-size:0.82rem; }
+      .hdr-right { gap:0.75rem; }
+      nav a { margin-left:0.75rem; font-size:0.8rem; }
+
+      /* Year tabs — scroll horizontally */
+      .tabs { overflow-x:auto; flex-wrap:nowrap; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+      .tabs::-webkit-scrollbar { display:none; }
+      .tab { white-space:nowrap; flex-shrink:0; padding:6px 14px; font-size:0.8rem; }
+
+      /* Stat cards */
+      .stat-card { padding:0.85rem 0.6rem; }
+      .stat-card .num { font-size:1.5rem; }
+      .stat-card .label { font-size:0.65rem; }
+
+      /* Students like me — 2-col grid on mobile */
+      .slm-inputs { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+      .slm-btn, .slm-clear { width:100%; text-align:center; }
+      .slm-field input { width:100%; }
+      .slm-field select { width:100%; }
+
+      /* Chart card */
+      .chart-card { padding:0.85rem 0.75rem; }
+
+      /* Chart top row: stack tabs+compare on one line, search+fs on next */
+      .chart-top-left { flex-wrap:wrap; }
+      .chart-top-right { width:100%; }
+      .chart-top-right input[type=text] { width:100% !important; flex:1; }
+
+      /* Min submissions: wrap nicely */
+      .minsub-row { flex-wrap:wrap; gap:6px; }
+
+      /* Hide arrow buttons on mobile — just swipe instead */
+      #chart-prev, #chart-next { display:none !important; }
+
+      /* Legend wraps */
+      #legend { gap:6px; }
+      .legend-item { font-size:0.7rem; padding:2px 7px; }
+
+      /* Entry cards */
+      .entry-card { padding:0.85rem 1rem; }
+      .pill { font-size:0.68rem; padding:2px 8px; }
+      .ecs { font-size:0.75rem; }
+
+      /* Modals */
+      .modal { padding:1.25rem; border-radius:10px 10px 0 0; max-height:92vh; }
+      .modal-overlay { align-items:flex-end; padding:0; }
+
+      /* Form */
+      .form-wrap { padding:1.25rem; }
+      .anon-badge { font-size:0.7rem; }
+
+      /* Dot tooltip — full width at bottom on mobile */
+      #dot-tooltip { max-width:calc(100vw - 2rem); font-size:0.75rem; }
+
+      /* Fullscreen button — hide on mobile (not useful on small screens) */
+      #fs-btn { display:none !important; }
     }
   </style>
 </head>
@@ -259,14 +320,14 @@
 
     <div class="chart-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px;">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="chart-top-left" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <div class="chart-tabs">
             <button class="chart-tab active" onclick="switchChart('gpa',this)">Weighted GPA</button>
             <button class="chart-tab" onclick="switchChart('sat',this)">SAT</button>
           </div>
           <button onclick="openCompare()" style="padding:5px 12px;border-radius:5px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:0.75rem;color:var(--text2);font-family:inherit;">Compare colleges</button>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;">
+        <div class="chart-top-right" style="display:flex;align-items:center;gap:6px;">
           <input type="text" id="college-search" placeholder="Search a college..." oninput="filterChart(this.value)"
             style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:0.82rem;font-family:inherit;width:200px;background:var(--bg);color:var(--text);" />
           <button id="fs-btn" onclick="toggleChartFullscreen()" title="Fullscreen" style="flex-shrink:0;width:32px;height:32px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:0.9rem;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseenter="this.style.color='var(--text)'" onmouseleave="this.style.color='var(--text2)'">⛶</button>
@@ -274,7 +335,7 @@
       </div>
 
       <!-- Min submissions filter -->
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.85rem;flex-wrap:wrap;">
+      <div class="minsub-row" style="display:flex;align-items:center;gap:6px;margin-bottom:0.85rem;flex-wrap:wrap;">
         <span style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px dashed var(--border2);position:relative;display:inline-block;"
           onmouseenter="document.getElementById('minsub-tip').style.display='block'"
           onmouseleave="document.getElementById('minsub-tip').style.display='none'">Min. submissions
@@ -743,8 +804,9 @@ function buildChart(data,animate){
   const gridC=dk?'#2c2c2e':'#f0ede8',axisC=dk?'#3a3a3c':'#e0ddd8',tickC=dk?'#636366':'#999',lblC=dk?'#aeaeb2':'#555';
 
   const isFullscreen=!!document.fullscreenElement;
-  const H=isFullscreen?Math.max(window.innerHeight-220,500):420;
-  const PAD={top:20,right:20,bottom:100,left:55};
+  const isMobile=window.innerWidth<=600;
+  const H=isFullscreen?Math.max(window.innerHeight-220,500):isMobile?260:420;
+  const PAD={top:20,right:20,bottom:isMobile?80:100,left:55};
   const MIN_COL_W=58;
   const containerW=el.closest('.chart-card').clientWidth-40;
   const naturalColW=containerW/cols.length;
@@ -1212,6 +1274,9 @@ async function deleteSubmission(){
 
 updateNav();
 loadData();
+window.addEventListener('resize',()=>{
+  if(scatterData.length) buildChart(scatterData,false);
+});
 </script>
 </body>
 </html>
