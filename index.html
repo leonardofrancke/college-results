@@ -55,7 +55,11 @@
     .legend-item:hover { border-color:var(--border2); }
     .legend-item.dimmed { opacity:0.35; }
     .legend-dot { width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0; }
-    .x-axis-note { font-size:0.7rem; color:var(--text3); margin-top:8px; text-align:center; }
+    .minsub-btn { padding:3px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:0.75rem;color:var(--text2);font-family:inherit;transition:all 0.12s; }
+    .minsub-btn:hover { border-color:var(--text3); color:var(--text); }
+    .minsub-active { background:var(--text)!important;color:var(--bg)!important;border-color:var(--text)!important; }
+    /* hide scrollbar on chart wrap */
+    #chart-scroll-wrap::-webkit-scrollbar { display:none; }
     .entries { display:flex; flex-direction:column; gap:10px; }
     .entry-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1rem 1.25rem; }
     .entry-top { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:8px; }
@@ -247,7 +251,7 @@
     </div>
 
     <div class="chart-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <div class="chart-tabs">
             <button class="chart-tab active" onclick="switchChart('gpa',this)">Weighted GPA</button>
@@ -258,9 +262,35 @@
         <input type="text" id="college-search" placeholder="Search a college..." oninput="filterChart(this.value)"
           style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:0.82rem;font-family:inherit;width:200px;background:var(--bg);color:var(--text);" />
       </div>
+
+      <!-- Min submissions filter -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.85rem;flex-wrap:wrap;">
+        <span style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Min. submissions:</span>
+        <div style="display:flex;gap:4px;">
+          <button id="minsub-1" class="minsub-btn minsub-active" onclick="setMinSubs(1,this)">Any</button>
+          <button id="minsub-2" class="minsub-btn" onclick="setMinSubs(2,this)">2+</button>
+          <button id="minsub-3" class="minsub-btn" onclick="setMinSubs(3,this)">3+</button>
+          <button id="minsub-5" class="minsub-btn" onclick="setMinSubs(5,this)">5+</button>
+        </div>
+        <span id="chart-col-count" style="font-size:0.72rem;color:var(--text3);margin-left:4px;"></span>
+      </div>
+
       <div id="legend"></div>
-      <div id="chart-main" style="width:100%;overflow-x:auto;"></div>
-      <div class="x-axis-note">Sorted by number of submissions · ties broken by acceptance rate (hardest first). Click a college name to see details.</div>
+
+      <!-- Chart with arrow nav -->
+      <div style="display:flex;align-items:center;gap:6px;position:relative;">
+        <button id="chart-prev" onclick="scrollChart(-1)" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:1rem;color:var(--text2);display:none;align-items:center;justify-content:center;transition:all 0.15s;">‹</button>
+        <div style="flex:1;position:relative;min-width:0;">
+          <div id="chart-scroll-wrap" style="width:100%;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;border-radius:6px;">
+            <div id="chart-main"></div>
+          </div>
+          <div id="chart-scroll-hint-l" style="display:none;position:absolute;top:0;left:0;bottom:0;width:32px;background:linear-gradient(to left,transparent,var(--surface));pointer-events:none;"></div>
+          <div id="chart-scroll-hint-r" style="display:none;position:absolute;top:0;right:0;bottom:0;width:32px;background:linear-gradient(to right,transparent,var(--surface));pointer-events:none;"></div>
+        </div>
+        <button id="chart-next" onclick="scrollChart(1)" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:1rem;color:var(--text2);display:none;align-items:center;justify-content:center;transition:all 0.15s;">›</button>
+      </div>
+
+      <div class="x-axis-note" style="margin-top:8px;">Sorted by submissions · ties broken by acceptance rate (hardest first) · click a name for details</div>
     </div>
     <div id="dot-tooltip"></div>
     <div id="entries-header" style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:0.75rem;"></div>
@@ -431,7 +461,7 @@ function getAcceptRate(name){
 const SESSION_ID=localStorage.getItem('cr_sid')||(()=>{const id=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('cr_sid',id);return id;})();
 const HAS_SUBMITTED=()=>localStorage.getItem('cr_submitted')==='1';
 
-let activeYear=2026,allData=[],scatterData=[],searchFilter='',collegeCount=0,activeChartType='gpa',activeFilter=null,slmFilter=null,statsAnimated=false;
+let activeYear=2026,allData=[],scatterData=[],searchFilter='',collegeCount=0,activeChartType='gpa',activeFilter=null,slmFilter=null,statsAnimated=false,minSubs=1;
 const PAGE_ORDER=['results','submit'];
 let currentPage='results';
 function goToResults(){ showPage('results'); }
@@ -503,7 +533,7 @@ function renderResults(){
   const d=allData.filter(r=>r.grad_year==activeYear);
   renderStats(d);renderCharts(d);renderEntries(d);
 }
-function setYear(y){activeYear=y;activeFilter=null;renderResults();}
+function setYear(y){activeYear=y;activeFilter=null;minSubs=1;setMinSubsUI(1);renderResults();}
 function renderTabs(){
   document.getElementById('year-tabs').innerHTML=YEARS.map(y=>
     `<button class="tab${y==activeYear?' active':''}" onclick="setYear(${y})">${y}</button>`
@@ -604,6 +634,49 @@ function toggleFilter(decision){
   buildChart(scatterData,false);
 }
 
+function setMinSubsUI(n){
+  document.querySelectorAll('.minsub-btn').forEach(b=>b.classList.remove('minsub-active'));
+  const el=document.getElementById('minsub-'+n);
+  if(el) el.classList.add('minsub-active');
+}
+function setMinSubs(n,btn){
+  minSubs=n;
+  setMinSubsUI(n);
+  buildChart(scatterData,false);
+}
+
+const SCROLL_COLS=8; // how many columns to jump per arrow click
+function scrollChart(dir){
+  const wrap=document.getElementById('chart-scroll-wrap');
+  const svg=wrap.querySelector('svg');
+  if(!wrap||!svg) return;
+  // estimate column width from SVG total width and col count
+  const colCount=wrap.querySelector('svg').getAttribute('data-cols');
+  const svgW=parseFloat(svg.getAttribute('width'));
+  const colW=colCount?(svgW-75)/colCount:80;
+  wrap.scrollBy({left:dir*colW*SCROLL_COLS,behavior:'smooth'});
+}
+
+function updateScrollArrows(){
+  const wrap=document.getElementById('chart-scroll-wrap');
+  const prev=document.getElementById('chart-prev');
+  const next=document.getElementById('chart-next');
+  const hintL=document.getElementById('chart-scroll-hint-l');
+  const hintR=document.getElementById('chart-scroll-hint-r');
+  if(!wrap||!prev||!next) return;
+  const scrollable=wrap.scrollWidth>wrap.clientWidth+4;
+  const atStart=wrap.scrollLeft<=4;
+  const atEnd=wrap.scrollLeft+wrap.clientWidth>=wrap.scrollWidth-4;
+  prev.style.display=scrollable?'flex':'none';
+  next.style.display=scrollable?'flex':'none';
+  prev.style.opacity=atStart?'0.3':'1';
+  prev.style.pointerEvents=atStart?'none':'auto';
+  next.style.opacity=atEnd?'0.3':'1';
+  next.style.pointerEvents=atEnd?'none':'auto';
+  if(hintL) hintL.style.display=(scrollable&&!atStart)?'block':'none';
+  if(hintR) hintR.style.display=(scrollable&&!atEnd)?'block':'none';
+}
+
 function buildChart(data,animate){
   const allCols=[...new Set(data.map(r=>r.college_name).filter(Boolean))];
   allCols.sort((a,b)=>{
@@ -612,7 +685,13 @@ function buildChart(data,animate){
     if(bt!==at) return bt-at;
     return getAcceptRate(a)-getAcceptRate(b);
   });
-  const cols=searchFilter?allCols.filter(c=>c.toLowerCase().includes(searchFilter)):allCols;
+  // Apply min submissions filter
+  const allColsFiltered=allCols.filter(c=>data.filter(r=>r.college_name===c).length>=minSubs);
+  const cols=searchFilter?allColsFiltered.filter(c=>c.toLowerCase().includes(searchFilter)):allColsFiltered;
+
+  // Update col count badge
+  const colCount=document.getElementById('chart-col-count');
+  if(colCount) colCount.textContent=cols.length?`${cols.length} college${cols.length!==1?'s':''}`:'';
   const el=document.getElementById('chart-main');
   el.innerHTML='';
   if(!cols.length){document.getElementById('legend').innerHTML='';return;}
@@ -629,16 +708,20 @@ function buildChart(data,animate){
   const dk=document.documentElement.getAttribute('data-theme')==='dark';
   const gridC=dk?'#2c2c2e':'#f0ede8',axisC=dk?'#3a3a3c':'#e0ddd8',tickC=dk?'#636366':'#999',lblC=dk?'#aeaeb2':'#555';
 
-  const W=Math.max(el.closest('.chart-card').clientWidth-40,cols.length*60,400);
   const H=340,PAD={top:20,right:20,bottom:100,left:55};
-  const plotW=W-PAD.left-PAD.right,plotH=H-PAD.top-PAD.bottom,colW=plotW/cols.length;
+  const MIN_COL_W=58;
+  const containerW=el.closest('.chart-card').clientWidth-40;
+  const naturalColW=containerW/cols.length;
+  const colW=Math.max(naturalColW,MIN_COL_W);
+  const W=Math.max(PAD.left+PAD.right+colW*cols.length, containerW, 400);
+  const plotW=W-PAD.left-PAD.right,plotH=H-PAD.top-PAD.bottom;
 
   // y-axis tick steps
   const ySteps=isGpa?[1,1.5,2,2.5,3,3.5,4,4.5,5]:[400,600,800,1000,1200,1400,1600];
   // monospace font for axis tick labels
   const monoFont=`'DM Mono',monospace`;
 
-  let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;">`;
+  let svg=`<svg width="${W}" height="${H}" data-cols="${cols.length}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;">`;
   ySteps.forEach(v=>{
     const y=PAD.top+plotH-(v-yMin)/(yMax-yMin)*plotH;
     svg+=`<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+plotW}" y2="${y}" stroke="${gridC}" stroke-width="1"/>`;
@@ -685,6 +768,15 @@ function buildChart(data,animate){
   });
   svg+=`</svg>`;
   el.innerHTML=svg;
+
+  // Wire up arrow nav and edge hints
+  const wrap=document.getElementById('chart-scroll-wrap');
+  if(wrap){
+    wrap.scrollLeft=0;
+    wrap.onscroll=updateScrollArrows;
+    // Use rAF so scrollWidth is available after paint
+    requestAnimationFrame(updateScrollArrows);
+  }
 
   const used=DECISION_ORDER.filter(d=>filtered.find(r=>r.decision===d));
   document.getElementById('legend').innerHTML=used.map(d=>`
