@@ -78,8 +78,9 @@
     .add-btn { background:none; border:1px dashed var(--border2); border-radius:7px; padding:7px 14px; font-size:0.8rem; color:var(--text3); cursor:pointer; margin-bottom:1.25rem; font-family:inherit; width:100%; }
     .submit-btn { width:100%; padding:11px; background:var(--text); color:var(--bg); border:none; border-radius:7px; font-size:0.875rem; font-weight:500; cursor:pointer; font-family:inherit; }
     .submit-btn:hover { opacity:0.85; }
-    .delete-btn { padding:8px 16px; background:none; color:#dc2626; border:1px solid #fca5a5; border-radius:7px; font-size:0.8rem; cursor:pointer; font-family:inherit; margin-top:12px; display:block; width:auto; }
+    .delete-btn { padding:7px 18px; background:none; color:#dc2626; border:1px solid #fca5a5; border-radius:7px; font-size:0.78rem; cursor:pointer; font-family:inherit; }
     .delete-btn:hover { background:#fee2e2; }
+    .delete-wrap { display:none; text-align:center; margin-top:2rem; padding-top:1.25rem; border-top:1px solid var(--border); }
     .success-msg { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:7px; padding:0.75rem 1rem; margin-bottom:1rem; font-size:0.85rem; display:none; }
     .page { display:none; }
     .page.active { display:block; }
@@ -299,7 +300,10 @@
         <button type="button" class="add-btn" onclick="addCollege()">+ Add another college</button>
       </div>
       <button type="button" class="submit-btn" id="submit-btn" onclick="submitForm()">Submit</button>
-      <button type="button" class="delete-btn" id="delete-btn" onclick="deleteSubmission()" style="display:none;">Delete my submission</button>
+      <div class="delete-wrap" id="delete-wrap">
+        <p style="font-size:0.75rem;color:var(--text3);margin-bottom:0.6rem;">Want to remove your data?</p>
+        <button type="button" class="delete-btn" id="delete-btn" onclick="deleteSubmission()">Delete my submission</button>
+      </div>
     </div>
   </div>
 </div>
@@ -930,14 +934,14 @@ async function loadExistingSubmission(){
     document.getElementById('submit-btn').textContent='Update Submission';
     document.getElementById('form-title').textContent='Edit your Submission';
     document.getElementById('form-subtitle').textContent='Update your results below.';
-    document.getElementById('delete-btn').style.display='block';
+    document.getElementById('delete-wrap').style.display='block';
   } else {
     ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs','f-year','f-sport'].forEach(id=>document.getElementById(id).value='');
     addCollege();
     document.getElementById('submit-btn').textContent='Submit';
     document.getElementById('form-title').textContent='Add your college results';
     document.getElementById('form-subtitle').textContent='Anonymous — your name is never stored.';
-    document.getElementById('delete-btn').style.display='none';
+    document.getElementById('delete-wrap').style.display='none';
   }
 }
 
