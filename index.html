@@ -1,76 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>College Results — Live Oak</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    :root {
+      --bg:#f8f7f4;--surface:#fff;--border:#e8e5e0;--border2:#e0ddd8;
+      --text:#1a1a1a;--text2:#666;--text3:#999;--text4:#555;
+      --header:#1a1a1a;--grid:#f0ede8;--axis:#e0ddd8;--dot-label:#555;--legend:#555;
+    }
+    [data-theme="dark"] {
+      --bg:#111;--surface:#1c1c1e;--border:#2c2c2e;--border2:#2c2c2e;
+      --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;--text4:#aeaeb2;
+      --header:#000;--grid:#2c2c2e;--axis:#3a3a3c;--dot-label:#aeaeb2;--legend:#aeaeb2;
+    }
+    @keyframes dotSpring {
+      0%   { transform-box:fill-box; transform-origin:center; transform:scale(0); opacity:0; }
+      55%  { transform:scale(1.6); opacity:1; }
+      75%  { transform:scale(0.85); }
+      90%  { transform:scale(1.1); }
+      100% { transform:scale(1); opacity:1; }
+    }
+
+    :root {
+      --bg: #f8f7f4; --surface: #fff; --border: #e8e5e0; --border2: #e0ddd8;
+      --text: #1a1a1a; --text2: #666; --text3: #999; --text4: #555;
+      --header: #1a1a1a; --header-text: #fff; --header-muted: #888;
+      --grid: #f0ede8; --axis: #e0ddd8;
+      --pill-gray-bg: #f0ede8; --pill-gray-text: #555;
+      --tip-bg: #1a1a1a; --tip-text: #fff; --tip-muted: #888; --tip-border: #333;
+    }
+    [data-theme="dark"] {
+      --bg: #0f0f10; --surface: #1a1a1c; --border: #2a2a2d; --border2: #2a2a2d;
+      --text: #f0f0f0; --text2: #aaa; --text3: #666; --text4: #aaa;
+      --header: #111113; --header-text: #f0f0f0; --header-muted: #666;
+      --grid: #222224; --axis: #2a2a2d;
+      --pill-gray-bg: #252528; --pill-gray-text: #aaa;
+      --tip-bg: #f0f0f0; --tip-text: #111; --tip-muted: #666; --tip-border: #ddd;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', -apple-system, sans-serif; background: #f8f7f4; color: #1a1a1a; }
-    header { background: #1a1a1a; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; }
-    header h1 { font-size: 0.95rem; font-weight: 600; color: #fff; letter-spacing: 0.01em; }
-    nav a { margin-left: 1.5rem; text-decoration: none; color: #888; font-size: 0.85rem; }
-    nav a.active, nav a:hover { color: #fff; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--header); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    header h1 { font-size: 0.95rem; font-weight: 600; color: var(--header-text); letter-spacing: 0.01em; }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    nav a { margin-left: 1.5rem; text-decoration: none; color: var(--header-muted); font-size: 0.85rem; }
+    nav a.active, nav a:hover { color: var(--header-text); }
+    .theme-btn { background: none; border: 1px solid #444; border-radius: 6px; color: var(--header-muted); cursor: pointer; font-size: 0.75rem; padding: 4px 10px; font-family: inherit; }
+    .theme-btn:hover { color: var(--header-text); border-color: #666; }
     .container { max-width: 920px; margin: 2rem auto; padding: 0 1.25rem; }
     .tabs { display: flex; gap: 6px; margin-bottom: 1.75rem; }
-    .tab { padding: 7px 20px; border-radius: 6px; border: 1px solid #e0ddd8; background: #fff; cursor: pointer; font-size: 0.85rem; color: #666; font-family: inherit; }
-    .tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; font-weight: 500; }
+    .tab { padding: 7px 20px; border-radius: 6px; border: 1px solid var(--border2); background: var(--surface); cursor: pointer; font-size: 0.85rem; color: var(--text2); font-family: inherit; }
+    .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 500; }
     .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
-    .stat-card { background: #fff; border: 1px solid #e8e5e0; border-radius: 10px; padding: 1.1rem 1rem; text-align: center; }
-    .stat-card .num { font-size: 2rem; font-weight: 600; color: #1a1a1a; }
-    .stat-card .label { font-size: 0.72rem; color: #999; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .chart-card { background: #fff; border: 1px solid #e8e5e0; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem 1rem; text-align: center; }
+    .stat-card .num { font-size: 2rem; font-weight: 600; color: var(--text); }
+    .stat-card .label { font-size: 0.72rem; color: var(--text3); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; }
     .chart-tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
-    .chart-tab { padding: 5px 14px; border-radius: 5px; border: 1px solid #e0ddd8; background: transparent; cursor: pointer; font-size: 0.78rem; color: #888; font-family: inherit; }
-    .chart-tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+    .chart-tab { padding: 5px 14px; border-radius: 5px; border: 1px solid var(--border2); background: transparent; cursor: pointer; font-size: 0.78rem; color: var(--text2); font-family: inherit; }
+    .chart-tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
     .entries { display: flex; flex-direction: column; gap: 10px; }
-    .entry-card { background: #fff; border: 1px solid #e8e5e0; border-radius: 10px; padding: 1rem 1.25rem; }
+    .entry-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
     .entry-top { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 8px; }
     .pill { font-size: 0.72rem; padding: 3px 10px; border-radius: 5px; font-weight: 500; }
-    .pill-gray { background: #f0ede8; color: #555; }
+    .pill-gray { background: var(--pill-gray-bg); color: var(--pill-gray-text); }
     .pill-accepted { background: #dcfce7; color: #15803d; }
     .pill-rejected { background: #fee2e2; color: #b91c1c; }
     .pill-waitlisted { background: #fef9c3; color: #a16207; }
     .pill-deferred { background: #dbeafe; color: #1d4ed8; }
     .pill-withdrawn { background: #f1f5f9; color: #475569; }
     .pill-pending { background: #fce7f3; color: #be185d; }
-    .ecs { font-size: 0.8rem; color: #888; margin-bottom: 8px; line-height: 1.5; }
+    .ecs { font-size: 0.8rem; color: var(--text2); margin-bottom: 8px; line-height: 1.5; }
     .decisions { display: flex; flex-wrap: wrap; gap: 6px; }
-    .empty { text-align: center; color: #bbb; padding: 4rem 0; font-size: 0.9rem; }
-    .form-wrap { background: #fff; border: 1px solid #e8e5e0; border-radius: 12px; padding: 2rem; max-width: 580px; margin: 0 auto; }
-    .form-wrap h2 { font-size: 1rem; font-weight: 600; margin-bottom: 0.35rem; }
-    .form-subtitle { font-size: 0.82rem; color: #999; margin-bottom: 1.5rem; }
+    .empty { text-align: center; color: var(--text3); padding: 4rem 0; font-size: 0.9rem; }
+    .form-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; max-width: 580px; margin: 0 auto; }
+    .form-wrap h2 { font-size: 1rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--text); }
+    .form-subtitle { font-size: 0.82rem; color: var(--text3); margin-bottom: 1.5rem; }
     .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: 0.78rem; color: #666; margin-bottom: 5px; font-weight: 500; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; color: #1a1a1a; background: #fafaf9; }
+    .form-group label { display: block; font-size: 0.78rem; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border2); border-radius: 7px; font-size: 0.875rem; font-family: inherit; color: var(--text); background: var(--bg); }
     .form-group textarea { resize: vertical; min-height: 72px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .college-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-    .college-row input { flex: 2; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; background: #fafaf9; }
-    .college-row select { flex: 1; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 7px; font-size: 0.875rem; font-family: inherit; background: #fafaf9; }
-    .college-row button { background: none; border: 1px solid #e0ddd8; border-radius: 7px; padding: 8px 12px; cursor: pointer; color: #bbb; font-size: 1rem; flex-shrink: 0; }
-    .add-btn { background: none; border: 1px dashed #ddd; border-radius: 7px; padding: 7px 14px; font-size: 0.8rem; color: #999; cursor: pointer; margin-bottom: 1.25rem; font-family: inherit; width: 100%; }
-    .submit-btn { width: 100%; padding: 11px; background: #1a1a1a; color: #fff; border: none; border-radius: 7px; font-size: 0.875rem; font-weight: 500; cursor: pointer; font-family: inherit; }
-    .submit-btn:hover { background: #333; }
+    .add-btn { background: none; border: 1px dashed var(--border2); border-radius: 7px; padding: 7px 14px; font-size: 0.8rem; color: var(--text3); cursor: pointer; margin-bottom: 1.25rem; font-family: inherit; width: 100%; }
+    .submit-btn { width: 100%; padding: 11px; background: var(--text); color: var(--bg); border: none; border-radius: 7px; font-size: 0.875rem; font-weight: 500; cursor: pointer; font-family: inherit; }
+    .submit-btn:hover { opacity: 0.85; }
     .success-msg { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 7px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; display: none; }
     .page { display: none; }
     .page.active { display: block; }
-    #dot-tooltip { display: none; position: fixed; background: #1a1a1a; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 0.78rem; line-height: 1.7; max-width: 260px; pointer-events: none; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-    .tip-label { color: #888; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    #dot-tooltip { display: none; position: fixed; background: var(--tip-bg); color: var(--tip-text); border-radius: 8px; padding: 12px 14px; font-size: 0.78rem; line-height: 1.7; max-width: 260px; pointer-events: none; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .tip-label { color: var(--tip-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    @keyframes dotSpring {
+      0%   { transform: scale(0); opacity: 0; }
+      55%  { transform: scale(1.5); opacity: 1; }
+      75%  { transform: scale(0.85); }
+      90%  { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
     @media (max-width: 600px) { .form-row, .form-row-3 { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
   </style>
 </head>
 <body>
 <header>
   <h1>College Results — Live Oak</h1>
-  <nav>
-    <a href="#" class="active" id="nav-results" onclick="showPage('results'); return false;">Results</a>
-    <a href="#" id="nav-submit" onclick="showPage('submit'); return false;">Submit yours</a>
-  </nav>
+  <div class="header-right">
+    <nav>
+      <a href="#" class="active" id="nav-results" onclick="showPage('results'); return false;">Results</a>
+      <a href="#" id="nav-submit" onclick="showPage('submit'); return false;">Submit yours</a>
+    </nav>
+    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">Dark</button>
+  </div>
 </header>
 
 <div class="container">
@@ -84,7 +126,7 @@
           <button class="chart-tab" onclick="switchChart('sat',this)">SAT</button>
         </div>
         <input type="text" id="college-search" placeholder="Search a college..." oninput="filterChart(this.value)"
-          style="padding:6px 12px;border:1px solid #e0ddd8;border-radius:6px;font-size:0.82rem;font-family:inherit;width:200px;background:#fafaf9;" />
+          style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:0.82rem;font-family:inherit;width:200px;background:var(--bg);color:var(--text);" />
       </div>
       <div id="legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1rem;"></div>
       <div id="chart-main" style="width:100%;overflow-x:auto;"></div>
@@ -164,82 +206,61 @@ const COLLEGE_ACCEPT_RATES = {
   'Harvard':3,'Princeton':4,'MIT':4,'Yale':5,'Columbia':4,'Stanford':4,'Caltech':4,
   'Penn':7,'UPenn':7,'University of Pennsylvania':7,
   'Brown':6,'Dartmouth':6,'Cornell':8,'Duke':7,'Northwestern':7,'Johns Hopkins':7,
-  'Harvey Mudd College':10,
+  'Harvey Mudd':10,'Harvey Mudd College':10,'Olin College':10,
   'Vanderbilt':7,'Rice':9,'WashU':11,'Notre Dame':13,'Georgetown':13,
   'Emory':14,'Carnegie Mellon':14,'Tufts':11,'Northeastern':6,'Tulane':13,
   'Wake Forest':25,'USC':13,'NYU':12,'Boston College':19,'Boston University':18,
   'Case Western':30,'University of Rochester':30,'Lehigh':34,
   'University of Miami':27,'Villanova':28,'University of Richmond':28,
   'William & Mary':37,'SMU':50,'TCU':48,'Baylor':45,
-  'Harvey Mudd':10,'Olin College':10,
-  // UC System
   'UC Berkeley':14,'UCLA':14,'UCSD':24,'UC Santa Barbara':29,'UC Davis':39,
   'UC Irvine':26,'UC Santa Cruz':47,'UC Riverside':57,'UC Merced':69,
-  // California State System
   'Cal Poly SLO':30,'Cal Poly Pomona':55,'Cal State Long Beach':33,
   'San Jose State':68,'San Francisco State':58,'Fresno State':77,
   'Sacramento State':73,'Cal State Fullerton':67,'Cal State Northridge':55,
   'Sonoma State':90,'Cal State East Bay':73,'Cal State Stanislaus':82,
   'Chico State':76,'Cal State San Bernardino':75,'Cal State Dominguez Hills':63,
   'Cal State Los Angeles':64,'Cal State Monterey Bay':71,'Cal State Channel Islands':79,
-  'Cal State San Marcos':79,'Cal State Bakersfield':78,'Humboldt State':80,
-  'Cal Maritime':72,
-  // California Privates
+  'Cal State San Marcos':79,'Cal State Bakersfield':78,'Humboldt State':80,'Cal Maritime':72,
   'LMU':50,'Santa Clara':44,'University of San Diego':52,'Pepperdine':37,
   'University of San Francisco':67,'Chapman':63,'Occidental':38,
   'University of the Pacific':60,'Whittier College':73,'Azusa Pacific':72,
   'Biola University':61,'Point Loma Nazarene':72,'Westmont':75,
-  'Cal Lutheran':68,'La Sierra':62,'Vanguard':65,
-  'Mills College':78,'Dominican University':72,'Notre Dame de Namur':72,
-  'Holy Names':72,'Saint Mary\'s College of California':71,
-  'University of La Verne':62,'Concordia Irvine':68,
-  'Claremont McKenna':9,'Scripps':22,'Pitzer':14,'Mudd Harvey':10,
-  // Public flagships
-  'Michigan':18,'UVA':21,'UNC Chapel Hill':19,
-  'Georgia Tech':17,'University of Florida':24,'Wisconsin':49,'Ohio State':53,
-  'Penn State':55,'UT Austin':31,'UIUC':45,'Purdue':53,
+  'Cal Lutheran':68,"Saint Mary's College of California":71,
+  'Claremont McKenna':9,'Scripps':22,'Pitzer':14,'Pomona':8,
+  'Michigan':18,'UVA':21,'UNC Chapel Hill':19,'Georgia Tech':17,'University of Florida':24,
+  'Wisconsin':49,'Ohio State':53,'Penn State':55,'UT Austin':31,'UIUC':45,'Purdue':53,
   'University of Washington':48,'University of Maryland':44,'University of Georgia':42,
-  'Michigan State':76,'Indiana University':80,'University of Iowa':85,
-  'Arizona State':88,'University of Arizona':85,'Colorado State':90,
-  'University of Alabama':80,'University of South Carolina':67,
-  'University of Tennessee':67,'University of Kentucky':95,
-  'University of Pittsburgh':49,'Virginia Tech':65,'Clemson':47,
-  'University of Delaware':65,'UConn':56,'UMass Amherst':58,
-  'University of Vermont':63,'UNH':80,'Rutgers':61,
-  'Stony Brook':49,'University at Buffalo':58,'George Mason':82,
-  'JMU':71,'University of Oregon':82,'Oregon State':77,
-  'Colorado':77,'University of Denver':60,'Texas A&M':63,'UT Dallas':45,
-  // Liberal Arts
-  'Swarthmore':7,'Amherst':9,'Williams':9,'Pomona':8,'Bowdoin':9,
-  'Middlebury':15,'Colby':11,'Bates':13,'Hamilton':14,'Colgate':22,
-  'Vassar':24,'Wesleyan':17,'Haverford':15,'Bryn Mawr':31,
-  'Wellesley':20,'Barnard':11,'Smith':33,'Mount Holyoke':52,
-  'Davidson':19,'Oberlin':33,'Kenyon':36,'Grinnell':12,'Carleton':19,
-  'Macalester':36,'St Olaf':56,'Reed':35,'Whitman':42,
-  'Bucknell':38,'Lafayette':36,'Dickinson':47,'Gettysburg':60,
-  'Skidmore':42,'Trinity':34,'Connecticut College':35,
-  // Other well-known
-  'RPI':57,'RIT':57,'WPI':49,'Drexel':68,'Temple':68,
-  'Syracuse':60,'Fordham':46,'American University':35,'GWU':41,
-  'Howard':37,'Spelman':37,'Morehouse':48,
-  'Elon':72,'Furman':65,'College of Charleston':79,
-  'Gonzaga':72,'Loyola Chicago':68,'Marquette':82,'Butler':73,
+  'Michigan State':76,'Indiana University':80,'University of Iowa':85,'Arizona State':88,
+  'University of Arizona':85,'Colorado State':90,'University of Alabama':80,
+  'University of South Carolina':67,'University of Tennessee':67,'University of Kentucky':95,
+  'University of Pittsburgh':49,'Virginia Tech':65,'Clemson':47,'University of Delaware':65,
+  'UConn':56,'UMass Amherst':58,'University of Vermont':63,'UNH':80,'Rutgers':61,
+  'Stony Brook':49,'University at Buffalo':58,'George Mason':82,'JMU':71,
+  'University of Oregon':82,'Oregon State':77,'Colorado':77,'University of Denver':60,
+  'Texas A&M':63,'UT Dallas':45,
+  'Swarthmore':7,'Amherst':9,'Williams':9,'Bowdoin':9,'Middlebury':15,'Colby':11,
+  'Bates':13,'Hamilton':14,'Colgate':22,'Vassar':24,'Wesleyan':17,'Haverford':15,
+  'Bryn Mawr':31,'Wellesley':20,'Barnard':11,'Smith':33,'Mount Holyoke':52,
+  'Davidson':19,'Oberlin':33,'Kenyon':36,'Grinnell':12,'Carleton':19,'Macalester':36,
+  'Reed':35,'Whitman':42,'Bucknell':38,'Lafayette':36,'Dickinson':47,'Skidmore':42,
+  'Trinity':34,'Connecticut College':35,
+  'RPI':57,'RIT':57,'WPI':49,'Drexel':68,'Temple':68,'Syracuse':60,'Fordham':46,
+  'American University':35,'GWU':41,'Howard':37,'Spelman':37,'Morehouse':48,
+  'Elon':72,'Furman':65,'College of Charleston':79,'Gonzaga':72,
+  'Loyola Chicago':68,'Marquette':82,'Butler':73,
 };
 
 const ALL_COLLEGES = Object.keys(COLLEGE_ACCEPT_RATES).sort();
 
-// Normalize college name for lookup — strips common suffixes
 function normalizeName(name){
   return name.replace(/\b(university|college|institute of technology|state university)\b/gi,'').replace(/\s+/g,' ').trim();
 }
-
 function getAcceptRate(name){
   if(COLLEGE_ACCEPT_RATES[name]) return COLLEGE_ACCEPT_RATES[name];
   const norm=normalizeName(name).toLowerCase();
-  // exact normalized match
   const match=Object.keys(COLLEGE_ACCEPT_RATES).find(k=>normalizeName(k).toLowerCase()===norm);
   if(match) return COLLEGE_ACCEPT_RATES[match];
-  // partial match — if name contains a key or key contains name
   const partial=Object.keys(COLLEGE_ACCEPT_RATES).find(k=>{
     const kn=normalizeName(k).toLowerCase();
     return norm.includes(kn)||kn.includes(norm);
@@ -250,10 +271,40 @@ function getAcceptRate(name){
 const SESSION_ID = localStorage.getItem('cr_sid') || (()=>{ const id=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('cr_sid',id); return id; })();
 const HAS_SUBMITTED = () => localStorage.getItem('cr_submitted') === '1';
 
-let activeYear=2026, allData=[], mainChart=null, scatterData=[], searchFilter='', collegeCount=0, activeChartType='gpa';
+let activeYear=2026, allData=[], scatterData=[], searchFilter='', collegeCount=0, activeChartType='gpa';
+
+// THEME — instant, no animation
+function toggleTheme(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-btn').textContent = isDark ? 'Dark' : 'Light';
+  localStorage.setItem('cr_theme', isDark ? 'light' : 'dark');
+  buildChart(scatterData); // redraw chart with new colors
+}
+(function initTheme(){
+  const saved = localStorage.getItem('cr_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('theme-btn').textContent = saved === 'dark' ? 'Light' : 'Dark';
+})();
+
+function toggleTheme(){
+  const dk=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',dk?'light':'dark');
+  document.getElementById('theme-btn').textContent=dk?'Dark':'Light';
+  localStorage.setItem('cr_theme',dk?'light':'dark');
+  buildChart(scatterData,false);
+}
+(function(){
+  const t=localStorage.getItem('cr_theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  // btn text set after DOM ready
+  window.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('theme-btn').textContent=t==='dark'?'Light':'Dark';
+  });
+})();
 
 function updateNavForSubmitStatus() {
-  document.getElementById('nav-submit').textContent = HAS_SUBMITTED() ? 'Edit submission' : 'Submit yours';
+  document.getElementById('nav-submit').textContent = HAS_SUBMITTED() ? 'Edit Submission' : 'Submit yours';
 }
 
 function showPage(name) {
@@ -303,44 +354,41 @@ function renderStats(data){
     <div class="stat-card"><div class="num">${g}</div><div class="label">Avg GPA</div></div>`;
 }
 
-function renderCharts(data){scatterData=data;buildChart(data);}
-function filterChart(val){searchFilter=val.toLowerCase().trim();buildChart(scatterData);}
+function renderCharts(data){scatterData=data;buildChart(data,false);}
+function filterChart(val){searchFilter=val.toLowerCase().trim();buildChart(scatterData,false);}
 function switchChart(type,btn){
   activeChartType=type;
   document.querySelectorAll('.chart-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  buildChart(scatterData);
+  buildChart(scatterData,false);
 }
 
-function buildChart(data){
-  // Sort by most submissions first, then hardest to get in (lowest accept rate) on ties
+function buildChart(data, animate){
   const allCols=[...new Set(data.map(r=>r.college_name).filter(Boolean))];
   allCols.sort((a,b)=>{
-    const aTotal=data.filter(r=>r.college_name===a).length;
-    const bTotal=data.filter(r=>r.college_name===b).length;
-    if(bTotal!==aTotal) return bTotal-aTotal;
-    const aRate=getAcceptRate(a);
-    const bRate=getAcceptRate(b);
-    return aRate-bRate; // lower acceptance rate = harder = first
+    const at=data.filter(r=>r.college_name===a).length;
+    const bt=data.filter(r=>r.college_name===b).length;
+    if(bt!==at) return bt-at;
+    return getAcceptRate(a)-getAcceptRate(b);
   });
   const cols=searchFilter?allCols.filter(c=>c.toLowerCase().includes(searchFilter)):allCols;
   const el=document.getElementById('chart-main');
   el.innerHTML='';
-
-  if(!cols.length){
-    document.getElementById('legend').innerHTML='';
-    return;
-  }
+  if(!cols.length){document.getElementById('legend').innerHTML='';return;}
 
   const yKey=activeChartType==='gpa'?'gpa':'sat';
   const yLabel=activeChartType==='gpa'?'GPA':'SAT Score';
   const yMin=activeChartType==='gpa'?1:400;
   const yMax=activeChartType==='gpa'?5:1600;
-
   const filtered=data.filter(r=>r[yKey]!=null&&cols.includes(r.college_name));
 
-  // Use chart-card width for proper sizing
-  const W=Math.max(el.closest('.chart-card').clientWidth-40, cols.length*60, 400);
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const gridCol=isDark?'#222224':'#f0ede8';
+  const axisCol=isDark?'#2a2a2d':'#e0ddd8';
+  const labelCol=isDark?'#aaa':'#555';
+  const tickCol=isDark?'#666':'#999';
+
+  const W=Math.max(el.closest('.chart-card').clientWidth-40,cols.length*60,400);
   const H=340;
   const PAD={top:20,right:20,bottom:100,left:55};
   const plotW=W-PAD.left-PAD.right;
@@ -349,43 +397,40 @@ function buildChart(data){
 
   let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;">`;
 
-  // Y grid lines and labels
   const ySteps=activeChartType==='gpa'?[1,2,3,4,5]:[400,600,800,1000,1200,1400,1600];
   ySteps.forEach(v=>{
     const y=PAD.top+plotH-(v-yMin)/(yMax-yMin)*plotH;
-    svg+=`<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+plotW}" y2="${y}" stroke="#f0ede8" stroke-width="1"/>`;
-    svg+=`<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#999" font-family="Inter,sans-serif">${v}</text>`;
+    svg+=`<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+plotW}" y2="${y}" stroke="${gridCol}" stroke-width="1"/>`;
+    svg+=`<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="11" fill="${tickCol}" font-family="Inter,sans-serif">${v}</text>`;
   });
+  svg+=`<text x="14" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="11" fill="${tickCol}" font-family="Inter,sans-serif" transform="rotate(-90,14,${PAD.top+plotH/2})">${yLabel}</text>`;
+  svg+=`<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="${axisCol}" stroke-width="1"/>`;
 
-  // Y axis label
-  svg+=`<text x="14" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="11" fill="#999" font-family="Inter,sans-serif" transform="rotate(-90,14,${PAD.top+plotH/2})">${yLabel}</text>`;
-
-  // X axis line
-  svg+=`<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="#e0ddd8" stroke-width="1"/>`;
-
-  // X labels
   cols.forEach((col,i)=>{
     const x=PAD.left+i*colW+colW/2;
     const y=PAD.top+plotH+12;
-    svg+=`<text x="${x}" y="${y}" text-anchor="end" font-size="10" fill="#555" font-family="Inter,sans-serif" transform="rotate(-40,${x},${y})">${col}</text>`;
+    svg+=`<text x="${x}" y="${y}" text-anchor="end" font-size="10" fill="${labelCol}" font-family="Inter,sans-serif" transform="rotate(-40,${x},${y})">${col}</text>`;
   });
 
-  // Dots
-  filtered.forEach(r=>{
+  // Dot animation: appear, spring up big, settle back
+  filtered.forEach((r,ri)=>{
     const i=cols.indexOf(r.college_name);
     const x=PAD.left+i*colW+colW/2;
     const y=PAD.top+plotH-(parseFloat(r[yKey])-yMin)/(yMax-yMin)*plotH;
     const col=DOT_COLORS[r.decision]||'#888';
-    svg+=`<circle cx="${x}" cy="${y}" r="6" fill="${col}cc" stroke="${col}" stroke-width="1.5" style="cursor:pointer" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
+    const delay=animate?ri*60:0;
+    const anim=animate
+      ?`transform-box:fill-box;transform-origin:center;animation:dotSpring 0.55s cubic-bezier(0.34,1.56,0.64,1) ${delay}ms both;`
+      :'';
+    svg+=`<circle cx="${x}" cy="${y}" r="6" fill="${col}cc" stroke="${col}" stroke-width="1.5" style="cursor:pointer;${anim}" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
   });
 
   svg+=`</svg>`;
   el.innerHTML=svg;
 
-  // Legend
   const used=DECISION_ORDER.filter(d=>filtered.find(r=>r.decision===d));
   document.getElementById('legend').innerHTML=used.map(d=>
-    `<span style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:#555;"><span style="width:10px;height:10px;border-radius:50%;background:${DOT_COLORS[d]};display:inline-block;"></span>${d}</span>`
+    `<span style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:${labelCol};"><span style="width:10px;height:10px;border-radius:50%;background:${DOT_COLORS[d]};display:inline-block;"></span>${d}</span>`
   ).join('');
 }
 
@@ -402,14 +447,12 @@ function showTooltip(evt,r){
   const testLine=(r.sat||r.act)?`<div style="margin-top:3px;">${r.sat?`<span class="tip-label">SAT</span> ${r.sat}`:''}${r.sat&&r.act?' · ':''}${r.act?`<span class="tip-label">ACT</span> ${r.act}`:''}</div>`:'';
   const rankLine=r.class_rank?`<div style="margin-top:3px;"><span class="tip-label">Rank</span> #${r.class_rank}</div>`:'';
   const majorLine=r.major?`<div style="margin-top:3px;"><span class="tip-label">Major</span> ${r.major}</div>`:'';
-  const ecsLine=r.extracurriculars?`<div style="margin-top:4px;color:#aaa;font-size:0.73rem;">${r.extracurriculars}</div>`:'';
+  const ecsLine=r.extracurriculars?`<div style="margin-top:4px;color:var(--tip-muted);font-size:0.73rem;">${r.extracurriculars}</div>`:'';
   const decisions=sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
-  tip.innerHTML=`${gpaLine}${testLine}${rankLine}${majorLine}${ecsLine}<div style="border-top:1px solid #333;margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
+  tip.innerHTML=`${gpaLine}${testLine}${rankLine}${majorLine}${ecsLine}<div style="border-top:1px solid var(--tip-border);margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
   tip.style.display='block';
-  const clientX=evt.clientX||evt.native?.clientX||0;
-  const clientY=evt.clientY||evt.native?.clientY||0;
-  tip.style.left=Math.min(clientX+16,window.innerWidth-270)+'px';
-  tip.style.top=Math.max(clientY-10,10)+'px';
+  tip.style.left=Math.min(evt.clientX+16,window.innerWidth-270)+'px';
+  tip.style.top=Math.max(evt.clientY-10,10)+'px';
 }
 
 document.addEventListener('click',e=>{
@@ -443,8 +486,7 @@ function renderEntries(data){
 
 function getKnownColleges(){
   const submitted=allData.map(r=>r.college_name).filter(Boolean);
-  const combined=[...new Set([...ALL_COLLEGES,...submitted])].sort();
-  return combined;
+  return [...new Set([...ALL_COLLEGES,...submitted])].sort();
 }
 
 function addCollege(name='',decision='Accepted'){
@@ -456,26 +498,25 @@ function addCollege(name='',decision='Accepted'){
     <div style="flex:2;position:relative;">
       <input placeholder="College name" id="cn-${id}" value="${name}" autocomplete="off"
         oninput="showSuggestions('cn-${id}')" onblur="setTimeout(()=>hideSuggestions('cn-${id}'),400)"
-        style="width:100%;padding:9px 12px;border:1px solid #e0ddd8;border-radius:7px;font-size:0.875rem;font-family:inherit;background:#fafaf9;box-sizing:border-box;" />
-      <div id="sug-${id}" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e0ddd8;border-radius:7px;z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:2px;"></div>
+        style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:7px;font-size:0.875rem;font-family:inherit;background:var(--bg);color:var(--text);box-sizing:border-box;" />
+      <div id="sug-${id}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:7px;z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.12);margin-top:2px;"></div>
     </div>
-    <select id="cd-${id}" style="flex:1;padding:9px 12px;border:1px solid #e0ddd8;border-radius:7px;font-size:0.875rem;font-family:inherit;background:#fafaf9;">${DECISIONS.map(d=>`<option${d===decision?' selected':''}>${d}</option>`).join('')}</select>
-    <button type="button" onclick="document.getElementById('cr-${id}').remove()" style="background:none;border:1px solid #e0ddd8;border-radius:7px;padding:8px 12px;cursor:pointer;color:#bbb;font-size:1rem;flex-shrink:0;">×</button>`;
+    <select id="cd-${id}" style="flex:1;padding:9px 12px;border:1px solid var(--border2);border-radius:7px;font-size:0.875rem;font-family:inherit;background:var(--bg);color:var(--text);">${DECISIONS.map(d=>`<option${d===decision?' selected':''}>${d}</option>`).join('')}</select>
+    <button type="button" onclick="document.getElementById('cr-${id}').remove()" style="background:none;border:1px solid var(--border2);border-radius:7px;padding:8px 12px;cursor:pointer;color:var(--text3);font-size:1rem;flex-shrink:0;">×</button>`;
   document.getElementById('college-inputs').appendChild(div);
 }
 
 function showSuggestions(inputId){
   const input=document.getElementById(inputId);
-  const sugId=inputId.replace('cn-','sug-');
-  const sug=document.getElementById(sugId);
+  const sug=document.getElementById(inputId.replace('cn-','sug-'));
   const val=input.value.toLowerCase().trim();
   if(!val){sug.style.display='none';return;}
   const matches=getKnownColleges().filter(c=>c.toLowerCase().includes(val));
   if(!matches.length){sug.style.display='none';return;}
   sug.innerHTML=matches.slice(0,6).map(c=>
     `<div onclick="selectSuggestion('${inputId}','${c.replace(/'/g,"\\'")}');event.preventDefault();"
-      style="padding:8px 12px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid #f0ede8;"
-      onmouseenter="this.style.background='#f8f7f4'" onmouseleave="this.style.background=''">${c}</div>`
+      style="padding:8px 12px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid var(--border);color:var(--text);"
+      onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">${c}</div>`
   ).join('');
   sug.style.display='block';
 }
@@ -486,8 +527,7 @@ function selectSuggestion(inputId,val){
 }
 
 function hideSuggestions(inputId){
-  const sugId=inputId.replace('cn-','sug-');
-  const sug=document.getElementById(sugId);
+  const sug=document.getElementById(inputId.replace('cn-','sug-'));
   if(sug) sug.style.display='none';
 }
 
@@ -505,8 +545,8 @@ async function loadExistingSubmission(){
     document.getElementById('f-ecs').value=r.extracurriculars||'';
     document.getElementById('f-year').value=r.grad_year||'';
     data.forEach(row=>addCollege(row.college_name||'',row.decision||'Accepted'));
-    document.getElementById('submit-btn').textContent='Update submission';
-    document.getElementById('form-title').textContent='Edit your submission';
+    document.getElementById('submit-btn').textContent='Update Submission';
+    document.getElementById('form-title').textContent='Edit your Submission';
     document.getElementById('form-subtitle').textContent='Update your results below.';
   } else {
     ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs','f-year'].forEach(id=>document.getElementById(id).value='');
@@ -542,7 +582,16 @@ async function submitForm(){
   localStorage.setItem('cr_submitted','1');
   updateNavForSubmitStatus();
   document.getElementById('success-msg').style.display='block';
-  setTimeout(()=>{ showPage('results'); loadData(); },800);
+  setTimeout(async ()=>{
+    showPage('results');
+    const {data}=await db.from('submissions').select('*');
+    allData=data||[];
+    renderTabs();
+    const d=allData.filter(r=>r.grad_year==activeYear);
+    renderStats(d); renderEntries(d);
+    scatterData=d;
+    buildChart(d, true); // animate=true triggers the spring pop
+  }, 800);
 }
 
 updateNavForSubmitStatus();
