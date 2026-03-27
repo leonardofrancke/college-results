@@ -356,12 +356,12 @@
     </div>
     <div class="footer-contact">
       Suggestions or concerns?<br>
-      <a href="mailto:leonardo.francke@gmail.com">leonardo.francke@gmail.com</a>
+      <a href="/cdn-cgi/l/email-protection#4b272e24252a392f24652d392a2528202e0b2c262a222765282426"><span class="__cf_email__" data-cfemail="3b575e54555a495f54155d495a5558505e7b5c565a525715585456">[email&#160;protected]</span></a>
     </div>
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 const SUPABASE_URL='https://fkieqpdobdznaspfkfwg.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZraWVxcGRvYmR6bmFzcGZrZndnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDg5NDMsImV4cCI6MjA5MDEyNDk0M30.C4dHW1zK1M01tMlCv1gVqlGNaGOuaKEo2jdldlRtLMs';
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -653,10 +653,29 @@ function buildChart(data,animate){
       <title>Click to see ${col} details</title>${col}</text>`;
   });
 
+  // Seeded jitter: deterministic per (session_id + college_name) so dots
+  // don't jump on re-render, but overlapping dots are visually separated and
+  // individually clickable.
+  function seededJitter(seed, range){
+    // fast 32-bit integer hash (fmix-style)
+    let h=0;
+    for(let i=0;i<seed.length;i++){h=Math.imul(h^seed.charCodeAt(i),0x9e3779b9)|0;}
+    h=Math.imul(h^(h>>>16),0x85ebca6b)|0;
+    h=Math.imul(h^(h>>>13),0xc2b2ae35)|0;
+    h=((h^(h>>>16))>>>0)/0xffffffff;  // 0–1
+    return (h-0.5)*2*range;           // -range … +range
+  }
+
   filtered.forEach((r,ri)=>{
     const i=cols.indexOf(r.college_name);
-    const x=PAD.left+i*colW+colW/2;
-    const y=PAD.top+plotH-(parseFloat(r[yKey])-yMin)/(yMax-yMin)*plotH;
+    const baseX=PAD.left+i*colW+colW/2;
+    const baseY=PAD.top+plotH-(parseFloat(r[yKey])-yMin)/(yMax-yMin)*plotH;
+    // Unique seed per dot so jitter is stable across re-renders
+    const seed=(r.session_id||String(ri))+(r.college_name||'')+(r.decision||'');
+    const jx=seededJitter(seed+'x', 5);
+    const jy=seededJitter(seed+'y', 5);
+    const x=(baseX+jx).toFixed(2);
+    const y=(baseY+jy).toFixed(2);
     const col=DOT_COLORS[r.decision]||'#888';
     const dimmed=(activeFilter&&r.decision!==activeFilter)||(slmFilter&&!slmMatches(r));
     const delay=animate?ri*55:0;
@@ -1001,9 +1020,23 @@ async function submitForm(){
     });
   }
   if(!rows.length){alert('Add at least one college!');return;}
-  await db.from('submissions').delete().eq('session_id',SESSION_ID);
-  const {error}=await db.from('submissions').insert(rows);
+
+  // --- Safe upsert strategy ---
+  // 1. Fetch what's currently in the DB for this session
+  const {data:existing}=await db.from('submissions').select('college_name').eq('session_id',SESSION_ID);
+  const existingNames=new Set((existing||[]).map(r=>r.college_name));
+  const newNames=new Set(rows.map(r=>r.college_name));
+
+  // 2. Delete only colleges that were removed from the form (not a full wipe)
+  const removed=[...existingNames].filter(n=>!newNames.has(n));
+  if(removed.length){
+    await db.from('submissions').delete().eq('session_id',SESSION_ID).in('college_name',removed);
+  }
+
+  // 3. Upsert current rows — requires unique constraint on (session_id, college_name) in Supabase
+  const {error}=await db.from('submissions').upsert(rows,{onConflict:'session_id,college_name'});
   if(error){alert('Something went wrong. Try again.');console.error(error);return;}
+  // --- End safe upsert ---
   localStorage.setItem('cr_submitted','1');
   updateNav();
 
@@ -1041,16 +1074,4 @@ async function submitForm(){
 }
 
 async function deleteSubmission(){
-  if(!confirm('Delete your submission? This cannot be undone.')) return;
-  await db.from('submissions').delete().eq('session_id',SESSION_ID);
-  localStorage.removeItem('cr_submitted');
-  updateNav();
-  loadExistingSubmission();
-  loadData();
-}
-
-updateNav();
-loadData();
-</script>
-</body>
-</html>
+  if(!confirm('Delete your submission?
