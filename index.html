@@ -122,7 +122,7 @@
     .slm-field input { padding:7px 10px; border:1px solid var(--border2); border-radius:6px; font-size:0.85rem; font-family:inherit; color:var(--text); background:var(--bg); width:100px; }
     .slm-field select { padding:7px 10px; border:1px solid var(--border2); border-radius:6px; font-size:0.82rem; font-family:inherit; color:var(--text); background:var(--bg); }
     .slm-btn { padding:7px 14px; background:var(--text); color:var(--bg); border:none; border-radius:6px; font-size:0.8rem; font-weight:500; cursor:pointer; font-family:inherit; }
-    .slm-clear { padding:7px 12px; background:none; color:var(--text3); border:1px solid var(--border2); border-radius:6px; font-size:0.8rem; cursor:pointer; font-family:inherit; }
+    .slm-clear { padding:7px 12px; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; border-radius:6px; font-size:0.8rem; font-weight:500; cursor:pointer; font-family:inherit; }
     .slm-active { font-size:0.75rem; color:var(--text3); margin-top:0.5rem; }
     .slm-active strong { color:var(--text); }
 
@@ -182,9 +182,9 @@
         <div class="slm-field">
           <label>GPA range ±</label>
           <select id="slm-gpa-range">
-            <option value="0.2">±0.2</option>
-            <option value="0.3" selected>±0.3</option>
-            <option value="0.5">±0.5</option>
+            <option value="0.2">±0.2 (tight)</option>
+            <option value="0.3" selected>±0.3 (default)</option>
+            <option value="0.5">±0.5 (loose)</option>
           </select>
         </div>
         <div class="slm-field">
@@ -194,13 +194,13 @@
         <div class="slm-field">
           <label>SAT range ±</label>
           <select id="slm-sat-range">
-            <option value="50">±50</option>
-            <option value="100" selected>±100</option>
-            <option value="150">±150</option>
+            <option value="50">±50 (tight)</option>
+            <option value="100" selected>±100 (default)</option>
+            <option value="150">±150 (loose)</option>
           </select>
         </div>
         <button class="slm-btn" onclick="applySlm()">Find matches</button>
-        <button class="slm-clear" onclick="clearSlm()" id="slm-clear-btn" style="display:none;">Clear</button>
+        <button class="slm-clear" onclick="clearSlm()" id="slm-clear-btn" style="display:none;">✕ Clear filter</button>
       </div>
       <div class="slm-active" id="slm-status" style="display:none;"></div>
     </div>
@@ -592,23 +592,6 @@ function buildChart(data,animate){
   svg+=`</svg>`;
   el.innerHTML=svg;
 
-  // Overlay school logos on x-axis using absolute positioned imgs
-  const svgEl=el.querySelector('svg');
-  const rect=svgEl.getBoundingClientRect();
-  cols.forEach((col,i)=>{
-    const domain=COLLEGE_DOMAINS[col];
-    if(!domain) return;
-    const x=PAD.left+i*colW+colW/2;
-    const yBase=PAD.top+plotH+12;
-    const img=document.createElement('img');
-    img.src=`https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
-    img.className='school-logo';
-    img.style.cssText=`position:absolute;left:${x-8}px;top:${yBase+82}px;width:14px;height:14px;opacity:0.7;`;
-    img.onerror=()=>img.remove();
-    el.style.position='relative';
-    el.appendChild(img);
-  });
-
   // Legend with filter toggle
   const used=DECISION_ORDER.filter(d=>filtered.find(r=>r.decision===d));
   document.getElementById('legend').innerHTML=used.map(d=>`
@@ -739,12 +722,19 @@ function renderEntries(data){
     displayData=data.filter(r=>matchedSessions.has(r.session_id));
   }
   if(!displayData.length){
-    el.innerHTML=`<div class="empty-state">
-      <div class="empty-icon">🎓</div>
-      <h3>No results yet for ${activeYear}</h3>
-      <p>Be the first from Live Oak to share your college decisions.</p>
-      <button onclick="showPage('submit')">Add your results</button>
-    </div>`;
+    el.innerHTML=slmFilter
+      ? `<div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h3>No matches found</h3>
+          <p>No submissions match your stats yet. Try widening the range or check back as more people submit.</p>
+          <button onclick="clearSlm()">Clear filter</button>
+        </div>`
+      : `<div class="empty-state">
+          <div class="empty-icon">🎓</div>
+          <h3>No results yet for ${activeYear}</h3>
+          <p>Be the first from Live Oak to share your college decisions.</p>
+          <button onclick="showPage('submit')">Add your results</button>
+        </div>`;
     return;
   }
   const groups=[],seen=new Map();
