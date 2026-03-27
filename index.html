@@ -282,13 +282,9 @@
         </div>
       </div>
       <div class="form-group">
-        <label>Sports scholarship (optional)</label>
-        <div style="position:relative;">
-          <input type="text" id="f-sport" placeholder="e.g. Soccer, Basketball, None" autocomplete="off"
-            oninput="showSportSuggestions()" onblur="setTimeout(hideSportSuggestions,400)"
-            style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:7px;font-size:0.875rem;font-family:inherit;color:var(--text);background:var(--bg);" />
-          <div id="sport-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:7px;z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.12);margin-top:2px;"></div>
-        </div>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:400;">
+          <input type="checkbox" id="f-sport" style="width:16px;height:16px;cursor:pointer;accent-color:var(--text);flex-shrink:0;" />
+          Sports recruitment</label>
       </div>
       <div class="form-group">
         <label>Top extracurriculars (optional)</label>
@@ -665,7 +661,7 @@ function showTooltip(evt,r){
   const testLine=(r.sat||r.act)?`<div style="margin-top:3px;">${r.sat?`<span class="tip-label">SAT</span> ${r.sat}`:''}${r.sat&&r.act?' · ':''}${r.act?`<span class="tip-label">ACT</span> ${r.act}`:''}</div>`:'';
   const rankLine=r.class_rank?`<div style="margin-top:3px;"><span class="tip-label">Rank</span> #${r.class_rank}</div>`:'';
   const majorLine=r.major?`<div style="margin-top:3px;"><span class="tip-label">Major</span> ${r.major}</div>`:'';
-  const sportLine=r.sport?`<div style="margin-top:3px;"><span class="tip-label">Sport</span> 🏅 ${r.sport}</div>`:'';
+  const sportLine=r.sport==='yes'?`<div style="margin-top:3px;"><span class="tip-label">Sport</span> 🏅 Recruited athlete</div>`:'';
   const ecsLine=r.extracurriculars?`<div style="margin-top:4px;opacity:0.65;font-size:0.72rem;">${r.extracurriculars}</div>`:'';
   const decisions=sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
   tip.innerHTML=`${gpaLine}${testLine}${rankLine}${majorLine}${sportLine}${ecsLine}<div style="border-top:1px solid rgba(128,128,128,0.3);margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
@@ -808,7 +804,7 @@ function renderEntries(data){
         ${g.act?`<span class="pill pill-gray">ACT ${g.act}</span>`:''}
         ${g.class_rank?`<span class="pill pill-gray">Rank #${g.class_rank}</span>`:''}
         ${g.major?`<span class="pill pill-gray">${g.major}</span>`:''}
-        ${g.sport?`<span class="pill pill-gray">🏅 ${g.sport}</span>`:''}
+        ${g.sport==='yes'?`<span class="pill pill-gray">🏅 Recruited</span>`:''}
       </div>
       ${g.extracurriculars?`<div class="ecs">${g.extracurriculars}</div>`:''}
       <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}">${c.name} — ${c.decision}</span>`).join('')}</div>
@@ -837,13 +833,6 @@ const ALL_MAJORS=[
   'Theater','Undeclared','Urban Studies','Women\'s Studies',
 ];
 
-const ALL_SPORTS=[
-  'Baseball','Basketball','Cheerleading','Cross Country','Crew / Rowing','Cycling',
-  'Dance','Diving','Fencing','Field Hockey','Football','Golf','Gymnastics',
-  'Ice Hockey','Lacrosse','Polo','Rugby','Sailing','Soccer','Softball',
-  'Swimming','Tennis','Track & Field','Ultimate Frisbee','Volleyball',
-  'Water Polo','Wrestling',
-];
 
 function showMajorSuggestions(){
   const input=document.getElementById('f-major');
@@ -861,21 +850,6 @@ function showMajorSuggestions(){
 }
 function hideMajorSuggestions(){document.getElementById('major-sug').style.display='none';}
 
-function showSportSuggestions(){
-  const input=document.getElementById('f-sport');
-  const sug=document.getElementById('sport-sug');
-  const val=input.value.toLowerCase().trim();
-  if(!val){sug.style.display='none';return;}
-  const matches=ALL_SPORTS.filter(s=>s.toLowerCase().includes(val));
-  if(!matches.length){sug.style.display='none';return;}
-  sug.innerHTML=matches.slice(0,6).map(s=>
-    `<div onclick="document.getElementById('f-sport').value='${s}';hideSportSuggestions();event.preventDefault();"
-      style="padding:8px 12px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid var(--border);color:var(--text);"
-      onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">${s}</div>`
-  ).join('');
-  sug.style.display='block';
-}
-function hideSportSuggestions(){document.getElementById('sport-sug').style.display='none';}
 
 function getKnownColleges(){
   const submitted=allData.map(r=>r.college_name).filter(Boolean);
@@ -928,7 +902,7 @@ async function loadExistingSubmission(){
     document.getElementById('f-rank').value=r.class_rank||'';
     document.getElementById('f-major').value=r.major||'';
     document.getElementById('f-ecs').value=r.extracurriculars||'';
-    document.getElementById('f-sport').value=r.sport||'';
+    document.getElementById('f-sport').checked=r.sport==='yes';
     document.getElementById('f-year').value=r.grad_year||'';
     data.forEach(row=>addCollege(row.college_name||'',row.decision||'Accepted'));
     document.getElementById('submit-btn').textContent='Update Submission';
@@ -936,7 +910,8 @@ async function loadExistingSubmission(){
     document.getElementById('form-subtitle').textContent='Update your results below.';
     document.getElementById('delete-wrap').style.display='block';
   } else {
-    ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs','f-year','f-sport'].forEach(id=>document.getElementById(id).value='');
+    ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs','f-year'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-sport').checked=false;
     addCollege();
     document.getElementById('submit-btn').textContent='Submit';
     document.getElementById('form-title').textContent='Add your college results';
@@ -960,7 +935,7 @@ async function submitForm(){
       class_rank:parseInt(document.getElementById('f-rank').value)||null,
       major:document.getElementById('f-major').value.trim()||null,
       extracurriculars:document.getElementById('f-ecs').value.trim()||null,
-      sport:document.getElementById('f-sport').value.trim()||null,
+      sport:document.getElementById('f-sport').checked?'yes':null,
       college_name:cn.value.trim(),decision:cd.value,session_id:SESSION_ID
     });
   }
