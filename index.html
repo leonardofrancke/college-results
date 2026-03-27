@@ -395,9 +395,6 @@ function toggleTheme(){
 function updateNav(){
   document.getElementById('nav-submit').textContent=HAS_SUBMITTED()?'Edit Submission':'Submit yours';
 }
-const PAGE_ORDER=['results','submit'];
-let currentPage='results';
-
 function showPage(name){
   if(name===currentPage) return;
   const oldEl=document.getElementById('page-'+currentPage);
@@ -408,20 +405,31 @@ function showPage(name){
   document.getElementById('dot-tooltip').style.display='none';
   updateNav();
 
-  oldEl.classList.remove('active');
-  oldEl.classList.add(goRight?'slide-out-left':'slide-out-right');
-  newEl.classList.add(goRight?'slide-in-right':'slide-in-left');
+  const container=document.querySelector('.container');
+  const h=oldEl.offsetHeight;
+  container.style.minHeight=h+'px';
+
+  // Pin old page in place absolutely so new page can slide in beside it
+  oldEl.style.position='absolute';
+  oldEl.style.top='0';
+  oldEl.style.left='0';
+  oldEl.style.right='0';
+  oldEl.style.animation=(goRight?'slideOutLeft':'slideOutRight')+' 0.25s ease forwards';
+
+  newEl.style.display='block';
+  newEl.style.position='static';
+  newEl.style.animation=(goRight?'slideInRight':'slideInLeft')+' 0.3s cubic-bezier(0.16,1,0.3,1) forwards';
 
   setTimeout(()=>{
-    oldEl.classList.remove('slide-out-left','slide-out-right');
-    oldEl.style.display='none';
+    oldEl.style.cssText='display:none;';
+    newEl.style.cssText='display:block;';
     newEl.classList.remove('slide-in-right','slide-in-left');
     newEl.classList.add('active');
-    newEl.style.display='';
+    container.style.minHeight='';
     currentPage=name;
     if(name==='results') loadData();
     if(name==='submit') loadExistingSubmission();
-  },280);
+  },300);
 }
 
 async function loadData(){
@@ -947,21 +955,28 @@ async function submitForm(){
   localStorage.setItem('cr_submitted','1');
   updateNav();
 
-  // Slide form out to the right, results in from the left
   const submitPage=document.getElementById('page-submit');
   const resultsPage=document.getElementById('page-results');
-  submitPage.classList.remove('active');
-  submitPage.classList.add('slide-out-right');
-  resultsPage.classList.add('slide-in-left');
+  const container=document.querySelector('.container');
+  container.style.minHeight=submitPage.offsetHeight+'px';
+
+  submitPage.style.position='absolute';
+  submitPage.style.top='0';
+  submitPage.style.left='0';
+  submitPage.style.right='0';
+  submitPage.style.animation='slideOutRight 0.25s ease forwards';
+
+  resultsPage.style.display='block';
+  resultsPage.style.position='static';
+  resultsPage.style.animation='slideInLeft 0.3s cubic-bezier(0.16,1,0.3,1) forwards';
   document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
   document.getElementById('nav-results').classList.add('active');
 
   setTimeout(async()=>{
-    submitPage.classList.remove('slide-out-right');
-    submitPage.style.display='none';
-    resultsPage.classList.remove('slide-in-left');
+    submitPage.style.cssText='display:none;';
+    resultsPage.style.cssText='display:block;';
     resultsPage.classList.add('active');
-    resultsPage.style.display='';
+    container.style.minHeight='';
     currentPage='results';
 
     const {data}=await db.from('submissions').select('*');
@@ -970,7 +985,7 @@ async function submitForm(){
     const d=allData.filter(r=>r.grad_year==activeYear);
     renderStats(d);renderEntries(d);scatterData=d;
     buildChart(d,true);
-  },280);
+  },300);
 }
 
 async function deleteSubmission(){
