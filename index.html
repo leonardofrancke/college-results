@@ -1074,4 +1074,16 @@ async function submitForm(){
 }
 
 async function deleteSubmission(){
-  if(!confirm('Delete your submission?
+  if(!confirm('Delete your submission? This cannot be undone.')) return;
+  await db.from('submissions').delete().eq('session_id',SESSION_ID);
+  localStorage.removeItem('cr_submitted');
+  updateNav();
+  loadExistingSubmission();
+  loadData();
+}
+
+updateNav();
+loadData();
+</script>
+</body>
+</html>
