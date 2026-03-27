@@ -792,7 +792,9 @@ function buildChart(data,animate){
     // Unique seed per dot so jitter is stable across re-renders
     const seed=(r.session_id||String(ri))+(r.college_name||'')+(r.decision||'');
     const jx=seededJitter(seed+'x', 5);
-    const jy=seededJitter(seed+'y', 5);
+    // Y seed is session_id only — same student stays at same height across all their colleges
+    const seedY=(r.session_id||String(ri));
+    const jy=seededJitter(seedY+'y', 4);
     const x=(baseX+jx).toFixed(2);
     const y=(baseY+jy).toFixed(2);
     const col=DOT_COLORS[r.decision]||'#888';
