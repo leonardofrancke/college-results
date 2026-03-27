@@ -219,9 +219,9 @@
       <div id="legend"></div>
       <div id="chart-main" style="width:100%;overflow-x:auto;"></div>
       <div class="x-axis-note">Sorted by number of submissions · ties broken by acceptance rate (hardest first). Click a college name to see details.</div>
-      <div id="chart-subtitle" style="font-size:0.78rem;color:var(--text2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"></div>
     </div>
     <div id="dot-tooltip"></div>
+    <div id="entries-header" style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:0.75rem;"></div>
     <div class="entries" id="entries"></div>
   </div>
 
@@ -585,11 +585,16 @@ function buildChart(data,animate){
   svg+=`<text x="14" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="11" fill="${tickC}" font-family="Inter,sans-serif" transform="rotate(-90,14,${PAD.top+plotH/2})">${yLabel}</text>`;
   svg+=`<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="${axisC}" stroke-width="1"/>`;
 
-  // Clickable x-axis labels
+  // Clickable x-axis labels + favicons
   cols.forEach((col,i)=>{
-    const x=PAD.left+i*colW+colW/2,y=PAD.top+plotH+12;
+    const x=PAD.left+i*colW+colW/2, y=PAD.top+plotH+12;
     svg+=`<text x="${x}" y="${y}" text-anchor="end" font-size="10" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-40,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')">
       <title>Click to see ${col} details</title>${col}</text>`;
+    const domain=COLLEGE_DOMAINS[col];
+    if(domain){
+      // Small favicon above the rotated label, at the tick mark
+      svg+=`<image href="https://icon.horse/icon/${domain}" x="${x-8}" y="${PAD.top+plotH+2}" width="14" height="14" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title></image>`;
+    }
   });
 
   // Dots — dim if filter active and not matching
@@ -618,31 +623,32 @@ function buildChart(data,animate){
 }
 
 function updateChartSubtitle(filtered, allYearData){
-  const el=document.getElementById('chart-subtitle');
-  if(!el) return;
-  if(!allYearData.length){el.innerHTML='';return;}
-  const parts=[];
+  // entries section header
+  const hdr=document.getElementById('entries-header');
+  if(!hdr) return;
+  const sessions=new Set(allYearData.map(r=>r.session_id));
+  const total=sessions.size;
+  if(!total){hdr.innerHTML='';return;}
 
-  if(searchFilter){
-    parts.push(`Showing <strong>${filtered.length}</strong> result${filtered.length!==1?'s':''} matching "<strong>${searchFilter}</strong>"`);
-  } else {
-    parts.push(`<strong>${filtered.length}</strong> result${filtered.length!==1?'s':''} in view`);
-  }
+  let title=`All submissions — ${activeYear}`;
+  let sub='';
 
   if(slmFilter){
-    const {gpa,gpaRange,sat,satRange}=slmFilter;
-    let s=`filtered to GPA <strong>${(gpa-gpaRange).toFixed(1)}–${(gpa+gpaRange).toFixed(1)}</strong>`;
-    if(sat) s+=` · SAT <strong>${sat-satRange}–${sat+satRange}</strong>`;
-    parts.push(s);
+    const matched=new Set(allYearData.filter(r=>slmMatches(r)).map(r=>r.session_id)).size;
+    title=`${matched} student${matched!==1?'s':''} with similar stats`;
+    sub=`GPA ${(slmFilter.gpa-slmFilter.gpaRange).toFixed(1)}–${(slmFilter.gpa+slmFilter.gpaRange).toFixed(1)}${slmFilter.sat?` · SAT ${slmFilter.sat-slmFilter.satRange}–${slmFilter.sat+slmFilter.satRange}`:''}`;
+  } else if(searchFilter){
+    const colleges=[...new Set(allYearData.filter(r=>r.college_name?.toLowerCase().includes(searchFilter)).map(r=>r.session_id))].length;
+    title=`Submissions mentioning "${searchFilter}"`;
+  } else {
+    sub=`${total} student${total!==1?'s':''} · ${activeYear}`;
   }
 
-  if(activeFilter){
-    parts.push(`only <strong style="color:${DOT_COLORS[activeFilter]}">${activeFilter}</strong> decisions highlighted`);
-  }
-
-  parts.push(activeChartType==='gpa'?'y-axis = unweighted GPA':'y-axis = SAT score');
-
-  el.innerHTML=parts.join('<span style="margin:0 6px;opacity:0.35;">·</span>');
+  hdr.innerHTML=`
+    <div>
+      <div style="font-size:0.95rem;font-weight:600;color:var(--text);">${title}</div>
+      ${sub?`<div style="font-size:0.75rem;color:var(--text3);margin-top:2px;">${sub}</div>`:''}
+    </div>`;
 }
 
 function handleDotClick(evt,idx){evt.stopPropagation();showTooltip(evt,scatterData[idx]);}
