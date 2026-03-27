@@ -153,8 +153,8 @@
   <h1>College Results — Live Oak</h1>
   <div class="hdr-right">
     <nav>
-      <a href="#" class="active" id="nav-results" onclick="showPage('results');return false;">Results</a>
-      <a href="#" id="nav-submit" onclick="statsAnimated=false;showPage('submit');return false;">Submit yours</a>
+      <a href="#" class="active" id="nav-results" onclick="goToResults();return false;">Results</a>
+      <a href="#" id="nav-submit" onclick="goToSubmit();return false;">Submit yours</a>
     </nav>
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">Dark</button>
   </div>
@@ -377,6 +377,10 @@ const HAS_SUBMITTED=()=>localStorage.getItem('cr_submitted')==='1';
 
 
 let activeYear=2026,allData=[],scatterData=[],searchFilter='',collegeCount=0,activeChartType='gpa',activeFilter=null,slmFilter=null,statsAnimated=false;
+const PAGE_ORDER=['results','submit'];
+let currentPage='results';
+function goToResults(){ showPage('results'); }
+function goToSubmit(){ statsAnimated=false; showPage('submit'); }
 
 // THEME
 function toggleTheme(){
