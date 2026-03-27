@@ -129,7 +129,7 @@
     .compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
     .compare-col h3 { font-size:0.9rem; font-weight:600; color:var(--text); margin-bottom:0.75rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem; }
 
-    /* Schools like me */
+    /* Students like me */
     .slm-panel { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.1rem 1.25rem; margin-bottom:1.5rem; }
     .slm-title { font-size:0.8rem; font-weight:600; color:var(--text); margin-bottom:0.75rem; display:flex; align-items:center; gap:6px; }
     .slm-inputs { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
@@ -212,9 +212,9 @@
     <div class="tabs" id="year-tabs"></div>
     <div class="stats-row" id="stats-row"></div>
 
-    <!-- Schools like me -->
+    <!-- Students like me -->
     <div class="slm-panel">
-      <div class="slm-title">🎯 Schools like me — filter by similar stats</div>
+      <div class="slm-title">🎯 Students like me — see what schools others with similar stats applied to</div>
       <div class="slm-inputs">
         <div class="slm-field">
           <label>Unweighted GPA</label>
@@ -316,8 +316,8 @@
         </div>
       </div>
       <div class="form-group">
-        <label>Top extracurriculars (optional)</label>
-        <textarea id="f-ecs" placeholder="e.g. Varsity soccer captain, robotics club"></textarea>
+        <label>Extracurriculars — clubs, sports, jobs, volunteering (optional)</label>
+        <textarea id="f-ecs" placeholder="e.g. Varsity soccer captain, robotics club, part-time job at local bakery"></textarea>
       </div>
       <div class="form-group">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:400;">
@@ -733,7 +733,7 @@ function showTooltip(evt,r){
   const rankLine=r.class_rank?`<div style="margin-top:3px;"><span class="tip-label">Rank</span> <span class="tip-num">#${r.class_rank}</span></div>`:'';
   const majorLine=r.major?`<div style="margin-top:3px;"><span class="tip-label">Major</span> ${r.major}</div>`:'';
   const sportLine=r.sport==='yes'?`<div style="margin-top:3px;"><span class="tip-label">Sport</span> 🏅 Recruited athlete</div>`:'';
-  const ecsLine=r.extracurriculars?`<div style="margin-top:4px;opacity:0.65;font-size:0.72rem;">${r.extracurriculars}</div>`:'';
+  const ecsLine=r.extracurriculars?`<div style="margin-top:4px;"><span class="tip-label">Extracurriculars</span><div style="opacity:0.75;font-size:0.72rem;margin-top:2px;">${r.extracurriculars}</div></div>`:'';
   const decisions=sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
   tip.innerHTML=`${gpaLine}${testLine}${rankLine}${majorLine}${sportLine}${ecsLine}<div style="border-top:1px solid rgba(128,128,128,0.3);margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
   tip.style.display='block';
@@ -884,7 +884,7 @@ function renderEntries(data){
         ${g.major?`<span class="pill pill-gray" style="font-family:inherit;font-size:0.72rem;">${g.major}</span>`:''}
         ${g.sport==='yes'?`<span class="pill pill-gray" style="font-family:inherit;">🏅 Recruited</span>`:''}
       </div>
-      ${g.extracurriculars?`<div class="ecs">${g.extracurriculars}</div>`:''}
+      ${g.extracurriculars?`<div class="ecs"><span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);font-weight:600;">Extracurriculars</span><br>${g.extracurriculars}</div>`:''}
       <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}" style="font-family:inherit;">${c.name} — ${c.decision}</span>`).join('')}</div>
     </div>`).join('');
 }
