@@ -5,12 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>College Results — Live Oak</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
     :root {
       --bg:#f8f7f4;--surface:#fff;--border:#e8e5e0;--border2:#e0ddd8;
       --text:#1a1a1a;--text2:#666;--text3:#999;--text4:#555;
       --header:#1a1a1a;--grid:#f0ede8;--axis:#e0ddd8;--dot-label:#555;
+      --mono:'DM Mono',monospace;
     }
     [data-theme="dark"] {
       --bg:#111;--surface:#1c1c1e;--border:#2c2c2e;--border2:#2c2c2e;
@@ -18,7 +21,7 @@
       --header:#000;--grid:#2c2c2e;--axis:#3a3a3c;--dot-label:#aeaeb2;
     }
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); }
+    body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; }
     header { background:var(--header); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:56px; }
     header h1 { font-size:0.95rem; font-weight:600; color:#fff; letter-spacing:0.01em; }
     .hdr-right { display:flex; align-items:center; gap:1.25rem; }
@@ -26,13 +29,22 @@
     nav a.active, nav a:hover { color:#fff; }
     .theme-btn { background:none; border:1px solid #444; border-radius:6px; color:#888; cursor:pointer; font-size:0.72rem; padding:4px 9px; font-family:inherit; }
     .theme-btn:hover { color:#fff; border-color:#666; }
+
+    .main-wrap { flex:1; }
     .container { max-width:920px; margin:2rem auto; padding:0 1.25rem; overflow:hidden; position:relative; }
+
+    /* ── Mono numbers ── */
+    .num, .pill, .modal-stat .mn, .slm-field input, .tip-label + *, .stat-num {
+      font-family: var(--mono);
+    }
+    .stat-card .num { font-family: var(--mono); font-size:2rem; font-weight:500; color:var(--text); letter-spacing:-0.02em; }
+    .modal-stat .mn { font-family: var(--mono); }
+
     .tabs { display:flex; gap:6px; margin-bottom:1.75rem; }
     .tab { padding:7px 20px; border-radius:6px; border:1px solid var(--border2); background:var(--surface); cursor:pointer; font-size:0.85rem; color:var(--text2); font-family:inherit; }
     .tab.active { background:var(--text); color:var(--bg); border-color:var(--text); font-weight:500; }
     .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:1.5rem; }
     .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.1rem 1rem; text-align:center; }
-    .stat-card .num { font-size:2rem; font-weight:600; color:var(--text); }
     .stat-card .label { font-size:0.72rem; color:var(--text3); margin-top:3px; text-transform:uppercase; letter-spacing:0.05em; }
     .chart-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.25rem; margin-bottom:1.5rem; }
     .chart-tabs { display:flex; gap:6px; }
@@ -47,7 +59,7 @@
     .entries { display:flex; flex-direction:column; gap:10px; }
     .entry-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1rem 1.25rem; }
     .entry-top { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:8px; }
-    .pill { font-size:0.72rem; padding:3px 10px; border-radius:5px; font-weight:500; }
+    .pill { font-size:0.72rem; padding:3px 10px; border-radius:5px; font-weight:500; font-family:var(--mono); letter-spacing:0; }
     .pill-gray { background:var(--border); color:var(--text4); }
     .pill-accepted { background:#dcfce7; color:#15803d; }
     .pill-rejected { background:#fee2e2; color:#b91c1c; }
@@ -68,10 +80,12 @@
     /* Form */
     .form-wrap { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:2rem; max-width:580px; margin:0 auto; }
     .form-wrap h2 { font-size:1rem; font-weight:600; margin-bottom:0.35rem; color:var(--text); }
-    .form-subtitle { font-size:0.82rem; color:var(--text3); margin-bottom:1.5rem; }
+    .form-subtitle { font-size:0.82rem; color:var(--text3); margin-bottom:0.6rem; }
+    .anon-badge { display:inline-flex; align-items:center; gap:5px; font-size:0.75rem; color:#15803d; background:#dcfce7; border:1px solid #bbf7d0; border-radius:20px; padding:3px 10px; margin-bottom:1.25rem; font-weight:500; }
     .form-group { margin-bottom:1rem; }
     .form-group label { display:block; font-size:0.78rem; color:var(--text2); margin-bottom:5px; font-weight:500; }
     .form-group input,.form-group select,.form-group textarea { width:100%; padding:9px 12px; border:1px solid var(--border2); border-radius:7px; font-size:0.875rem; font-family:inherit; color:var(--text); background:var(--bg); }
+    .form-group input[type=number] { font-family:var(--mono); }
     .form-group textarea { resize:vertical; min-height:72px; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
@@ -87,6 +101,7 @@
 
     /* Tooltip */
     #dot-tooltip { display:none; position:fixed; background:var(--text); color:var(--bg); border-radius:8px; padding:12px 14px; font-size:0.78rem; line-height:1.7; max-width:260px; pointer-events:none; z-index:50; box-shadow:0 4px 20px rgba(0,0,0,0.2); }
+    #dot-tooltip .tip-num { font-family:var(--mono); }
     .tip-label { color:var(--text3); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; }
 
     /* Modal */
@@ -99,7 +114,7 @@
     .modal-sub { font-size:0.8rem; color:var(--text3); margin-bottom:1.25rem; }
     .modal-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:1.25rem; }
     .modal-stat { background:var(--bg); border-radius:8px; padding:0.75rem; text-align:center; }
-    .modal-stat .mn { font-size:1.4rem; font-weight:600; color:var(--text); }
+    .modal-stat .mn { font-size:1.4rem; font-weight:500; color:var(--text); font-family:var(--mono); }
     .modal-stat .ml { font-size:0.65rem; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; }
     .modal-section { margin-bottom:1rem; }
     .modal-section h3 { font-size:0.75rem; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.5rem; }
@@ -107,7 +122,7 @@
     .decision-bar-label { width:80px; color:var(--text2); flex-shrink:0; }
     .decision-bar-track { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
     .decision-bar-fill { height:100%; border-radius:4px; }
-    .decision-bar-count { width:24px; text-align:right; color:var(--text3); font-size:0.75rem; flex-shrink:0; }
+    .decision-bar-count { width:24px; text-align:right; color:var(--text3); font-size:0.75rem; flex-shrink:0; font-family:var(--mono); }
     .compare-pick { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; }
     .compare-pick select { flex:1; padding:8px 12px; border:1px solid var(--border2); border-radius:7px; font-size:0.82rem; font-family:inherit; color:var(--text); background:var(--bg); min-width:160px; }
     .compare-btn { padding:8px 16px; background:var(--text); color:var(--bg); border:none; border-radius:7px; font-size:0.82rem; font-weight:500; cursor:pointer; font-family:inherit; }
@@ -120,13 +135,23 @@
     .slm-inputs { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
     .slm-field { display:flex; flex-direction:column; gap:4px; }
     .slm-field label { font-size:0.7rem; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; }
-    .slm-field input { padding:7px 10px; border:1px solid var(--border2); border-radius:6px; font-size:0.85rem; font-family:inherit; color:var(--text); background:var(--bg); width:100px; }
+    .slm-field input { padding:7px 10px; border:1px solid var(--border2); border-radius:6px; font-size:0.85rem; font-family:var(--mono); color:var(--text); background:var(--bg); width:100px; }
     .slm-field select { padding:7px 10px; border:1px solid var(--border2); border-radius:6px; font-size:0.82rem; font-family:inherit; color:var(--text); background:var(--bg); }
     .slm-btn { padding:7px 14px; background:var(--text); color:var(--bg); border:none; border-radius:6px; font-size:0.8rem; font-weight:500; cursor:pointer; font-family:inherit; }
     .slm-clear { padding:7px 12px; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; border-radius:6px; font-size:0.8rem; font-weight:500; cursor:pointer; font-family:inherit; }
     .slm-active { font-size:0.75rem; color:var(--text3); margin-top:0.5rem; }
-    .slm-active strong { color:var(--text); }
+    .slm-active strong { color:var(--text); font-family:var(--mono); }
 
+    /* Footer */
+    footer { background:var(--header); border-top:1px solid rgba(255,255,255,0.07); padding:1.5rem 2rem; margin-top:auto; }
+    .footer-inner { max-width:920px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
+    .footer-left { font-size:0.75rem; color:#666; }
+    .footer-left strong { color:#aaa; font-weight:500; }
+    .footer-anon { display:flex; align-items:center; gap:6px; font-size:0.75rem; color:#4ade80; }
+    .footer-anon .shield { font-size:0.85rem; }
+    .footer-contact { font-size:0.75rem; color:#666; }
+    .footer-contact a { color:#aaa; text-decoration:none; border-bottom:1px solid #444; transition:color 0.15s,border-color 0.15s; }
+    .footer-contact a:hover { color:#fff; border-color:#fff; }
 
     @keyframes dotSpring {
       0%   { transform:scale(0); opacity:0; }
@@ -146,7 +171,13 @@
     .page.slide-in-left   { display:block; animation:slideInLeft   0.28s cubic-bezier(0.16,1,0.3,1) forwards; }
     .page.slide-in-right  { display:block; animation:slideInRight  0.28s cubic-bezier(0.16,1,0.3,1) forwards; }
     @keyframes countUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-    @media (max-width:600px) { .form-row,.form-row-3 { grid-template-columns:1fr; } .stats-row { grid-template-columns:repeat(2,1fr); } .modal-stats { grid-template-columns:1fr 1fr; } .compare-grid { grid-template-columns:1fr; } }
+    @media (max-width:600px) {
+      .form-row,.form-row-3 { grid-template-columns:1fr; }
+      .stats-row { grid-template-columns:repeat(2,1fr); }
+      .modal-stats { grid-template-columns:1fr 1fr; }
+      .compare-grid { grid-template-columns:1fr; }
+      .footer-inner { flex-direction:column; align-items:flex-start; }
+    }
   </style>
 </head>
 <body>
@@ -175,6 +206,7 @@
   </div>
 </div>
 
+<div class="main-wrap">
 <div class="container">
   <div class="page active" id="page-results">
     <div class="tabs" id="year-tabs"></div>
@@ -213,11 +245,12 @@
       </div>
       <div class="slm-active" id="slm-status" style="display:none;"></div>
     </div>
+
     <div class="chart-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <div class="chart-tabs">
-            <button class="chart-tab active" onclick="switchChart('gpa',this)">GPA</button>
+            <button class="chart-tab active" onclick="switchChart('gpa',this)">Weighted GPA</button>
             <button class="chart-tab" onclick="switchChart('sat',this)">SAT</button>
           </div>
           <button onclick="openCompare()" style="padding:5px 12px;border-radius:5px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:0.75rem;color:var(--text2);font-family:inherit;">Compare colleges</button>
@@ -237,7 +270,8 @@
   <div class="page" id="page-submit">
     <div class="form-wrap">
       <h2 id="form-title">Add your college results</h2>
-      <p class="form-subtitle" id="form-subtitle">Anonymous — your name is never stored.</p>
+      <p class="form-subtitle" id="form-subtitle">Share your college decisions to help future Live Oak students.</p>
+      <div class="anon-badge" id="anon-badge">🔒 Fully anonymous — your name is never stored</div>
       <div class="success-msg" id="success-msg">Saved!</div>
       <div class="form-row">
         <div class="form-group">
@@ -250,11 +284,11 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Unweighted GPA (required)</label>
+          <label>Unweighted GPA (required, max 4.0)</label>
           <input type="number" id="f-gpa" step="0.01" min="1" max="4" placeholder="1.0 – 4.0" />
         </div>
         <div class="form-group">
-          <label>Weighted GPA (required)</label>
+          <label>Weighted GPA (required, max 5.0)</label>
           <input type="number" id="f-gpa-w" step="0.01" min="1" max="5" placeholder="1.0 – 5.0" />
         </div>
       </div>
@@ -300,9 +334,32 @@
         <p style="font-size:0.75rem;color:var(--text3);margin-bottom:0.6rem;">Want to remove your data?</p>
         <button type="button" class="delete-btn" id="delete-btn" onclick="deleteSubmission()">Delete my submission</button>
       </div>
+      <!-- Privacy note at bottom of form -->
+      <div style="margin-top:1.5rem;padding:0.85rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:0.75rem;color:var(--text3);line-height:1.6;">
+        <strong style="color:var(--text2);">🔒 Privacy</strong> — Your name is never collected or stored. Submissions are identified only by a random browser ID so you can edit or delete your own entry. No login required. Data is used solely to show aggregated Live Oak college results.
+      </div>
     </div>
   </div>
 </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <strong>College Results — Live Oak</strong><br>
+      Aggregated, anonymous college decision data from Live Oak students.
+    </div>
+    <div class="footer-anon">
+      <span class="shield">🔒</span>
+      Fully anonymous · no names stored · no login required
+    </div>
+    <div class="footer-contact">
+      Suggestions or concerns?<br>
+      <a href="mailto:leonardo.francke@gmail.com">leonardo.francke@gmail.com</a>
+    </div>
+  </div>
+</footer>
 
 <script>
 const SUPABASE_URL='https://fkieqpdobdznaspfkfwg.supabase.co';
@@ -335,7 +392,7 @@ const COLLEGE_ACCEPT_RATES={
   'University of San Francisco':67,'Chapman':63,'Occidental':38,'University of the Pacific':60,
   'Whittier College':73,'Azusa Pacific':72,'Biola University':61,'Point Loma Nazarene':72,
   'Westmont':75,'Cal Lutheran':68,"Saint Mary's College of California":71,
-  'Northwest Nazarene':73,'Point Loma Nazarene':72,
+  'Northwest Nazarene':73,
   'Claremont McKenna':9,'Scripps':22,'Pitzer':14,'Pomona':8,
   'Michigan':18,'UVA':21,'UNC Chapel Hill':19,'Georgia Tech':17,'University of Florida':24,
   'Wisconsin':49,'Ohio State':53,'Penn State':55,'UT Austin':31,'UIUC':45,'Purdue':53,
@@ -374,9 +431,6 @@ function getAcceptRate(name){
 const SESSION_ID=localStorage.getItem('cr_sid')||(()=>{const id=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('cr_sid',id);return id;})();
 const HAS_SUBMITTED=()=>localStorage.getItem('cr_submitted')==='1';
 
-// School domain map for logos
-
-
 let activeYear=2026,allData=[],scatterData=[],searchFilter='',collegeCount=0,activeChartType='gpa',activeFilter=null,slmFilter=null,statsAnimated=false;
 const PAGE_ORDER=['results','submit'];
 let currentPage='results';
@@ -414,7 +468,6 @@ function showPage(name){
   const h=oldEl.offsetHeight;
   container.style.minHeight=h+'px';
 
-  // Pin old page in place absolutely so new page can slide in beside it
   oldEl.style.position='absolute';
   oldEl.style.top='0';
   oldEl.style.left='0';
@@ -457,7 +510,6 @@ function renderTabs(){
   ).join('');
 }
 
-// STAT CARDS with count-up animation
 function animateNum(el,target,isFloat,suffix){
   const dur=700,steps=40,step=dur/steps;
   let cur=0,i=0;
@@ -486,7 +538,7 @@ function renderStats(data){
     <div class="stat-card"><div class="num" id="s0">${doAnim?'0':t}</div><div class="label">Students</div></div>
     <div class="stat-card"><div class="num" id="s1">${doAnim?'0':a}</div><div class="label">Got in somewhere</div></div>
     <div class="stat-card"><div class="num" id="s2">${doAnim?'0%':t?Math.round(a/t*100)+'%':'—'}</div><div class="label">Accept rate</div></div>
-    <div class="stat-card"><div class="num" id="s3">${doAnim?'—':t?g.toFixed(2):'—'}</div><div class="label">Avg GPA</div></div>`;
+    <div class="stat-card"><div class="num" id="s3">${doAnim?'—':t?g.toFixed(2):'—'}</div><div class="label">Avg UW GPA</div></div>`;
 
   if(doAnim){
     animateNum(document.getElementById('s0'),t,false,'');
@@ -529,8 +581,6 @@ function clearSlm(){
 function slmMatches(r){
   if(!slmFilter) return true;
   const {gpa,gpaRange,sat,satRange}=slmFilter;
-  const sessions=[...new Set(scatterData.filter(x=>x.college_name===r.college_name||true).map(x=>x.session_id))];
-  // find the student's own GPA/SAT from their session
   const studentRows=scatterData.filter(x=>x.session_id===r.session_id);
   if(!studentRows.length) return false;
   const sGpa=parseFloat(studentRows[0].gpa);
@@ -549,7 +599,6 @@ function switchChart(type,btn){
   buildChart(scatterData,false);
 }
 
-// LEGEND FILTER
 function toggleFilter(decision){
   activeFilter=activeFilter===decision?null:decision;
   buildChart(scatterData,false);
@@ -568,10 +617,13 @@ function buildChart(data,animate){
   el.innerHTML='';
   if(!cols.length){document.getElementById('legend').innerHTML='';return;}
 
-  const yKey=activeChartType==='gpa'?'gpa':'sat';
-  const yLabel=activeChartType==='gpa'?'GPA':'SAT Score';
-  const yMin=activeChartType==='gpa'?1:400;
-  const yMax=activeChartType==='gpa'?5:1600;
+  // GPA chart now plots weighted GPA (gpa_weighted), SAT still plots sat
+  const isGpa=activeChartType==='gpa';
+  const yKey=isGpa?'gpa_weighted':'sat';
+  const yLabel=isGpa?'Weighted GPA':'SAT Score';
+  const yMin=isGpa?1:400;
+  const yMax=isGpa?5:1600;
+
   const filtered=data.filter(r=>r[yKey]!=null&&cols.includes(r.college_name));
 
   const dk=document.documentElement.getAttribute('data-theme')==='dark';
@@ -581,24 +633,26 @@ function buildChart(data,animate){
   const H=340,PAD={top:20,right:20,bottom:100,left:55};
   const plotW=W-PAD.left-PAD.right,plotH=H-PAD.top-PAD.bottom,colW=plotW/cols.length;
 
+  // y-axis tick steps
+  const ySteps=isGpa?[1,1.5,2,2.5,3,3.5,4,4.5,5]:[400,600,800,1000,1200,1400,1600];
+  // monospace font for axis tick labels
+  const monoFont=`'DM Mono',monospace`;
+
   let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;">`;
-  const ySteps=activeChartType==='gpa'?[1,2,3,4,5]:[400,600,800,1000,1200,1400,1600];
   ySteps.forEach(v=>{
     const y=PAD.top+plotH-(v-yMin)/(yMax-yMin)*plotH;
     svg+=`<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+plotW}" y2="${y}" stroke="${gridC}" stroke-width="1"/>`;
-    svg+=`<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="11" fill="${tickC}" font-family="Inter,sans-serif">${v}</text>`;
+    svg+=`<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="11" fill="${tickC}" font-family="${monoFont}">${isGpa?v.toFixed(1):v}</text>`;
   });
   svg+=`<text x="14" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="11" fill="${tickC}" font-family="Inter,sans-serif" transform="rotate(-90,14,${PAD.top+plotH/2})">${yLabel}</text>`;
   svg+=`<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="${axisC}" stroke-width="1"/>`;
 
-  // Clickable x-axis labels + favicons
   cols.forEach((col,i)=>{
     const x=PAD.left+i*colW+colW/2, y=PAD.top+plotH+12;
     svg+=`<text x="${x}" y="${y}" text-anchor="end" font-size="10" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-40,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')">
       <title>Click to see ${col} details</title>${col}</text>`;
   });
 
-  // Dots — dim if filter active and not matching
   filtered.forEach((r,ri)=>{
     const i=cols.indexOf(r.college_name);
     const x=PAD.left+i*colW+colW/2;
@@ -613,7 +667,6 @@ function buildChart(data,animate){
   svg+=`</svg>`;
   el.innerHTML=svg;
 
-  // Legend with filter toggle
   const used=DECISION_ORDER.filter(d=>filtered.find(r=>r.decision===d));
   document.getElementById('legend').innerHTML=used.map(d=>`
     <span class="legend-item${activeFilter&&activeFilter!==d?' dimmed':''}" onclick="toggleFilter('${d}')">
@@ -624,7 +677,6 @@ function buildChart(data,animate){
 }
 
 function updateChartSubtitle(filtered, allYearData){
-  // entries section header
   const hdr=document.getElementById('entries-header');
   if(!hdr) return;
   const sessions=new Set(allYearData.map(r=>r.session_id));
@@ -639,7 +691,6 @@ function updateChartSubtitle(filtered, allYearData){
     title=`${matched} student${matched!==1?'s':''} with similar stats`;
     sub=`GPA ${(slmFilter.gpa-slmFilter.gpaRange).toFixed(1)}–${(slmFilter.gpa+slmFilter.gpaRange).toFixed(1)}${slmFilter.sat?` · SAT ${slmFilter.sat-slmFilter.satRange}–${slmFilter.sat+slmFilter.satRange}`:''}`;
   } else if(searchFilter){
-    const colleges=[...new Set(allYearData.filter(r=>r.college_name?.toLowerCase().includes(searchFilter)).map(r=>r.session_id))].length;
     title=`Submissions mentioning "${searchFilter}"`;
   } else {
     sub=`${total} student${total!==1?'s':''} · ${activeYear}`;
@@ -658,9 +709,9 @@ function showTooltip(evt,r){
   const key=r.session_id||`${r.gpa}|${r.sat}|${r.act}`;
   const sibs=scatterData.filter(x=>(x.session_id||`${x.gpa}|${x.sat}|${x.act}`)===key);
   const tip=document.getElementById('dot-tooltip');
-  const gpaLine=`<div><span class="tip-label">UW GPA</span> ${r.gpa}${r.gpa_weighted?` &nbsp;·&nbsp; <span class="tip-label">W</span> ${r.gpa_weighted}`:''}</div>`;
-  const testLine=(r.sat||r.act)?`<div style="margin-top:3px;">${r.sat?`<span class="tip-label">SAT</span> ${r.sat}`:''}${r.sat&&r.act?' · ':''}${r.act?`<span class="tip-label">ACT</span> ${r.act}`:''}</div>`:'';
-  const rankLine=r.class_rank?`<div style="margin-top:3px;"><span class="tip-label">Rank</span> #${r.class_rank}</div>`:'';
+  const gpaLine=`<div><span class="tip-label">UW GPA</span> <span class="tip-num">${r.gpa}</span>${r.gpa_weighted?` &nbsp;·&nbsp; <span class="tip-label">W</span> <span class="tip-num">${r.gpa_weighted}</span>`:''}</div>`;
+  const testLine=(r.sat||r.act)?`<div style="margin-top:3px;">${r.sat?`<span class="tip-label">SAT</span> <span class="tip-num">${r.sat}</span>`:''}${r.sat&&r.act?' · ':''}${r.act?`<span class="tip-label">ACT</span> <span class="tip-num">${r.act}</span>`:''}</div>`:'';
+  const rankLine=r.class_rank?`<div style="margin-top:3px;"><span class="tip-label">Rank</span> <span class="tip-num">#${r.class_rank}</span></div>`:'';
   const majorLine=r.major?`<div style="margin-top:3px;"><span class="tip-label">Major</span> ${r.major}</div>`:'';
   const sportLine=r.sport==='yes'?`<div style="margin-top:3px;"><span class="tip-label">Sport</span> 🏅 Recruited athlete</div>`:'';
   const ecsLine=r.extracurriculars?`<div style="margin-top:4px;opacity:0.65;font-size:0.72rem;">${r.extracurriculars}</div>`:'';
@@ -677,15 +728,19 @@ document.addEventListener('click',e=>{
 
 // COLLEGE DETAIL MODAL
 function openCollegeDetail(name){
+  // Use weighted GPA for detail modal when chart is on GPA mode
   const rows=scatterData.filter(r=>r.college_name===name);
   if(!rows.length) return;
   const total=rows.length;
   const accepted=rows.filter(r=>r.decision==='Accepted').length;
   const rate=Math.round(accepted/total*100);
+  // Show both UW and W GPA ranges
   const gpas=rows.filter(r=>r.gpa).map(r=>parseFloat(r.gpa));
+  const gpasW=rows.filter(r=>r.gpa_weighted).map(r=>parseFloat(r.gpa_weighted));
   const gpaAvg=gpas.length?(gpas.reduce((a,b)=>a+b,0)/gpas.length).toFixed(2):'—';
   const gpaMin=gpas.length?Math.min(...gpas).toFixed(2):'—';
   const gpaMax=gpas.length?Math.max(...gpas).toFixed(2):'—';
+  const gpaWAvg=gpasW.length?(gpasW.reduce((a,b)=>a+b,0)/gpasW.length).toFixed(2):'—';
 
   const decCounts=DECISION_ORDER.map(d=>({d,n:rows.filter(r=>r.decision===d).length})).filter(x=>x.n>0);
   const bars=decCounts.map(({d,n})=>`
@@ -712,11 +767,15 @@ function openCollegeDetail(name){
     <div class="modal-section">
       <h3>GPA range (unweighted)</h3>
       <div style="display:flex;gap:16px;font-size:0.85rem;color:var(--text2);">
-        <span>Min <strong style="color:var(--text)">${gpaMin}</strong></span>
-        <span>Avg <strong style="color:var(--text)">${gpaAvg}</strong></span>
-        <span>Max <strong style="color:var(--text)">${gpaMax}</strong></span>
+        <span>Min <strong style="color:var(--text);font-family:var(--mono)">${gpaMin}</strong></span>
+        <span>Avg <strong style="color:var(--text);font-family:var(--mono)">${gpaAvg}</strong></span>
+        <span>Max <strong style="color:var(--text);font-family:var(--mono)">${gpaMax}</strong></span>
       </div>
     </div>
+    ${gpasW.length?`<div class="modal-section">
+      <h3>Avg Weighted GPA</h3>
+      <div style="font-size:0.85rem;color:var(--text2);">Avg <strong style="color:var(--text);font-family:var(--mono)">${gpaWAvg}</strong></div>
+    </div>`:''}
     ${extLine}`;
   document.getElementById('college-modal').classList.add('open');
 }
@@ -751,12 +810,12 @@ function colStats(name){
   const gpas=rows.filter(r=>r.gpa).map(r=>parseFloat(r.gpa));
   const gpaAvg=gpas.length?(gpas.reduce((a,b)=>a+b,0)/gpas.length).toFixed(2):'—';
   const decRows=DECISION_ORDER.map(d=>({d,n:rows.filter(r=>r.decision===d).length})).filter(x=>x.n>0)
-    .map(({d,n})=>`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:3px 0;border-bottom:1px solid var(--border);"><span style="color:${DOT_COLORS[d]}">${d}</span><span>${n}</span></div>`).join('');
+    .map(({d,n})=>`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:3px 0;border-bottom:1px solid var(--border);"><span style="color:${DOT_COLORS[d]}">${d}</span><span style="font-family:var(--mono)">${n}</span></div>`).join('');
   return `<div class="compare-col">
     <h3>${name}</h3>
     <div style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem;">
-      ${total} applied · ${acc} accepted · ${total?Math.round(acc/total*100):0}% rate<br>
-      Avg GPA: <strong style="color:var(--text)">${gpaAvg}</strong>
+      <span style="font-family:var(--mono)">${total}</span> applied · <span style="font-family:var(--mono)">${acc}</span> accepted · <span style="font-family:var(--mono)">${total?Math.round(acc/total*100):0}%</span> rate<br>
+      Avg UW GPA: <strong style="color:var(--text);font-family:var(--mono)">${gpaAvg}</strong>
     </div>
     ${decRows}
   </div>`;
@@ -768,7 +827,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('college
 // ENTRIES
 function renderEntries(data){
   const el=document.getElementById('entries');
-  // Apply SLM filter — filter by unique session_ids that match
   let displayData=data;
   if(slmFilter){
     const matchedSessions=new Set(data.filter(r=>slmMatches(r)).map(r=>r.session_id));
@@ -804,11 +862,11 @@ function renderEntries(data){
         ${g.sat?`<span class="pill pill-gray">SAT ${g.sat}</span>`:''}
         ${g.act?`<span class="pill pill-gray">ACT ${g.act}</span>`:''}
         ${g.class_rank?`<span class="pill pill-gray">Rank #${g.class_rank}</span>`:''}
-        ${g.major?`<span class="pill pill-gray">${g.major}</span>`:''}
-        ${g.sport==='yes'?`<span class="pill pill-gray">🏅 Recruited</span>`:''}
+        ${g.major?`<span class="pill pill-gray" style="font-family:inherit;font-size:0.72rem;">${g.major}</span>`:''}
+        ${g.sport==='yes'?`<span class="pill pill-gray" style="font-family:inherit;">🏅 Recruited</span>`:''}
       </div>
       ${g.extracurriculars?`<div class="ecs">${g.extracurriculars}</div>`:''}
-      <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}">${c.name} — ${c.decision}</span>`).join('')}</div>
+      <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}" style="font-family:inherit;">${c.name} — ${c.decision}</span>`).join('')}</div>
     </div>`).join('');
 }
 
@@ -834,7 +892,6 @@ const ALL_MAJORS=[
   'Theater','Undeclared','Urban Studies','Women\'s Studies',
 ];
 
-
 function showMajorSuggestions(){
   const input=document.getElementById('f-major');
   const sug=document.getElementById('major-sug');
@@ -850,7 +907,6 @@ function showMajorSuggestions(){
   sug.style.display='block';
 }
 function hideMajorSuggestions(){document.getElementById('major-sug').style.display='none';}
-
 
 function getKnownColleges(){
   const submitted=allData.map(r=>r.college_name).filter(Boolean);
@@ -909,6 +965,7 @@ async function loadExistingSubmission(){
     document.getElementById('submit-btn').textContent='Update Submission';
     document.getElementById('form-title').textContent='Edit your Submission';
     document.getElementById('form-subtitle').textContent='Update your results below.';
+    document.getElementById('anon-badge').style.display='none';
     document.getElementById('delete-wrap').style.display='block';
   } else {
     ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs','f-year'].forEach(id=>document.getElementById(id).value='');
@@ -916,7 +973,8 @@ async function loadExistingSubmission(){
     addCollege();
     document.getElementById('submit-btn').textContent='Submit';
     document.getElementById('form-title').textContent='Add your college results';
-    document.getElementById('form-subtitle').textContent='Anonymous — your name is never stored.';
+    document.getElementById('form-subtitle').textContent='Share your college decisions to help future Live Oak students.';
+    document.getElementById('anon-badge').style.display='inline-flex';
     document.getElementById('delete-wrap').style.display='none';
   }
 }
@@ -926,6 +984,8 @@ async function submitForm(){
   const gpaW=parseFloat(document.getElementById('f-gpa-w').value)||null;
   const year=parseInt(document.getElementById('f-year').value);
   if(!gpa||!gpaW||!year){alert('Unweighted GPA, weighted GPA, and graduation year are required!');return;}
+  if(gpa>4){alert('Unweighted GPA cannot exceed 4.0');return;}
+  if(gpaW>5){alert('Weighted GPA cannot exceed 5.0');return;}
   const rows=[];
   for(let i=0;i<collegeCount;i++){
     const cn=document.getElementById(`cn-${i}`),cd=document.getElementById(`cd-${i}`);
@@ -965,7 +1025,6 @@ async function submitForm(){
   document.getElementById('nav-results').classList.add('active');
 
   setTimeout(async()=>{
-    // Clean up both pages to pristine state
     submitPage.removeAttribute('style');
     submitPage.classList.remove('active');
     resultsPage.removeAttribute('style');
