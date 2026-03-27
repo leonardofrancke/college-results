@@ -126,8 +126,6 @@
     .slm-active { font-size:0.75rem; color:var(--text3); margin-top:0.5rem; }
     .slm-active strong { color:var(--text); }
 
-    /* School logo */
-    .school-logo { width:13px; height:13px; border-radius:2px; vertical-align:middle; margin-right:3px; object-fit:contain; display:inline-block; position:relative; top:-1px; }
 
     @keyframes dotSpring {
       0%   { transform-box:fill-box; transform-origin:center; transform:scale(0); opacity:0; }
@@ -366,49 +364,7 @@ const SESSION_ID=localStorage.getItem('cr_sid')||(()=>{const id=Math.random().to
 const HAS_SUBMITTED=()=>localStorage.getItem('cr_submitted')==='1';
 
 // School domain map for logos
-const COLLEGE_DOMAINS={
-  'Harvard':'harvard.edu','Princeton':'princeton.edu','MIT':'mit.edu','Yale':'yale.edu',
-  'Columbia':'columbia.edu','Stanford':'stanford.edu','Caltech':'caltech.edu',
-  'Penn':'upenn.edu','UPenn':'upenn.edu','Brown':'brown.edu','Dartmouth':'dartmouth.edu',
-  'Cornell':'cornell.edu','Duke':'duke.edu','Northwestern':'northwestern.edu',
-  'Johns Hopkins':'jhu.edu','Harvey Mudd':'hmc.edu','Harvey Mudd College':'hmc.edu',
-  'Vanderbilt':'vanderbilt.edu','Rice':'rice.edu','WashU':'wustl.edu',
-  'Notre Dame':'nd.edu','Georgetown':'georgetown.edu','Emory':'emory.edu',
-  'Carnegie Mellon':'cmu.edu','Tufts':'tufts.edu','Northeastern':'northeastern.edu',
-  'Tulane':'tulane.edu','Wake Forest':'wfu.edu','USC':'usc.edu','NYU':'nyu.edu',
-  'Boston College':'bc.edu','Boston University':'bu.edu','Lehigh':'lehigh.edu',
-  'University of Miami':'miami.edu','Villanova':'villanova.edu','SMU':'smu.edu',
-  'TCU':'tcu.edu','Baylor':'baylor.edu','Olin College':'olin.edu',
-  'UC Berkeley':'berkeley.edu','UCLA':'ucla.edu','UCSD':'ucsd.edu',
-  'UC Santa Barbara':'ucsb.edu','UC Davis':'ucdavis.edu','UC Irvine':'uci.edu',
-  'UC Santa Cruz':'ucsc.edu','UC Riverside':'ucr.edu','UC Merced':'ucmerced.edu',
-  'Cal Poly SLO':'calpoly.edu','Cal Poly Pomona':'cpp.edu','Cal State Long Beach':'csulb.edu',
-  'San Jose State':'sjsu.edu','Sacramento State':'csus.edu','Fresno State':'csufresno.edu',
-  'Chico State':'csuchico.edu','Cal State Fullerton':'fullerton.edu',
-  'LMU':'lmu.edu','Santa Clara':'scu.edu','Pepperdine':'pepperdine.edu',
-  'Chapman':'chapman.edu','Occidental':'oxy.edu','Claremont McKenna':'cmc.edu',
-  'Scripps':'scrippscollege.edu','Pitzer':'pitzer.edu','Pomona':'pomona.edu',
-  'Michigan':'umich.edu','UVA':'virginia.edu','UNC Chapel Hill':'unc.edu',
-  'Georgia Tech':'gatech.edu','University of Florida':'ufl.edu','Wisconsin':'wisc.edu',
-  'Ohio State':'osu.edu','Penn State':'psu.edu','UT Austin':'utexas.edu',
-  'UIUC':'illinois.edu','Purdue':'purdue.edu','University of Washington':'uw.edu',
-  'University of Maryland':'umd.edu','University of Georgia':'uga.edu',
-  'Virginia Tech':'vt.edu','Clemson':'clemson.edu','Rutgers':'rutgers.edu',
-  'Swarthmore':'swarthmore.edu','Amherst':'amherst.edu','Williams':'williams.edu',
-  'Bowdoin':'bowdoin.edu','Middlebury':'middlebury.edu','Wellesley':'wellesley.edu',
-  'Barnard':'barnard.edu','Smith':'smith.edu','Vassar':'vassar.edu',
-  'Wesleyan':'wesleyan.edu','Haverford':'haverford.edu','Davidson':'davidson.edu',
-  'Oberlin':'oberlin.edu','Grinnell':'grinnell.edu','Carleton':'carleton.edu',
-  'Reed':'reed.edu','Hamilton':'hamilton.edu','Colgate':'colgate.edu',
-  'Syracuse':'syr.edu','Fordham':'fordham.edu','GWU':'gwu.edu','Howard':'howard.edu',
-  'Spelman':'spelman.edu','Morehouse':'morehouse.edu','Gonzaga':'gonzaga.edu',
-};
 
-function getSchoolLogo(name){
-  const domain=COLLEGE_DOMAINS[name];
-  if(!domain) return '';
-  return `<img src="https://icon.horse/icon/${domain}" class="school-logo" onerror="this.style.display='none'" alt="" />`;
-}
 
 let activeYear=2026,allData=[],scatterData=[],searchFilter='',collegeCount=0,activeChartType='gpa',activeFilter=null,slmFilter=null;
 
@@ -590,11 +546,6 @@ function buildChart(data,animate){
     const x=PAD.left+i*colW+colW/2, y=PAD.top+plotH+12;
     svg+=`<text x="${x}" y="${y}" text-anchor="end" font-size="10" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-40,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')">
       <title>Click to see ${col} details</title>${col}</text>`;
-    const domain=COLLEGE_DOMAINS[col];
-    if(domain){
-      // Small favicon above the rotated label, at the tick mark
-      svg+=`<image href="https://icon.horse/icon/${domain}" x="${x-8}" y="${PAD.top+plotH+2}" width="14" height="14" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title></image>`;
-    }
   });
 
   // Dots — dim if filter active and not matching
@@ -698,7 +649,7 @@ function openCollegeDetail(name){
   const extLine=extRate<100?`<p style="font-size:0.78rem;color:var(--text3);margin-top:0.75rem;">National acceptance rate: ~${extRate}%</p>`:'';
 
   document.getElementById('college-modal-content').innerHTML=`
-    <h2>${getSchoolLogo(name)}${name}</h2>
+    <h2>${name}</h2>
     <p class="modal-sub">${total} submission${total!==1?'s':''} from Live Oak</p>
     <div class="modal-stats">
       <div class="modal-stat"><div class="mn">${total}</div><div class="ml">Applied</div></div>
@@ -752,7 +703,7 @@ function colStats(name){
   const decRows=DECISION_ORDER.map(d=>({d,n:rows.filter(r=>r.decision===d).length})).filter(x=>x.n>0)
     .map(({d,n})=>`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:3px 0;border-bottom:1px solid var(--border);"><span style="color:${DOT_COLORS[d]}">${d}</span><span>${n}</span></div>`).join('');
   return `<div class="compare-col">
-    <h3>${getSchoolLogo(name)}${name}</h3>
+    <h3>${name}</h3>
     <div style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem;">
       ${total} applied · ${acc} accepted · ${total?Math.round(acc/total*100):0}% rate<br>
       Avg GPA: <strong style="color:var(--text)">${gpaAvg}</strong>
@@ -807,7 +758,7 @@ function renderEntries(data){
         ${g.sport?`<span class="pill pill-gray">🏅 ${g.sport}</span>`:''}
       </div>
       ${g.extracurriculars?`<div class="ecs">${g.extracurriculars}</div>`:''}
-      <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}">${getSchoolLogo(c.name)}${c.name} — ${c.decision}</span>`).join('')}</div>
+      <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}">${c.name} — ${c.decision}</span>`).join('')}</div>
     </div>`).join('');
 }
 
