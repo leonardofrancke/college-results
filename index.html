@@ -198,10 +198,6 @@
       .compare-grid { grid-template-columns:1fr; }
       .footer-inner { flex-direction:column; align-items:flex-start; gap:0.75rem; }
 
-      /* Top CTA banner on mobile */
-      #top-cta { padding:8px 0.75rem; }
-      #top-cta .inner-row { gap:6px; }
-
       /* Header — on mobile hide long title, keep nav tight on right */
       header { height:48px; padding:0 0.75rem; }
       header h1 { display:none; }
@@ -266,19 +262,6 @@
   </style>
 </head>
 <body>
-<!-- Top CTA banner — hidden if already submitted or dismissed -->
-<div id="top-cta" style="display:none;background:#18181b;border-bottom:1px solid rgba(255,255,255,0.08);padding:10px 1.5rem;position:relative;">
-  <div style="max-width:920px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span style="font-size:0.82rem;font-weight:600;color:#fff;">🎓 Add your college results</span>
-      <span style="font-size:0.78rem;color:#888;">Takes 2 minutes · fully anonymous · helps future Live Oak students</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-      <button onclick="goToSubmit();dismissCta()" style="padding:6px 16px;background:#fff;color:#111;border:none;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">Share mine →</button>
-      <button onclick="dismissCta()" aria-label="Dismiss" style="background:none;border:none;color:#555;font-size:1.1rem;cursor:pointer;padding:2px 6px;line-height:1;display:flex;align-items:center;justify-content:center;">×</button>
-    </div>
-  </div>
-</div>
 <header>
   <h1>College Results — Live Oak</h1>
   <div class="hdr-right">
@@ -309,6 +292,18 @@
   <div class="page active" id="page-results">
 
     <div class="tabs" id="year-tabs"></div>
+
+    <!-- CTA banner — shown to non-submitters until dismissed -->
+    <div id="top-cta" style="display:none;background:var(--text);border-radius:10px;padding:12px 1.25rem;margin-bottom:1rem;display:none;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;">
+        <span style="font-size:0.85rem;font-weight:600;color:var(--bg);white-space:nowrap;">🎓 Add your college results</span>
+        <span style="font-size:0.78rem;color:var(--bg);opacity:0.55;min-width:0;">Takes 2 minutes · fully anonymous · helps future students</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <button onclick="goToSubmit();dismissCta()" style="padding:7px 16px;background:var(--bg);color:var(--text);border:none;border-radius:7px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">Share mine →</button>
+        <button onclick="dismissCta()" aria-label="Dismiss" style="background:none;border:none;color:var(--bg);opacity:0.45;font-size:1.2rem;cursor:pointer;padding:0 4px;line-height:1;transition:opacity 0.15s;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.45'">×</button>
+      </div>
+    </div>
 
     <div class="chart-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px;">
@@ -602,7 +597,7 @@ function updateNav(){
   const cta=document.getElementById('top-cta');
   if(cta){
     const dismissed=sessionStorage.getItem('cr_cta_dismissed')==='1';
-    cta.style.display=(!submitted&&!dismissed)?'block':'none';
+    cta.style.display=(!submitted&&!dismissed)?'flex':'none';
   }
 }
 function showPage(name){
