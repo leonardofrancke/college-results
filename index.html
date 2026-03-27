@@ -127,7 +127,7 @@
     .slm-active strong { color:var(--text); }
 
     /* School logo */
-    .school-logo { width:16px; height:16px; border-radius:3px; vertical-align:middle; margin-right:4px; object-fit:contain; display:inline-block; }
+    .school-logo { width:13px; height:13px; border-radius:2px; vertical-align:middle; margin-right:3px; object-fit:contain; display:inline-block; position:relative; top:-1px; }
 
     @keyframes dotSpring {
       0%   { transform-box:fill-box; transform-origin:center; transform:scale(0); opacity:0; }
@@ -264,7 +264,21 @@
       </div>
       <div class="form-group">
         <label>Intended major (optional)</label>
-        <input type="text" id="f-major" placeholder="e.g. Computer Science" />
+        <div style="position:relative;">
+          <input type="text" id="f-major" placeholder="e.g. Computer Science" autocomplete="off"
+            oninput="showMajorSuggestions()" onblur="setTimeout(hideMajorSuggestions,400)"
+            style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:7px;font-size:0.875rem;font-family:inherit;color:var(--text);background:var(--bg);" />
+          <div id="major-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:7px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.12);margin-top:2px;"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Sports scholarship (optional)</label>
+        <div style="position:relative;">
+          <input type="text" id="f-sport" placeholder="e.g. Soccer, Basketball, None" autocomplete="off"
+            oninput="showSportSuggestions()" onblur="setTimeout(hideSportSuggestions,400)"
+            style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:7px;font-size:0.875rem;font-family:inherit;color:var(--text);background:var(--bg);" />
+          <div id="sport-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:7px;z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.12);margin-top:2px;"></div>
+        </div>
       </div>
       <div class="form-group">
         <label>Top extracurriculars (optional)</label>
@@ -610,9 +624,10 @@ function showTooltip(evt,r){
   const testLine=(r.sat||r.act)?`<div style="margin-top:3px;">${r.sat?`<span class="tip-label">SAT</span> ${r.sat}`:''}${r.sat&&r.act?' · ':''}${r.act?`<span class="tip-label">ACT</span> ${r.act}`:''}</div>`:'';
   const rankLine=r.class_rank?`<div style="margin-top:3px;"><span class="tip-label">Rank</span> #${r.class_rank}</div>`:'';
   const majorLine=r.major?`<div style="margin-top:3px;"><span class="tip-label">Major</span> ${r.major}</div>`:'';
+  const sportLine=r.sport?`<div style="margin-top:3px;"><span class="tip-label">Sport</span> 🏅 ${r.sport}</div>`:'';
   const ecsLine=r.extracurriculars?`<div style="margin-top:4px;opacity:0.65;font-size:0.72rem;">${r.extracurriculars}</div>`:'';
   const decisions=sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
-  tip.innerHTML=`${gpaLine}${testLine}${rankLine}${majorLine}${ecsLine}<div style="border-top:1px solid rgba(128,128,128,0.3);margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
+  tip.innerHTML=`${gpaLine}${testLine}${rankLine}${majorLine}${sportLine}${ecsLine}<div style="border-top:1px solid rgba(128,128,128,0.3);margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
   tip.style.display='block';
   tip.style.left=Math.min(evt.clientX+16,window.innerWidth-270)+'px';
   tip.style.top=Math.max(evt.clientY-10,10)+'px';
@@ -700,7 +715,7 @@ function colStats(name){
   const decRows=DECISION_ORDER.map(d=>({d,n:rows.filter(r=>r.decision===d).length})).filter(x=>x.n>0)
     .map(({d,n})=>`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:3px 0;border-bottom:1px solid var(--border);"><span style="color:${DOT_COLORS[d]}">${d}</span><span>${n}</span></div>`).join('');
   return `<div class="compare-col">
-    <h3>${name}</h3>
+    <h3>${getSchoolLogo(name)}${name}</h3>
     <div style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem;">
       ${total} applied · ${acc} accepted · ${total?Math.round(acc/total*100):0}% rate<br>
       Avg GPA: <strong style="color:var(--text)">${gpaAvg}</strong>
@@ -752,13 +767,75 @@ function renderEntries(data){
         ${g.act?`<span class="pill pill-gray">ACT ${g.act}</span>`:''}
         ${g.class_rank?`<span class="pill pill-gray">Rank #${g.class_rank}</span>`:''}
         ${g.major?`<span class="pill pill-gray">${g.major}</span>`:''}
+        ${g.sport?`<span class="pill pill-gray">🏅 ${g.sport}</span>`:''}
       </div>
       ${g.extracurriculars?`<div class="ecs">${g.extracurriculars}</div>`:''}
-      <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}">${c.name} — ${c.decision}</span>`).join('')}</div>
+      <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}">${getSchoolLogo(c.name)}${c.name} — ${c.decision}</span>`).join('')}</div>
     </div>`).join('');
 }
 
 // FORM
+const ALL_MAJORS=[
+  'Accounting','Aerospace Engineering','African American Studies','Agriculture','Anthropology',
+  'Architecture','Art','Art History','Biochemistry','Biology','Biomedical Engineering',
+  'Business','Business Administration','Chemical Engineering','Chemistry','Civil Engineering',
+  'Classics','Cognitive Science','Communication','Computer Engineering','Computer Science',
+  'Creative Writing','Criminal Justice','Data Science','Economics','Education',
+  'Electrical Engineering','English','Environmental Science','Environmental Studies',
+  'Film','Finance','Fine Arts','French','Gender Studies','Geography','Geology',
+  'German','Global Studies','Graphic Design','History','Human Biology','Humanities',
+  'Industrial Engineering','Information Systems','International Business',
+  'International Relations','Italian','Japanese','Journalism','Kinesiology',
+  'Latin American Studies','Law','Linguistics','Management','Marine Biology',
+  'Marketing','Mathematics','Mechanical Engineering','Media Studies','Medicine',
+  'Middle Eastern Studies','Music','Neuroscience','Nursing','Nutrition',
+  'Philosophy','Physics','Political Science','Pre-Dental','Pre-Law','Pre-Med',
+  'Pre-Pharmacy','Pre-Veterinary','Psychology','Public Health','Public Policy',
+  'Religious Studies','Russian','Social Work','Sociology','Software Engineering',
+  'Spanish','Statistics','Studio Art','Supply Chain','Sustainability',
+  'Theater','Undeclared','Urban Studies','Women\'s Studies',
+];
+
+const ALL_SPORTS=[
+  'Baseball','Basketball','Cheerleading','Cross Country','Crew / Rowing','Cycling',
+  'Dance','Diving','Fencing','Field Hockey','Football','Golf','Gymnastics',
+  'Ice Hockey','Lacrosse','Polo','Rugby','Sailing','Soccer','Softball',
+  'Swimming','Tennis','Track & Field','Ultimate Frisbee','Volleyball',
+  'Water Polo','Wrestling',
+];
+
+function showMajorSuggestions(){
+  const input=document.getElementById('f-major');
+  const sug=document.getElementById('major-sug');
+  const val=input.value.toLowerCase().trim();
+  if(!val){sug.style.display='none';return;}
+  const matches=ALL_MAJORS.filter(m=>m.toLowerCase().includes(val));
+  if(!matches.length){sug.style.display='none';return;}
+  sug.innerHTML=matches.slice(0,7).map(m=>
+    `<div onclick="document.getElementById('f-major').value='${m}';hideMajorSuggestions();event.preventDefault();"
+      style="padding:8px 12px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid var(--border);color:var(--text);"
+      onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">${m}</div>`
+  ).join('');
+  sug.style.display='block';
+}
+function hideMajorSuggestions(){document.getElementById('major-sug').style.display='none';}
+
+function showSportSuggestions(){
+  const input=document.getElementById('f-sport');
+  const sug=document.getElementById('sport-sug');
+  const val=input.value.toLowerCase().trim();
+  if(!val){sug.style.display='none';return;}
+  const matches=ALL_SPORTS.filter(s=>s.toLowerCase().includes(val));
+  if(!matches.length){sug.style.display='none';return;}
+  sug.innerHTML=matches.slice(0,6).map(s=>
+    `<div onclick="document.getElementById('f-sport').value='${s}';hideSportSuggestions();event.preventDefault();"
+      style="padding:8px 12px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid var(--border);color:var(--text);"
+      onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">${s}</div>`
+  ).join('');
+  sug.style.display='block';
+}
+function hideSportSuggestions(){document.getElementById('sport-sug').style.display='none';}
+
 function getKnownColleges(){
   const submitted=allData.map(r=>r.college_name).filter(Boolean);
   return [...new Set([...ALL_COLLEGES,...submitted])].sort();
@@ -810,6 +887,7 @@ async function loadExistingSubmission(){
     document.getElementById('f-rank').value=r.class_rank||'';
     document.getElementById('f-major').value=r.major||'';
     document.getElementById('f-ecs').value=r.extracurriculars||'';
+    document.getElementById('f-sport').value=r.sport||'';
     document.getElementById('f-year').value=r.grad_year||'';
     data.forEach(row=>addCollege(row.college_name||'',row.decision||'Accepted'));
     document.getElementById('submit-btn').textContent='Update Submission';
@@ -817,7 +895,7 @@ async function loadExistingSubmission(){
     document.getElementById('form-subtitle').textContent='Update your results below.';
     document.getElementById('delete-btn').style.display='block';
   } else {
-    ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs','f-year'].forEach(id=>document.getElementById(id).value='');
+    ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs','f-year','f-sport'].forEach(id=>document.getElementById(id).value='');
     addCollege();
     document.getElementById('submit-btn').textContent='Submit';
     document.getElementById('form-title').textContent='Add your college results';
@@ -841,6 +919,7 @@ async function submitForm(){
       class_rank:parseInt(document.getElementById('f-rank').value)||null,
       major:document.getElementById('f-major').value.trim()||null,
       extracurriculars:document.getElementById('f-ecs').value.trim()||null,
+      sport:document.getElementById('f-sport').value.trim()||null,
       college_name:cn.value.trim(),decision:cd.value,session_id:SESSION_ID
     });
   }
