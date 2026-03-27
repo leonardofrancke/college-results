@@ -129,9 +129,8 @@
 
 
     @keyframes dotSpring {
-      0%   { transform-box:fill-box; transform-origin:center; transform:scale(0); opacity:0; }
-      40%  { opacity:1; }
-      55%  { transform:scale(1.5); }
+      0%   { transform:scale(0); opacity:0; }
+      55%  { transform:scale(1.5); opacity:1; }
       75%  { transform:scale(0.9); }
       90%  { transform:scale(1.06); }
       100% { transform:scale(1); opacity:1; }
@@ -607,7 +606,7 @@ function buildChart(data,animate){
     const col=DOT_COLORS[r.decision]||'#888';
     const dimmed=(activeFilter&&r.decision!==activeFilter)||(slmFilter&&!slmMatches(r));
     const delay=animate?ri*55:0;
-    const anim=animate?`transform-box:fill-box;transform-origin:center;animation:dotSpring 0.6s cubic-bezier(0.34,1.56,0.64,1) ${delay}ms both;`:'';
+    const anim=animate?`transform-box:fill-box;transform-origin:center;animation:dotSpring 0.55s cubic-bezier(0.34,1.56,0.64,1) ${delay}ms both;`:'';
     const opacity=dimmed?0.12:1;
     svg+=`<circle cx="${x}" cy="${y}" r="6" fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${opacity}" style="cursor:pointer;${anim};transition:opacity 0.2s;" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
   });
