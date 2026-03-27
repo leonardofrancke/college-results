@@ -26,7 +26,7 @@
     nav a.active, nav a:hover { color:#fff; }
     .theme-btn { background:none; border:1px solid #444; border-radius:6px; color:#888; cursor:pointer; font-size:0.72rem; padding:4px 9px; font-family:inherit; }
     .theme-btn:hover { color:#fff; border-color:#666; }
-    .container { max-width:920px; margin:2rem auto; padding:0 1.25rem; }
+    .container { max-width:920px; margin:2rem auto; padding:0 1.25rem; overflow:hidden; position:relative; }
     .tabs { display:flex; gap:6px; margin-bottom:1.75rem; }
     .tab { padding:7px 20px; border-radius:6px; border:1px solid var(--border2); background:var(--surface); cursor:pointer; font-size:0.85rem; color:var(--text2); font-family:inherit; }
     .tab.active { background:var(--text); color:var(--bg); border-color:var(--text); font-weight:500; }
@@ -134,16 +134,16 @@
       90%  { transform:scale(1.08); }
       100% { transform:scale(1); opacity:1; }
     }
-    @keyframes morphOut {
-      0%   { opacity:1; transform:scale(1); }
-      60%  { opacity:0.2; transform:scale(0.08); }
-      100% { opacity:0; transform:scale(0); }
-    }
-    @keyframes morphIn {
-      0%   { opacity:0; transform:scale(0.15); }
-      60%  { opacity:1; transform:scale(1.03); }
-      100% { transform:scale(1); }
-    }
+    @keyframes slideOutRight { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(48px); } }
+    @keyframes slideOutLeft  { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(-48px); } }
+    @keyframes slideInLeft   { from { opacity:0; transform:translateX(-48px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes slideInRight  { from { opacity:0; transform:translateX(48px); } to { opacity:1; transform:translateX(0); } }
+    .page { display:none; }
+    .page.active { display:block; }
+    .page.slide-out-right { display:block; animation:slideOutRight 0.22s ease forwards; pointer-events:none; }
+    .page.slide-out-left  { display:block; animation:slideOutLeft  0.22s ease forwards; pointer-events:none; }
+    .page.slide-in-left   { display:block; animation:slideInLeft   0.28s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .page.slide-in-right  { display:block; animation:slideInRight  0.28s cubic-bezier(0.16,1,0.3,1) forwards; }
     @keyframes countUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
     @media (max-width:600px) { .form-row,.form-row-3 { grid-template-columns:1fr; } .stats-row { grid-template-columns:repeat(2,1fr); } .modal-stats { grid-template-columns:1fr 1fr; } .compare-grid { grid-template-columns:1fr; } }
   </style>
@@ -395,14 +395,33 @@ function toggleTheme(){
 function updateNav(){
   document.getElementById('nav-submit').textContent=HAS_SUBMITTED()?'Edit Submission':'Submit yours';
 }
+const PAGE_ORDER=['results','submit'];
+let currentPage='results';
+
 function showPage(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  if(name===currentPage) return;
+  const oldEl=document.getElementById('page-'+currentPage);
+  const newEl=document.getElementById('page-'+name);
+  const goRight=PAGE_ORDER.indexOf(name)>PAGE_ORDER.indexOf(currentPage);
   document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
   document.getElementById('dot-tooltip').style.display='none';
-  if(name==='results') loadData();
-  if(name==='submit') loadExistingSubmission();
+  updateNav();
+
+  oldEl.classList.remove('active');
+  oldEl.classList.add(goRight?'slide-out-left':'slide-out-right');
+  newEl.classList.add(goRight?'slide-in-right':'slide-in-left');
+
+  setTimeout(()=>{
+    oldEl.classList.remove('slide-out-left','slide-out-right');
+    oldEl.style.display='none';
+    newEl.classList.remove('slide-in-right','slide-in-left');
+    newEl.classList.add('active');
+    newEl.style.display='';
+    currentPage=name;
+    if(name==='results') loadData();
+    if(name==='submit') loadExistingSubmission();
+  },280);
 }
 
 async function loadData(){
@@ -928,34 +947,30 @@ async function submitForm(){
   localStorage.setItem('cr_submitted','1');
   updateNav();
 
-  // Morph transition: form shrinks to center, then results grow out
-  const formWrap=document.getElementById('page-submit');
-  formWrap.style.transformOrigin='center center';
-  formWrap.style.animation='morphOut 0.45s cubic-bezier(0.4,0,1,1) forwards';
+  // Slide form out to the right, results in from the left
+  const submitPage=document.getElementById('page-submit');
+  const resultsPage=document.getElementById('page-results');
+  submitPage.classList.remove('active');
+  submitPage.classList.add('slide-out-right');
+  resultsPage.classList.add('slide-in-left');
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById('nav-results').classList.add('active');
 
   setTimeout(async()=>{
-    // Switch page while invisible
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
-    formWrap.style.animation='';
-    const resultsPage=document.getElementById('page-results');
+    submitPage.classList.remove('slide-out-right');
+    submitPage.style.display='none';
+    resultsPage.classList.remove('slide-in-left');
     resultsPage.classList.add('active');
-    document.getElementById('nav-results').classList.add('active');
-    resultsPage.style.transformOrigin='center top';
-    resultsPage.style.animation='morphIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards';
+    resultsPage.style.display='';
+    currentPage='results';
 
-    // Load data and render with animated dots
     const {data}=await db.from('submissions').select('*');
     allData=data||[];
     renderTabs();
     const d=allData.filter(r=>r.grad_year==activeYear);
     renderStats(d);renderEntries(d);scatterData=d;
-
-    setTimeout(()=>{
-      resultsPage.style.animation='';
-      buildChart(d,true);
-    },300);
-  },420);
+    buildChart(d,true);
+  },280);
 }
 
 async function deleteSubmission(){
