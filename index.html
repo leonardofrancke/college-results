@@ -47,6 +47,13 @@
     .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.1rem 1rem; text-align:center; }
     .stat-card .label { font-size:0.72rem; color:var(--text3); margin-top:3px; text-transform:uppercase; letter-spacing:0.05em; }
     .chart-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.25rem; margin-bottom:1.5rem; }
+    .chart-card:fullscreen {
+      padding:1.5rem;
+      border-radius:0;
+      overflow-y:auto;
+      background:var(--surface);
+    }
+    .chart-card:-webkit-full-screen { padding:1.5rem; border-radius:0; overflow-y:auto; background:var(--surface); }
     .chart-tabs { display:flex; gap:6px; }
     .chart-tab { padding:5px 14px; border-radius:5px; border:1px solid var(--border2); background:transparent; cursor:pointer; font-size:0.78rem; color:var(--text2); font-family:inherit; }
     .chart-tab.active { background:var(--text); color:var(--bg); border-color:var(--text); }
@@ -259,13 +266,16 @@
           </div>
           <button onclick="openCompare()" style="padding:5px 12px;border-radius:5px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:0.75rem;color:var(--text2);font-family:inherit;">Compare colleges</button>
         </div>
-        <input type="text" id="college-search" placeholder="Search a college..." oninput="filterChart(this.value)"
-          style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:0.82rem;font-family:inherit;width:200px;background:var(--bg);color:var(--text);" />
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="text" id="college-search" placeholder="Search a college..." oninput="filterChart(this.value)"
+            style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:0.82rem;font-family:inherit;width:200px;background:var(--bg);color:var(--text);" />
+          <button id="fs-btn" onclick="toggleChartFullscreen()" title="Fullscreen" style="flex-shrink:0;width:32px;height:32px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:0.9rem;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseenter="this.style.color='var(--text)'" onmouseleave="this.style.color='var(--text2)'">⛶</button>
+        </div>
       </div>
 
       <!-- Min submissions filter -->
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.85rem;flex-wrap:wrap;">
-        <span style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Min. submissions:</span>
+        <span style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;cursor:help;border-bottom:1px dashed var(--border2);" title="Only show colleges where at least this many Live Oak students submitted results. Colleges with just 1 submission aren't statistically meaningful — filtering them out makes the chart easier to read.">Min. submissions:</span>
         <div style="display:flex;gap:4px;">
           <button id="minsub-1" class="minsub-btn minsub-active" onclick="setMinSubs(1,this)">Any</button>
           <button id="minsub-2" class="minsub-btn" onclick="setMinSubs(2,this)">2+</button>
@@ -634,6 +644,23 @@ function toggleFilter(decision){
   buildChart(scatterData,false);
 }
 
+function toggleChartFullscreen(){
+  const card=document.querySelector('.chart-card');
+  if(!document.fullscreenElement){
+    (card.requestFullscreen||card.webkitRequestFullscreen||card.mozRequestFullScreen).call(card);
+  } else {
+    (document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen).call(document);
+  }
+}
+document.addEventListener('fullscreenchange',()=>{
+  const btn=document.getElementById('fs-btn');
+  const inFs=!!document.fullscreenElement;
+  if(btn) btn.title=inFs?'Exit fullscreen':'Fullscreen';
+  if(btn) btn.textContent=inFs?'✕':'⛶';
+  // Rebuild chart at new size
+  buildChart(scatterData,false);
+});
+
 function setMinSubsUI(n){
   document.querySelectorAll('.minsub-btn').forEach(b=>b.classList.remove('minsub-active'));
   const el=document.getElementById('minsub-'+n);
@@ -708,7 +735,9 @@ function buildChart(data,animate){
   const dk=document.documentElement.getAttribute('data-theme')==='dark';
   const gridC=dk?'#2c2c2e':'#f0ede8',axisC=dk?'#3a3a3c':'#e0ddd8',tickC=dk?'#636366':'#999',lblC=dk?'#aeaeb2':'#555';
 
-  const H=340,PAD={top:20,right:20,bottom:100,left:55};
+  const isFullscreen=!!document.fullscreenElement;
+  const H=isFullscreen?Math.max(window.innerHeight-220,500):420;
+  const PAD={top:20,right:20,bottom:100,left:55};
   const MIN_COL_W=58;
   const containerW=el.closest('.chart-card').clientWidth-40;
   const naturalColW=containerW/cols.length;
