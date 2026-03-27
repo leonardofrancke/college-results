@@ -113,6 +113,22 @@
     .compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
     .compare-col h3 { font-size:0.9rem; font-weight:600; color:var(--text); margin-bottom:0.75rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem; }
 
+    /* Schools like me */
+    .slm-panel { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.1rem 1.25rem; margin-bottom:1.5rem; }
+    .slm-title { font-size:0.8rem; font-weight:600; color:var(--text); margin-bottom:0.75rem; display:flex; align-items:center; gap:6px; }
+    .slm-inputs { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    .slm-field { display:flex; flex-direction:column; gap:4px; }
+    .slm-field label { font-size:0.7rem; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; }
+    .slm-field input { padding:7px 10px; border:1px solid var(--border2); border-radius:6px; font-size:0.85rem; font-family:inherit; color:var(--text); background:var(--bg); width:100px; }
+    .slm-field select { padding:7px 10px; border:1px solid var(--border2); border-radius:6px; font-size:0.82rem; font-family:inherit; color:var(--text); background:var(--bg); }
+    .slm-btn { padding:7px 14px; background:var(--text); color:var(--bg); border:none; border-radius:6px; font-size:0.8rem; font-weight:500; cursor:pointer; font-family:inherit; }
+    .slm-clear { padding:7px 12px; background:none; color:var(--text3); border:1px solid var(--border2); border-radius:6px; font-size:0.8rem; cursor:pointer; font-family:inherit; }
+    .slm-active { font-size:0.75rem; color:var(--text3); margin-top:0.5rem; }
+    .slm-active strong { color:var(--text); }
+
+    /* School logo */
+    .school-logo { width:16px; height:16px; border-radius:3px; vertical-align:middle; margin-right:4px; object-fit:contain; display:inline-block; }
+
     @keyframes dotSpring {
       0%   { transform-box:fill-box; transform-origin:center; transform:scale(0); opacity:0; }
       55%  { transform:scale(1.6); opacity:1; }
@@ -154,6 +170,40 @@
   <div class="page active" id="page-results">
     <div class="tabs" id="year-tabs"></div>
     <div class="stats-row" id="stats-row"></div>
+
+    <!-- Schools like me -->
+    <div class="slm-panel">
+      <div class="slm-title">🎯 Schools like me — filter by similar stats</div>
+      <div class="slm-inputs">
+        <div class="slm-field">
+          <label>Unweighted GPA</label>
+          <input type="number" id="slm-gpa" placeholder="e.g. 3.8" step="0.01" min="1" max="4" />
+        </div>
+        <div class="slm-field">
+          <label>GPA range ±</label>
+          <select id="slm-gpa-range">
+            <option value="0.2">±0.2</option>
+            <option value="0.3" selected>±0.3</option>
+            <option value="0.5">±0.5</option>
+          </select>
+        </div>
+        <div class="slm-field">
+          <label>SAT (optional)</label>
+          <input type="number" id="slm-sat" placeholder="e.g. 1400" step="10" />
+        </div>
+        <div class="slm-field">
+          <label>SAT range ±</label>
+          <select id="slm-sat-range">
+            <option value="50">±50</option>
+            <option value="100" selected>±100</option>
+            <option value="150">±150</option>
+          </select>
+        </div>
+        <button class="slm-btn" onclick="applySlm()">Find matches</button>
+        <button class="slm-clear" onclick="clearSlm()" id="slm-clear-btn" style="display:none;">Clear</button>
+      </div>
+      <div class="slm-active" id="slm-status" style="display:none;"></div>
+    </div>
     <div class="chart-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -300,7 +350,52 @@ function getAcceptRate(name){
 const SESSION_ID=localStorage.getItem('cr_sid')||(()=>{const id=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('cr_sid',id);return id;})();
 const HAS_SUBMITTED=()=>localStorage.getItem('cr_submitted')==='1';
 
-let activeYear=2026,allData=[],scatterData=[],searchFilter='',collegeCount=0,activeChartType='gpa',activeFilter=null;
+// School domain map for logos
+const COLLEGE_DOMAINS={
+  'Harvard':'harvard.edu','Princeton':'princeton.edu','MIT':'mit.edu','Yale':'yale.edu',
+  'Columbia':'columbia.edu','Stanford':'stanford.edu','Caltech':'caltech.edu',
+  'Penn':'upenn.edu','UPenn':'upenn.edu','Brown':'brown.edu','Dartmouth':'dartmouth.edu',
+  'Cornell':'cornell.edu','Duke':'duke.edu','Northwestern':'northwestern.edu',
+  'Johns Hopkins':'jhu.edu','Harvey Mudd':'hmc.edu','Harvey Mudd College':'hmc.edu',
+  'Vanderbilt':'vanderbilt.edu','Rice':'rice.edu','WashU':'wustl.edu',
+  'Notre Dame':'nd.edu','Georgetown':'georgetown.edu','Emory':'emory.edu',
+  'Carnegie Mellon':'cmu.edu','Tufts':'tufts.edu','Northeastern':'northeastern.edu',
+  'Tulane':'tulane.edu','Wake Forest':'wfu.edu','USC':'usc.edu','NYU':'nyu.edu',
+  'Boston College':'bc.edu','Boston University':'bu.edu','Lehigh':'lehigh.edu',
+  'University of Miami':'miami.edu','Villanova':'villanova.edu','SMU':'smu.edu',
+  'TCU':'tcu.edu','Baylor':'baylor.edu','Olin College':'olin.edu',
+  'UC Berkeley':'berkeley.edu','UCLA':'ucla.edu','UCSD':'ucsd.edu',
+  'UC Santa Barbara':'ucsb.edu','UC Davis':'ucdavis.edu','UC Irvine':'uci.edu',
+  'UC Santa Cruz':'ucsc.edu','UC Riverside':'ucr.edu','UC Merced':'ucmerced.edu',
+  'Cal Poly SLO':'calpoly.edu','Cal Poly Pomona':'cpp.edu','Cal State Long Beach':'csulb.edu',
+  'San Jose State':'sjsu.edu','Sacramento State':'csus.edu','Fresno State':'csufresno.edu',
+  'Chico State':'csuchico.edu','Cal State Fullerton':'fullerton.edu',
+  'LMU':'lmu.edu','Santa Clara':'scu.edu','Pepperdine':'pepperdine.edu',
+  'Chapman':'chapman.edu','Occidental':'oxy.edu','Claremont McKenna':'cmc.edu',
+  'Scripps':'scrippscollege.edu','Pitzer':'pitzer.edu','Pomona':'pomona.edu',
+  'Michigan':'umich.edu','UVA':'virginia.edu','UNC Chapel Hill':'unc.edu',
+  'Georgia Tech':'gatech.edu','University of Florida':'ufl.edu','Wisconsin':'wisc.edu',
+  'Ohio State':'osu.edu','Penn State':'psu.edu','UT Austin':'utexas.edu',
+  'UIUC':'illinois.edu','Purdue':'purdue.edu','University of Washington':'uw.edu',
+  'University of Maryland':'umd.edu','University of Georgia':'uga.edu',
+  'Virginia Tech':'vt.edu','Clemson':'clemson.edu','Rutgers':'rutgers.edu',
+  'Swarthmore':'swarthmore.edu','Amherst':'amherst.edu','Williams':'williams.edu',
+  'Bowdoin':'bowdoin.edu','Middlebury':'middlebury.edu','Wellesley':'wellesley.edu',
+  'Barnard':'barnard.edu','Smith':'smith.edu','Vassar':'vassar.edu',
+  'Wesleyan':'wesleyan.edu','Haverford':'haverford.edu','Davidson':'davidson.edu',
+  'Oberlin':'oberlin.edu','Grinnell':'grinnell.edu','Carleton':'carleton.edu',
+  'Reed':'reed.edu','Hamilton':'hamilton.edu','Colgate':'colgate.edu',
+  'Syracuse':'syr.edu','Fordham':'fordham.edu','GWU':'gwu.edu','Howard':'howard.edu',
+  'Spelman':'spelman.edu','Morehouse':'morehouse.edu','Gonzaga':'gonzaga.edu',
+};
+
+function getSchoolLogo(name){
+  const domain=COLLEGE_DOMAINS[name];
+  if(!domain) return '';
+  return `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" class="school-logo" onerror="this.style.display='none'" alt="" />`;
+}
+
+let activeYear=2026,allData=[],scatterData=[],searchFilter='',collegeCount=0,activeChartType='gpa',activeFilter=null,slmFilter=null;
 
 // THEME
 function toggleTheme(){
@@ -382,6 +477,48 @@ function renderStats(data){
   else document.getElementById('s3').textContent='—';
 }
 
+// SCHOOLS LIKE ME
+function applySlm(){
+  const gpa=parseFloat(document.getElementById('slm-gpa').value);
+  if(!gpa){alert('Enter your GPA to find matches.');return;}
+  const gpaRange=parseFloat(document.getElementById('slm-gpa-range').value);
+  const sat=parseInt(document.getElementById('slm-sat').value)||null;
+  const satRange=parseInt(document.getElementById('slm-sat-range').value);
+  slmFilter={gpa,gpaRange,sat,satRange};
+  document.getElementById('slm-clear-btn').style.display='inline-block';
+  const status=document.getElementById('slm-status');
+  status.style.display='block';
+  let desc=`Showing students with GPA <strong>${(gpa-gpaRange).toFixed(1)} – ${(gpa+gpaRange).toFixed(1)}</strong>`;
+  if(sat) desc+=` · SAT <strong>${sat-satRange} – ${sat+satRange}</strong>`;
+  status.innerHTML=desc;
+  buildChart(scatterData,false);
+  renderEntries(scatterData);
+}
+
+function clearSlm(){
+  slmFilter=null;
+  document.getElementById('slm-gpa').value='';
+  document.getElementById('slm-sat').value='';
+  document.getElementById('slm-clear-btn').style.display='none';
+  document.getElementById('slm-status').style.display='none';
+  buildChart(scatterData,false);
+  renderEntries(scatterData);
+}
+
+function slmMatches(r){
+  if(!slmFilter) return true;
+  const {gpa,gpaRange,sat,satRange}=slmFilter;
+  const sessions=[...new Set(scatterData.filter(x=>x.college_name===r.college_name||true).map(x=>x.session_id))];
+  // find the student's own GPA/SAT from their session
+  const studentRows=scatterData.filter(x=>x.session_id===r.session_id);
+  if(!studentRows.length) return false;
+  const sGpa=parseFloat(studentRows[0].gpa);
+  const sSat=parseInt(studentRows[0].sat)||null;
+  if(isNaN(sGpa)||Math.abs(sGpa-gpa)>gpaRange) return false;
+  if(sat&&sSat&&Math.abs(sSat-sat)>satRange) return false;
+  return true;
+}
+
 function renderCharts(data){scatterData=data;buildChart(data,false);}
 function filterChart(val){searchFilter=val.toLowerCase().trim();buildChart(scatterData,false);}
 function switchChart(type,btn){
@@ -446,7 +583,7 @@ function buildChart(data,animate){
     const x=PAD.left+i*colW+colW/2;
     const y=PAD.top+plotH-(parseFloat(r[yKey])-yMin)/(yMax-yMin)*plotH;
     const col=DOT_COLORS[r.decision]||'#888';
-    const dimmed=activeFilter&&r.decision!==activeFilter;
+    const dimmed=(activeFilter&&r.decision!==activeFilter)||(slmFilter&&!slmMatches(r));
     const delay=animate?ri*55:0;
     const anim=animate?`transform-box:fill-box;transform-origin:center;animation:dotSpring 0.6s cubic-bezier(0.34,1.56,0.64,1) ${delay}ms both;`:'';
     const opacity=dimmed?0.12:1;
@@ -454,6 +591,23 @@ function buildChart(data,animate){
   });
   svg+=`</svg>`;
   el.innerHTML=svg;
+
+  // Overlay school logos on x-axis using absolute positioned imgs
+  const svgEl=el.querySelector('svg');
+  const rect=svgEl.getBoundingClientRect();
+  cols.forEach((col,i)=>{
+    const domain=COLLEGE_DOMAINS[col];
+    if(!domain) return;
+    const x=PAD.left+i*colW+colW/2;
+    const yBase=PAD.top+plotH+12;
+    const img=document.createElement('img');
+    img.src=`https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+    img.className='school-logo';
+    img.style.cssText=`position:absolute;left:${x-8}px;top:${yBase+82}px;width:14px;height:14px;opacity:0.7;`;
+    img.onerror=()=>img.remove();
+    el.style.position='relative';
+    el.appendChild(img);
+  });
 
   // Legend with filter toggle
   const used=DECISION_ORDER.filter(d=>filtered.find(r=>r.decision===d));
@@ -509,7 +663,7 @@ function openCollegeDetail(name){
   const extLine=extRate<100?`<p style="font-size:0.78rem;color:var(--text3);margin-top:0.75rem;">National acceptance rate: ~${extRate}%</p>`:'';
 
   document.getElementById('college-modal-content').innerHTML=`
-    <h2>${name}</h2>
+    <h2>${getSchoolLogo(name)}${name}</h2>
     <p class="modal-sub">${total} submission${total!==1?'s':''} from Live Oak</p>
     <div class="modal-stats">
       <div class="modal-stat"><div class="mn">${total}</div><div class="ml">Applied</div></div>
@@ -578,7 +732,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('college
 // ENTRIES
 function renderEntries(data){
   const el=document.getElementById('entries');
-  if(!data.length){
+  // Apply SLM filter — filter by unique session_ids that match
+  let displayData=data;
+  if(slmFilter){
+    const matchedSessions=new Set(data.filter(r=>slmMatches(r)).map(r=>r.session_id));
+    displayData=data.filter(r=>matchedSessions.has(r.session_id));
+  }
+  if(!displayData.length){
     el.innerHTML=`<div class="empty-state">
       <div class="empty-icon">🎓</div>
       <h3>No results yet for ${activeYear}</h3>
@@ -588,7 +748,7 @@ function renderEntries(data){
     return;
   }
   const groups=[],seen=new Map();
-  data.forEach(r=>{
+  displayData.forEach(r=>{
     const k=r.session_id||`${r.gpa}|${r.sat}|${r.act}|${r.major}|${r.extracurriculars}`;
     if(!seen.has(k)){seen.set(k,groups.length);groups.push({...r,colleges:[]});}
     groups[seen.get(k)].colleges.push({name:r.college_name,decision:r.decision});
