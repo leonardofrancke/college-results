@@ -25,8 +25,9 @@
     header { background:var(--header); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:56px; }
     header h1 { font-size:0.95rem; font-weight:600; color:#fff; letter-spacing:0.01em; }
     .hdr-right { display:flex; align-items:center; gap:1.25rem; }
-    nav a { margin-left:1.5rem; text-decoration:none; color:#888; font-size:0.85rem; }
-    nav a.active, nav a:hover { color:#fff; }
+    nav a { margin-left:1rem; text-decoration:none; color:#888; font-size:0.82rem; padding:5px 13px; border-radius:6px; border:1px solid transparent; transition:all 0.15s; }
+    nav a.active { color:#fff; background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.18); }
+    nav a:hover:not(.active) { color:#ccc; border-color:#444; }
     .theme-btn { background:none; border:1px solid #444; border-radius:6px; color:#888; cursor:pointer; font-size:0.72rem; padding:4px 9px; font-family:inherit; }
     .theme-btn:hover { color:#fff; border-color:#666; }
 
@@ -164,11 +165,12 @@
     .footer-contact a { color:#aaa; text-decoration:none; border-bottom:1px solid #444; transition:color 0.15s,border-color 0.15s; }
     .footer-contact a:hover { color:#fff; border-color:#fff; }
 
-    @keyframes swipePulse {
-      0%,100% { opacity:0.85; transform:translateX(0); }
-      50% { opacity:1; transform:translateX(3px); }
+    @keyframes trackThumbPulse {
+      0%,100% { opacity:0.5; }
+      50% { opacity:1; }
     }
-    #chart-swipe-hint { animation:swipePulse 1.6s ease-in-out infinite; }
+    /* Thumb pulses when at start to signal scrollability */
+    #chart-scroll-thumb.is-start { animation:trackThumbPulse 1.4s ease-in-out infinite; }
     @keyframes dotSpring {
       0%   { transform:scale(0); opacity:0; }
       55%  { transform:scale(1.5); opacity:1; }
@@ -197,11 +199,12 @@
       .footer-inner { flex-direction:column; align-items:flex-start; gap:0.75rem; }
 
       /* Header — on mobile hide long title, keep nav tight on right */
-      header { height:44px; padding:0 0.75rem; }
+      header { height:48px; padding:0 0.75rem; }
       header h1 { display:none; }
-      .hdr-right { margin-left:auto; gap:0.5rem; }
-      nav a { margin-left:0.6rem; font-size:0.82rem; }
-      .theme-btn { font-size:0.68rem; padding:3px 8px; }
+      .hdr-right { margin-left:auto; gap:0.4rem; }
+      nav a { margin-left:0.3rem; font-size:0.78rem; padding:5px 11px; }
+      nav a.active { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.25); color:#fff; font-weight:500; }
+      .theme-btn { font-size:0.68rem; padding:4px 9px; }
 
       /* Year tabs — scroll horizontally */
       .tabs { overflow-x:auto; flex-wrap:nowrap; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
@@ -334,8 +337,10 @@
           </div>
           <div id="chart-scroll-hint-l" style="display:none;position:absolute;top:0;left:0;bottom:0;width:32px;background:linear-gradient(to left,transparent,var(--surface));pointer-events:none;"></div>
           <div id="chart-scroll-hint-r" style="display:none;position:absolute;top:0;right:0;bottom:0;width:32px;background:linear-gradient(to right,transparent,var(--surface));pointer-events:none;"></div>
-          <!-- Mobile swipe hint — shown only when chart is scrollable -->
-          <div id="chart-swipe-hint" style="display:none;position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.55);color:#fff;font-size:0.65rem;padding:3px 8px;border-radius:20px;pointer-events:none;letter-spacing:0.03em;backdrop-filter:blur(4px);">swipe → to see more</div>
+          <!-- Mobile scroll track indicator -->
+          <div id="chart-scroll-track" style="display:none;position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:60px;height:4px;background:rgba(128,128,128,0.2);border-radius:99px;overflow:hidden;pointer-events:none;">
+            <div id="chart-scroll-thumb" style="position:absolute;top:0;left:0;height:100%;width:30%;background:rgba(128,128,128,0.6);border-radius:99px;transition:left 0.1s linear;"></div>
+          </div>
         </div>
         <button id="chart-next" onclick="scrollChart(1)" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:1rem;color:var(--text2);display:none;align-items:center;justify-content:center;transition:all 0.15s;">›</button>
       </div>
@@ -767,22 +772,42 @@ function updateScrollArrows(){
   const next=document.getElementById('chart-next');
   const hintL=document.getElementById('chart-scroll-hint-l');
   const hintR=document.getElementById('chart-scroll-hint-r');
-  const swipeHint=document.getElementById('chart-swipe-hint');
+  const track=document.getElementById('chart-scroll-track');
+  const thumb=document.getElementById('chart-scroll-thumb');
   if(!wrap||!prev||!next) return;
   const scrollable=wrap.scrollWidth>wrap.clientWidth+4;
   const atStart=wrap.scrollLeft<=4;
   const atEnd=wrap.scrollLeft+wrap.clientWidth>=wrap.scrollWidth-4;
   const isMobile=window.innerWidth<=600;
+
+  // Desktop arrow buttons
   prev.style.display=(!isMobile&&scrollable)?'flex':'none';
   next.style.display=(!isMobile&&scrollable)?'flex':'none';
   prev.style.opacity=atStart?'0.3':'1';
   prev.style.pointerEvents=atStart?'none':'auto';
   next.style.opacity=atEnd?'0.3':'1';
   next.style.pointerEvents=atEnd?'none':'auto';
+
+  // Edge fades
   if(hintL) hintL.style.display=(scrollable&&!atStart)?'block':'none';
   if(hintR) hintR.style.display=(scrollable&&!atEnd)?'block':'none';
-  // Mobile swipe hint: show when scrollable and not yet scrolled
-  if(swipeHint) swipeHint.style.display=(isMobile&&scrollable&&atStart)?'block':'none';
+
+  // Mobile scroll track pill
+  if(track&&thumb){
+    track.style.display=(isMobile&&scrollable)?'block':'none';
+    if(scrollable){
+      // thumb width = viewport/totalWidth proportion, min 20%
+      const ratio=Math.min(wrap.clientWidth/wrap.scrollWidth,1);
+      const thumbW=Math.max(ratio*100,20);
+      const maxScroll=wrap.scrollWidth-wrap.clientWidth;
+      const thumbLeft=maxScroll>0?(wrap.scrollLeft/maxScroll)*(100-thumbW):0;
+      thumb.style.width=thumbW+'%';
+      thumb.style.left=thumbLeft+'%';
+      // Pulse when at start to signal "there's more"
+      if(atStart) thumb.classList.add('is-start');
+      else thumb.classList.remove('is-start');
+    }
+  }
 }
 
 function buildChart(data,animate){
