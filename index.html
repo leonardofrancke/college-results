@@ -425,8 +425,9 @@ function showPage(name){
   newEl.style.animation=(goRight?'slideInRight':'slideInLeft')+' 0.3s cubic-bezier(0.16,1,0.3,1) forwards';
 
   setTimeout(()=>{
-    oldEl.style.cssText='display:none;';
-    newEl.style.cssText='display:block;';
+    oldEl.removeAttribute('style');
+    oldEl.classList.remove('active');
+    newEl.removeAttribute('style');
     newEl.classList.remove('slide-in-right','slide-in-left');
     newEl.classList.add('active');
     container.style.minHeight='';
@@ -984,10 +985,11 @@ async function submitForm(){
   document.getElementById('nav-results').classList.add('active');
 
   setTimeout(async()=>{
-    submitPage.style.cssText='display:none;';
-    resultsPage.style.cssText='display:block;';
+    // Clean up both pages to pristine state
+    submitPage.removeAttribute('style');
+    submitPage.classList.remove('active');
+    resultsPage.removeAttribute('style');
     resultsPage.classList.add('active');
-    container.style.minHeight='';
     currentPage='results';
 
     const {data}=await db.from('submissions').select('*');
