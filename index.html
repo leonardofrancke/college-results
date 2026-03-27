@@ -128,11 +128,21 @@
 
 
     @keyframes dotSpring {
-      0%   { transform-box:fill-box; transform-origin:center; transform:scale(0); opacity:0; }
-      55%  { transform:scale(1.6); opacity:1; }
-      75%  { transform:scale(0.85); }
-      90%  { transform:scale(1.1); }
+      0%   { transform-box:fill-box; transform-origin:center; transform:scale(0); opacity:0; filter:blur(4px); }
+      50%  { filter:blur(0px); transform:scale(1.6); opacity:1; }
+      75%  { transform:scale(0.88); }
+      90%  { transform:scale(1.08); }
       100% { transform:scale(1); opacity:1; }
+    }
+    @keyframes morphOut {
+      0%   { opacity:1; transform:scale(1); }
+      60%  { opacity:0.2; transform:scale(0.08); }
+      100% { opacity:0; transform:scale(0); }
+    }
+    @keyframes morphIn {
+      0%   { opacity:0; transform:scale(0.15); }
+      60%  { opacity:1; transform:scale(1.03); }
+      100% { transform:scale(1); }
     }
     @keyframes countUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
     @media (max-width:600px) { .form-row,.form-row-3 { grid-template-columns:1fr; } .stats-row { grid-template-columns:repeat(2,1fr); } .modal-stats { grid-template-columns:1fr 1fr; } .compare-grid { grid-template-columns:1fr; } }
@@ -917,15 +927,35 @@ async function submitForm(){
   if(error){alert('Something went wrong. Try again.');console.error(error);return;}
   localStorage.setItem('cr_submitted','1');
   updateNav();
-  document.getElementById('success-msg').style.display='block';
+
+  // Morph transition: form shrinks to center, then results grow out
+  const formWrap=document.getElementById('page-submit');
+  formWrap.style.transformOrigin='center center';
+  formWrap.style.animation='morphOut 0.45s cubic-bezier(0.4,0,1,1) forwards';
+
   setTimeout(async()=>{
-    showPage('results');
+    // Switch page while invisible
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+    formWrap.style.animation='';
+    const resultsPage=document.getElementById('page-results');
+    resultsPage.classList.add('active');
+    document.getElementById('nav-results').classList.add('active');
+    resultsPage.style.transformOrigin='center top';
+    resultsPage.style.animation='morphIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards';
+
+    // Load data and render with animated dots
     const {data}=await db.from('submissions').select('*');
     allData=data||[];
     renderTabs();
     const d=allData.filter(r=>r.grad_year==activeYear);
-    renderStats(d);renderEntries(d);scatterData=d;buildChart(d,true);
-  },800);
+    renderStats(d);renderEntries(d);scatterData=d;
+
+    setTimeout(()=>{
+      resultsPage.style.animation='';
+      buildChart(d,true);
+    },300);
+  },420);
 }
 
 async function deleteSubmission(){
