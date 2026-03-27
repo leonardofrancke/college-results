@@ -78,7 +78,7 @@
     .add-btn { background:none; border:1px dashed var(--border2); border-radius:7px; padding:7px 14px; font-size:0.8rem; color:var(--text3); cursor:pointer; margin-bottom:1.25rem; font-family:inherit; width:100%; }
     .submit-btn { width:100%; padding:11px; background:var(--text); color:var(--bg); border:none; border-radius:7px; font-size:0.875rem; font-weight:500; cursor:pointer; font-family:inherit; }
     .submit-btn:hover { opacity:0.85; }
-    .delete-btn { width:100%; padding:9px; background:none; color:#dc2626; border:1px solid #fca5a5; border-radius:7px; font-size:0.82rem; cursor:pointer; font-family:inherit; margin-top:10px; }
+    .delete-btn { padding:8px 16px; background:none; color:#dc2626; border:1px solid #fca5a5; border-radius:7px; font-size:0.8rem; cursor:pointer; font-family:inherit; margin-top:12px; display:block; width:auto; }
     .delete-btn:hover { background:#fee2e2; }
     .success-msg { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:7px; padding:0.75rem 1rem; margin-bottom:1rem; font-size:0.85rem; display:none; }
     .page { display:none; }
@@ -154,7 +154,7 @@
   <div class="hdr-right">
     <nav>
       <a href="#" class="active" id="nav-results" onclick="showPage('results');return false;">Results</a>
-      <a href="#" id="nav-submit" onclick="showPage('submit');return false;">Submit yours</a>
+      <a href="#" id="nav-submit" onclick="statsAnimated=false;showPage('submit');return false;">Submit yours</a>
     </nav>
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">Dark</button>
   </div>
@@ -376,7 +376,7 @@ const HAS_SUBMITTED=()=>localStorage.getItem('cr_submitted')==='1';
 // School domain map for logos
 
 
-let activeYear=2026,allData=[],scatterData=[],searchFilter='',collegeCount=0,activeChartType='gpa',activeFilter=null,slmFilter=null;
+let activeYear=2026,allData=[],scatterData=[],searchFilter='',collegeCount=0,activeChartType='gpa',activeFilter=null,slmFilter=null,statsAnimated=false;
 
 // THEME
 function toggleTheme(){
@@ -472,17 +472,24 @@ function renderStats(data){
   const t=p.size,a=[...p.values()].filter(x=>x.ok).length;
   const gSum=[...p.values()].reduce((s,x)=>s+(x.gpa||0),0);
   const g=t?gSum/t:0;
+
+  const doAnim=!statsAnimated;
+  statsAnimated=true;
+
   document.getElementById('stats-row').innerHTML=`
-    <div class="stat-card"><div class="num" id="s0">0</div><div class="label">Students</div></div>
-    <div class="stat-card"><div class="num" id="s1">0</div><div class="label">Got in somewhere</div></div>
-    <div class="stat-card"><div class="num" id="s2">0%</div><div class="label">Accept rate</div></div>
-    <div class="stat-card"><div class="num" id="s3">—</div><div class="label">Avg GPA</div></div>`;
-  animateNum(document.getElementById('s0'),t,false,'');
-  animateNum(document.getElementById('s1'),a,false,'');
-  if(t) animateNum(document.getElementById('s2'),Math.round(a/t*100),false,'%');
-  else document.getElementById('s2').textContent='—';
-  if(t) animateNum(document.getElementById('s3'),g,true,'');
-  else document.getElementById('s3').textContent='—';
+    <div class="stat-card"><div class="num" id="s0">${doAnim?'0':t}</div><div class="label">Students</div></div>
+    <div class="stat-card"><div class="num" id="s1">${doAnim?'0':a}</div><div class="label">Got in somewhere</div></div>
+    <div class="stat-card"><div class="num" id="s2">${doAnim?'0%':t?Math.round(a/t*100)+'%':'—'}</div><div class="label">Accept rate</div></div>
+    <div class="stat-card"><div class="num" id="s3">${doAnim?'—':t?g.toFixed(2):'—'}</div><div class="label">Avg GPA</div></div>`;
+
+  if(doAnim){
+    animateNum(document.getElementById('s0'),t,false,'');
+    animateNum(document.getElementById('s1'),a,false,'');
+    if(t) animateNum(document.getElementById('s2'),Math.round(a/t*100),false,'%');
+    else document.getElementById('s2').textContent='—';
+    if(t) animateNum(document.getElementById('s3'),g,true,'');
+    else document.getElementById('s3').textContent='—';
+  }
 }
 
 // SCHOOLS LIKE ME
