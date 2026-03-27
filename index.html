@@ -275,7 +275,14 @@
 
       <!-- Min submissions filter -->
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.85rem;flex-wrap:wrap;">
-        <span style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;cursor:help;border-bottom:1px dashed var(--border2);" title="Only show colleges where at least this many Live Oak students submitted results. Colleges with just 1 submission aren't statistically meaningful — filtering them out makes the chart easier to read.">Min. submissions:</span>
+        <span style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px dashed var(--border2);position:relative;display:inline-block;"
+          onmouseenter="document.getElementById('minsub-tip').style.display='block'"
+          onmouseleave="document.getElementById('minsub-tip').style.display='none'">Min. submissions
+          <div id="minsub-tip" style="display:none;position:absolute;bottom:calc(100% + 8px);left:0;background:var(--text);color:var(--bg);font-size:0.75rem;line-height:1.5;padding:8px 12px;border-radius:7px;width:240px;font-weight:400;letter-spacing:0;text-transform:none;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.2);pointer-events:none;">
+            Only show colleges where at least this many Live Oak students submitted. Colleges with just 1 submission aren't statistically meaningful — filtering them out makes the chart cleaner.
+            <div style="position:absolute;top:100%;left:12px;border:5px solid transparent;border-top-color:var(--text);"></div>
+          </div>
+        </span>:
         <div style="display:flex;gap:4px;">
           <button id="minsub-1" class="minsub-btn minsub-active" onclick="setMinSubs(1,this)">Any</button>
           <button id="minsub-2" class="minsub-btn" onclick="setMinSubs(2,this)">2+</button>
