@@ -294,15 +294,13 @@
     <div class="tabs" id="year-tabs"></div>
 
     <!-- CTA banner — shown to non-submitters until dismissed -->
-    <div id="top-cta" style="display:none;background:var(--text);border-radius:10px;padding:12px 1.25rem;margin-bottom:1rem;display:none;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;">
+    <div id="top-cta" style="display:none;background:var(--text);border-radius:10px;padding:12px 1.25rem;margin-bottom:1rem;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;position:relative;">
+      <button onclick="dismissCta()" aria-label="Dismiss" style="position:absolute;top:8px;right:10px;background:none;border:none;color:var(--bg);opacity:0.4;font-size:1.1rem;cursor:pointer;padding:0;line-height:1;transition:opacity 0.15s;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.4'">×</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;padding-right:1.5rem;">
         <span style="font-size:0.85rem;font-weight:600;color:var(--bg);white-space:nowrap;">🎓 Add your college results</span>
         <span style="font-size:0.78rem;color:var(--bg);opacity:0.55;min-width:0;">Takes 2 minutes · fully anonymous · helps future students</span>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-        <button onclick="goToSubmit();dismissCta()" style="padding:7px 16px;background:var(--bg);color:var(--text);border:none;border-radius:7px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">Share mine →</button>
-        <button onclick="dismissCta()" aria-label="Dismiss" style="background:none;border:none;color:var(--bg);opacity:0.45;font-size:1.2rem;cursor:pointer;padding:0 4px;line-height:1;transition:opacity 0.15s;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.45'">×</button>
-      </div>
+      <button onclick="goToSubmit();dismissCta()" style="padding:7px 16px;background:var(--bg);color:var(--text);border:none;border-radius:7px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Share mine →</button>
     </div>
 
     <div class="chart-card">
