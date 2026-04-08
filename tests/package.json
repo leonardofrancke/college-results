@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Unit + E2E tests for Leo's Admissions App",
   "scripts": {
-    "test": "jest --forceExit --detectOpenHandles",
+    "test": "ADMIN_SECRET=test-secret jest --forceExit --detectOpenHandles",
     "test:unit": "jest unit/ --forceExit",
     "test:e2e": "jest e2e/ --forceExit --detectOpenHandles",
     "seed": "node fixtures/seed.js"
