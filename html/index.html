@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>College Results — Live Oak</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#f8f7f4;--surface:#fff;--border:#e8e5e0;--border2:#e0ddd8;
+      --text:#1a1a1a;--text2:#666;--text3:#999;--text4:#555;
+      --header:#1a1a1a;--grid:#f0ede8;--axis:#e0ddd8;--dot-label:#555;
+      --mono:'DM Mono',monospace;
+    }
+    [data-theme="dark"] {
+      --bg:#111;--surface:#1c1c1e;--border:#2c2c2e;--border2:#2c2c2e;
+      --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;--text4:#aeaeb2;
+      --header:#000;--grid:#2c2c2e;--axis:#3a3a3c;--dot-label:#aeaeb2;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; }
+    header { background:var(--header); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:56px; }
+    header h1 { font-size:0.95rem; font-weight:600; color:#fff; letter-spacing:0.01em; }
+    .hdr-right { display:flex; align-items:center; gap:1.25rem; }
+    nav a { margin-left:1rem; text-decoration:none; color:#888; font-size:0.82rem; padding:5px 13px; border-radius:6px; border:1px solid #444; transition:all 0.15s; }
+    nav a.active { color:#111; background:#fff; border-color:#fff; font-weight:600; }
+    nav a:hover:not(.active) { color:#fff; border-color:#888; }
+    .theme-btn { background:none; border:1px solid #444; border-radius:6px; color:#888; cursor:pointer; font-size:0.72rem; padding:4px 9px; font-family:inherit; }
+    .theme-btn:hover { color:#fff; border-color:#666; }
+
+    .main-wrap { flex:1; }
+    .container { max-width:920px; margin:2rem auto; padding:0 1.25rem; overflow:hidden; position:relative; }
+
+    /* ── Mono numbers ── */
+    .num, .pill, .modal-stat .mn, .slm-field input, .tip-label + *, .stat-num {
+      font-family: var(--mono);
+    }
+    .stat-card .num { font-family: var(--mono); font-size:2rem; font-weight:500; color:var(--text); letter-spacing:-0.02em; }
+    .modal-stat .mn { font-family: var(--mono); }
+
+    .tabs { display:flex; gap:6px; margin-bottom:0.75rem; }
+    .tab { padding:7px 20px; border-radius:6px; border:1px solid var(--border2); background:var(--surface); cursor:pointer; font-size:0.85rem; color:var(--text2); font-family:inherit; }
+    .tab.active { background:var(--text); color:var(--bg); border-color:var(--text); font-weight:500; }
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:1.5rem; }
+    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.1rem 1rem; text-align:center; }
+    .stat-card .label { font-size:0.72rem; color:var(--text3); margin-top:3px; text-transform:uppercase; letter-spacing:0.05em; }
+    .chart-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.25rem; margin-bottom:1.5rem; }
+    .chart-card:fullscreen {
+      padding:1.5rem;
+      border-radius:0;
+      overflow-y:auto;
+      background:var(--surface);
+    }
+    .chart-card:-webkit-full-screen { padding:1.5rem; border-radius:0; overflow-y:auto; background:var(--surface); }
+    .chart-tabs { display:flex; gap:6px; }
+    .chart-tab { padding:5px 14px; border-radius:5px; border:1px solid var(--border2); background:transparent; cursor:pointer; font-size:0.78rem; color:var(--text2); font-family:inherit; }
+    .chart-tab.active { background:var(--text); color:var(--bg); border-color:var(--text); }
+    #legend { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:1rem; }
+    .legend-item { display:flex; align-items:center; gap:5px; font-size:0.75rem; color:var(--text4); cursor:pointer; padding:3px 8px; border-radius:5px; border:1px solid transparent; user-select:none; transition:opacity 0.15s; }
+    .legend-item:hover { border-color:var(--border2); }
+    .legend-item.dimmed { opacity:0.35; }
+    .legend-dot { width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0; }
+    .minsub-btn { padding:3px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:0.75rem;color:var(--text2);font-family:inherit;transition:all 0.12s; }
+    .minsub-btn:hover { border-color:var(--text3); color:var(--text); }
+    .minsub-active { background:var(--text)!important;color:var(--bg)!important;border-color:var(--text)!important; }
+    /* hide scrollbar on chart wrap */
+    #chart-scroll-wrap::-webkit-scrollbar { display:none; }
+    .entries { display:flex; flex-direction:column; gap:10px; }
+    .entry-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1rem 1.25rem; }
+    .entry-top { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:8px; }
+    .pill { font-size:0.72rem; padding:3px 10px; border-radius:5px; font-weight:500; font-family:var(--mono); letter-spacing:0; }
+    .pill-gray { background:var(--border); color:var(--text4); }
+    .pill-accepted { background:#dcfce7; color:#15803d; }
+    .pill-rejected { background:#fee2e2; color:#b91c1c; }
+    .pill-waitlisted { background:#fef9c3; color:#a16207; }
+    .pill-deferred { background:#dbeafe; color:#1d4ed8; }
+    .pill-withdrawn { background:#f1f5f9; color:#475569; }
+    .pill-pending { background:#fce7f3; color:#be185d; }
+    .ecs { font-size:0.8rem; color:var(--text2); margin-bottom:8px; line-height:1.5; }
+    .decisions { display:flex; flex-wrap:wrap; gap:6px; }
+
+    /* Empty state */
+    .empty-state { text-align:center; padding:4rem 1rem; }
+    .empty-state .empty-icon { font-size:2.5rem; margin-bottom:1rem; }
+    .empty-state h3 { font-size:1rem; font-weight:600; color:var(--text); margin-bottom:0.5rem; }
+    .empty-state p { font-size:0.85rem; color:var(--text3); margin-bottom:1.25rem; }
+    .empty-state button { padding:8px 20px; background:var(--text); color:var(--bg); border:none; border-radius:7px; font-size:0.85rem; font-weight:500; cursor:pointer; font-family:inherit; }
+
+    /* Form */
+    .form-wrap { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:2rem; max-width:580px; margin:0 auto; }
+    .form-wrap h2 { font-size:1rem; font-weight:600; margin-bottom:0.35rem; color:var(--text); }
+    .form-subtitle { font-size:0.82rem; color:var(--text3); margin-bottom:0.6rem; }
+    .anon-badge { display:inline-flex; align-items:center; gap:5px; font-size:0.75rem; color:#15803d; background:#dcfce7; border:1px solid #bbf7d0; border-radius:20px; padding:3px 10px; margin-bottom:1.25rem; font-weight:500; }
+    .form-group { margin-bottom:1rem; }
+    .form-group label { display:block; font-size:0.78rem; color:var(--text2); margin-bottom:5px; font-weight:500; }
+    .form-group input,.form-group select,.form-group textarea { width:100%; padding:9px 12px; border:1px solid var(--border2); border-radius:7px; font-size:0.875rem; font-family:inherit; color:var(--text); background:var(--bg); }
+    .form-group input[type=number] { font-family:var(--mono); }
+    .form-group textarea { resize:vertical; min-height:72px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+    .add-btn { background:none; border:1px dashed var(--border2); border-radius:7px; padding:7px 14px; font-size:0.8rem; color:var(--text3); cursor:pointer; margin-bottom:1.25rem; font-family:inherit; width:100%; }
+    .submit-btn { width:100%; padding:11px; background:var(--text); color:var(--bg); border:none; border-radius:7px; font-size:0.875rem; font-weight:500; cursor:pointer; font-family:inherit; }
+    .submit-btn:hover { opacity:0.85; }
+    .delete-btn { padding:7px 18px; background:none; color:#dc2626; border:1px solid #fca5a5; border-radius:7px; font-size:0.78rem; cursor:pointer; font-family:inherit; }
+    .delete-btn:hover { background:#fee2e2; }
+    .delete-wrap { display:none; text-align:center; margin-top:2rem; padding-top:1.25rem; border-top:1px solid var(--border); }
+    .success-msg { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:7px; padding:0.75rem 1rem; margin-bottom:1rem; font-size:0.85rem; display:none; }
+    .page { display:none; }
+    .page.active { display:block; }
+
+    /* Tooltip */
+    #dot-tooltip { display:none; position:fixed; background:var(--text); color:var(--bg); border-radius:8px; padding:12px 14px; font-size:0.78rem; line-height:1.7; max-width:260px; pointer-events:none; z-index:50; box-shadow:0 4px 20px rgba(0,0,0,0.2); }
+    #dot-tooltip .tip-num { font-family:var(--mono); }
+    .tip-label { color:var(--text3); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; }
+
+    /* Modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:100; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:var(--surface); border-radius:14px; padding:1.75rem; max-width:540px; width:100%; max-height:85vh; overflow-y:auto; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+    .modal-close { position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.25rem; cursor:pointer; color:var(--text3); line-height:1; }
+    .modal-close:hover { color:var(--text); }
+    .modal h2 { font-size:1.1rem; font-weight:600; margin-bottom:0.25rem; color:var(--text); }
+    .modal-sub { font-size:0.8rem; color:var(--text3); margin-bottom:1.25rem; }
+    .modal-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:1.25rem; }
+    .modal-stat { background:var(--bg); border-radius:8px; padding:0.75rem; text-align:center; }
+    .modal-stat .mn { font-size:1.4rem; font-weight:500; color:var(--text); font-family:var(--mono); }
+    .modal-stat .ml { font-size:0.65rem; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; }
+    .modal-section { margin-bottom:1rem; }
+    .modal-section h3 { font-size:0.75rem; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.5rem; }
+    .decision-bar { display:flex; align-items:center; gap:8px; margin-bottom:5px; font-size:0.8rem; }
+    .decision-bar-label { width:80px; color:var(--text2); flex-shrink:0; }
+    .decision-bar-track { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+    .decision-bar-fill { height:100%; border-radius:4px; }
+    .decision-bar-count { width:24px; text-align:right; color:var(--text3); font-size:0.75rem; flex-shrink:0; font-family:var(--mono); }
+    .compare-pick { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; }
+    .compare-pick select { flex:1; padding:8px 12px; border:1px solid var(--border2); border-radius:7px; font-size:0.82rem; font-family:inherit; color:var(--text); background:var(--bg); min-width:160px; }
+    .compare-btn { padding:8px 16px; background:var(--text); color:var(--bg); border:none; border-radius:7px; font-size:0.82rem; font-weight:500; cursor:pointer; font-family:inherit; }
+    .compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .compare-col h3 { font-size:0.9rem; font-weight:600; color:var(--text); margin-bottom:0.75rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem; }
+
+    /* Students like me */
+    .slm-panel { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.1rem 1.25rem; margin-bottom:1.5rem; }
+    .slm-title { font-size:0.8rem; font-weight:600; color:var(--text); margin-bottom:0.75rem; display:flex; align-items:center; gap:6px; }
+    .slm-inputs { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    .slm-field { display:flex; flex-direction:column; gap:4px; }
+    .slm-field label { font-size:0.7rem; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; }
+    .slm-field input { padding:7px 10px; border:1px solid var(--border2); border-radius:6px; font-size:0.85rem; font-family:var(--mono); color:var(--text); background:var(--bg); width:100px; }
+    .slm-field select { padding:7px 10px; border:1px solid var(--border2); border-radius:6px; font-size:0.82rem; font-family:inherit; color:var(--text); background:var(--bg); }
+    .slm-btn { padding:7px 14px; background:var(--text); color:var(--bg); border:none; border-radius:6px; font-size:0.8rem; font-weight:500; cursor:pointer; font-family:inherit; }
+    .slm-clear { padding:7px 12px; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; border-radius:6px; font-size:0.8rem; font-weight:500; cursor:pointer; font-family:inherit; }
+    .slm-active { font-size:0.75rem; color:var(--text3); margin-top:0.5rem; }
+    .slm-active strong { color:var(--text); font-family:var(--mono); }
+
+    /* Footer */
+    footer { background:var(--header); border-top:1px solid rgba(255,255,255,0.07); padding:1.5rem 2rem; margin-top:auto; }
+    .footer-inner { max-width:920px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
+    .footer-left { font-size:0.75rem; color:#666; }
+    .footer-left strong { color:#aaa; font-weight:500; }
+    .footer-anon { display:flex; align-items:center; gap:6px; font-size:0.75rem; color:#4ade80; }
+    .footer-anon .shield { font-size:0.85rem; }
+    .footer-contact { font-size:0.75rem; color:#666; }
+    .footer-contact a { color:#aaa; text-decoration:none; border-bottom:1px solid #444; transition:color 0.15s,border-color 0.15s; }
+    .footer-contact a:hover { color:#fff; border-color:#fff; }
+
+    @keyframes trackThumbPulse {
+      0%,100% { opacity:0.5; }
+      50% { opacity:1; }
+    }
+    /* Thumb pulses when at start to signal scrollability */
+    #chart-scroll-thumb.is-start { animation:trackThumbPulse 1.4s ease-in-out infinite; }
+    @keyframes dotSpring {
+      0%   { transform:scale(0); opacity:0; }
+      55%  { transform:scale(1.5); opacity:1; }
+      75%  { transform:scale(0.9); }
+      90%  { transform:scale(1.06); }
+      100% { transform:scale(1); opacity:1; }
+    }
+    @keyframes slideOutRight { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(48px); } }
+    @keyframes slideOutLeft  { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(-48px); } }
+    @keyframes slideInLeft   { from { opacity:0; transform:translateX(-48px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes slideInRight  { from { opacity:0; transform:translateX(48px); } to { opacity:1; transform:translateX(0); } }
+    .page { display:none; }
+    .page.active { display:block; }
+    .page.slide-out-right { display:block; animation:slideOutRight 0.22s ease forwards; pointer-events:none; }
+    .page.slide-out-left  { display:block; animation:slideOutLeft  0.22s ease forwards; pointer-events:none; }
+    .page.slide-in-left   { display:block; animation:slideInLeft   0.28s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .page.slide-in-right  { display:block; animation:slideInRight  0.28s cubic-bezier(0.16,1,0.3,1) forwards; }
+    @keyframes countUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    @media (max-width:600px) {
+      /* Layout */
+      .container { margin:1rem auto; padding:0 0.75rem; }
+      .form-row,.form-row-3 { grid-template-columns:1fr; }
+      .stats-row { grid-template-columns:repeat(2,1fr); gap:8px; }
+      .modal-stats { grid-template-columns:1fr 1fr; }
+      .compare-grid { grid-template-columns:1fr; }
+      .footer-inner { flex-direction:column; align-items:flex-start; gap:0.75rem; }
+
+      /* Header — on mobile hide long title, keep nav tight on right */
+      header { height:48px; padding:0 0.75rem; }
+      header h1 { display:none; }
+      .hdr-right { margin-left:auto; gap:0.4rem; }
+      nav a { margin-left:0.3rem; font-size:0.78rem; padding:5px 11px; border-color:#444; }
+      nav a.active { background:#fff; border-color:#fff; color:#111; font-weight:600; }
+      .theme-btn { font-size:0.68rem; padding:4px 9px; }
+
+      /* Year tabs — scroll horizontally */
+      .tabs { overflow-x:auto; flex-wrap:nowrap; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+      .tabs::-webkit-scrollbar { display:none; }
+      .tab { white-space:nowrap; flex-shrink:0; padding:6px 14px; font-size:0.8rem; }
+
+      /* Stat cards */
+      .stat-card { padding:0.85rem 0.6rem; }
+      .stat-card .num { font-size:1.5rem; }
+      .stat-card .label { font-size:0.65rem; }
+
+      /* Students like me — 2-col grid on mobile */
+      .slm-inputs { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+      .slm-btn, .slm-clear { width:100%; text-align:center; }
+      .slm-field input { width:100%; }
+      .slm-field select { width:100%; }
+
+      /* Chart card */
+      .chart-card { padding:0.85rem 0.75rem; }
+
+      /* Chart top row: stack tabs+compare on one line, search+fs on next */
+      .chart-top-left { flex-wrap:wrap; }
+      .chart-top-right { width:100%; }
+      .chart-top-right input[type=text] { width:100% !important; flex:1; }
+
+      /* Min submissions: wrap nicely */
+      .minsub-row { flex-wrap:wrap; gap:6px; }
+
+      /* Hide arrow buttons on mobile — just swipe instead */
+      #chart-prev, #chart-next { display:none !important; }
+
+      /* Legend wraps */
+      #legend { gap:6px; }
+      .legend-item { font-size:0.7rem; padding:2px 7px; }
+
+      /* Entry cards */
+      .entry-card { padding:0.85rem 1rem; }
+      .pill { font-size:0.68rem; padding:2px 8px; }
+      .ecs { font-size:0.75rem; }
+
+      /* Modals */
+      .modal { padding:1.25rem; border-radius:10px 10px 0 0; max-height:92vh; }
+      .modal-overlay { align-items:flex-end; padding:0; }
+
+      /* Form */
+      .form-wrap { padding:1.25rem; }
+      .anon-badge { font-size:0.7rem; }
+
+      /* Dot tooltip — full width at bottom on mobile */
+      #dot-tooltip { max-width:calc(100vw - 2rem); font-size:0.75rem; }
+
+      /* Fullscreen button — hide on mobile (not useful on small screens) */
+      #fs-btn { display:none !important; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>College Results — Live Oak</h1>
+  <div class="hdr-right">
+    <nav>
+      <a href="#" class="active" id="nav-results" onclick="goToResults();return false;">Results</a>
+      <a href="#" id="nav-submit" onclick="goToSubmit();return false;">Submit yours</a>
+    </nav>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">Dark</button>
+  </div>
+</header>
+
+<!-- Modals -->
+<div class="modal-overlay" id="college-modal" onclick="if(event.target===this)closeModal('college-modal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('college-modal')">×</button>
+    <div id="college-modal-content"></div>
+  </div>
+</div>
+<div class="modal-overlay" id="compare-modal" onclick="if(event.target===this)closeModal('compare-modal')">
+  <div class="modal" style="max-width:660px;">
+    <button class="modal-close" onclick="closeModal('compare-modal')">×</button>
+    <div id="compare-modal-content"></div>
+  </div>
+</div>
+
+<div class="main-wrap">
+<div class="container">
+  <div class="page active" id="page-results">
+
+    <!-- CTA banner — shown to non-submitters until dismissed -->
+    <div id="top-cta" style="display:none;background:var(--text);border-radius:10px;padding:12px 1.25rem;margin-bottom:1rem;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;position:relative;">
+      <button onclick="dismissCta()" aria-label="Dismiss" style="position:absolute;top:8px;right:10px;background:none;border:none;color:var(--bg);opacity:0.4;font-size:1.1rem;cursor:pointer;padding:0;line-height:1;transition:opacity 0.15s;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.4'">×</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;padding-right:1.5rem;">
+        <span style="font-size:0.85rem;font-weight:600;color:var(--bg);white-space:nowrap;">🎓 Add your college results</span>
+        <span style="font-size:0.78rem;color:var(--bg);opacity:0.55;min-width:0;">Takes 2 minutes · fully anonymous · helps future students</span>
+      </div>
+      <button onclick="goToSubmit();dismissCta()" style="padding:7px 16px;background:var(--bg);color:var(--text);border:none;border-radius:7px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">Share mine →</button>
+    </div>
+
+    <div class="tabs" id="year-tabs"></div>
+
+    <div class="chart-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px;">
+        <div class="chart-top-left" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="switchChart('gpa',this)">Weighted GPA</button>
+            <button class="chart-tab" onclick="switchChart('sat',this)">SAT</button>
+          </div>
+          <button onclick="openCompare()" style="padding:5px 12px;border-radius:5px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:0.75rem;color:var(--text2);font-family:inherit;">Compare colleges</button>
+        </div>
+        <div class="chart-top-right" style="display:flex;align-items:center;gap:6px;">
+          <input type="text" id="college-search" placeholder="Search a college..." oninput="filterChart(this.value)"
+            style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:0.82rem;font-family:inherit;width:200px;background:var(--bg);color:var(--text);" />
+          <button id="fs-btn" onclick="toggleChartFullscreen()" title="Fullscreen" style="flex-shrink:0;width:32px;height:32px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:0.9rem;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseenter="this.style.color='var(--text)'" onmouseleave="this.style.color='var(--text2)'">⛶</button>
+        </div>
+      </div>
+
+      <!-- Min submissions filter -->
+      <div class="minsub-row" style="display:flex;align-items:center;gap:6px;margin-bottom:0.85rem;flex-wrap:wrap;">
+        <span style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px dashed var(--border2);position:relative;display:inline-block;"
+          onmouseenter="document.getElementById('minsub-tip').style.display='block'"
+          onmouseleave="document.getElementById('minsub-tip').style.display='none'">Min. submissions
+          <div id="minsub-tip" style="display:none;position:absolute;bottom:calc(100% + 8px);left:0;background:var(--text);color:var(--bg);font-size:0.75rem;line-height:1.5;padding:8px 12px;border-radius:7px;width:240px;font-weight:400;letter-spacing:0;text-transform:none;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.2);pointer-events:none;">
+            Only show colleges where at least this many Live Oak students submitted. Colleges with just 1 submission aren't statistically meaningful — filtering them out makes the chart cleaner.
+            <div style="position:absolute;top:100%;left:12px;border:5px solid transparent;border-top-color:var(--text);"></div>
+          </div>
+        </span>:
+        <div style="display:flex;gap:4px;">
+          <button id="minsub-1" class="minsub-btn minsub-active" onclick="setMinSubs(1,this)">Any</button>
+          <button id="minsub-2" class="minsub-btn" onclick="setMinSubs(2,this)">2+</button>
+          <button id="minsub-3" class="minsub-btn" onclick="setMinSubs(3,this)">3+</button>
+          <button id="minsub-5" class="minsub-btn" onclick="setMinSubs(5,this)">5+</button>
+        </div>
+        <span id="chart-col-count" style="font-size:0.72rem;color:var(--text3);margin-left:4px;"></span>
+      </div>
+
+      <div id="legend"></div>
+
+      <!-- Chart with arrow nav -->
+      <div style="display:flex;align-items:center;gap:6px;position:relative;">
+        <button id="chart-prev" onclick="scrollChart(-1)" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:1rem;color:var(--text2);display:none;align-items:center;justify-content:center;transition:all 0.15s;">‹</button>
+        <div style="flex:1;position:relative;min-width:0;">
+          <div id="chart-scroll-wrap" style="width:100%;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;border-radius:6px;">
+            <div id="chart-main"></div>
+          </div>
+          <div id="chart-scroll-hint-l" style="display:none;position:absolute;top:0;left:0;bottom:0;width:32px;background:linear-gradient(to left,transparent,var(--surface));pointer-events:none;"></div>
+          <div id="chart-scroll-hint-r" style="display:none;position:absolute;top:0;right:0;bottom:0;width:32px;background:linear-gradient(to right,transparent,var(--surface));pointer-events:none;"></div>
+          <!-- Mobile scroll track indicator -->
+          <div id="chart-scroll-track" style="display:none;position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:60px;height:4px;background:rgba(128,128,128,0.2);border-radius:99px;overflow:hidden;pointer-events:none;">
+            <div id="chart-scroll-thumb" style="position:absolute;top:0;left:0;height:100%;width:30%;background:rgba(128,128,128,0.6);border-radius:99px;transition:left 0.1s linear;"></div>
+          </div>
+        </div>
+        <button id="chart-next" onclick="scrollChart(1)" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:1rem;color:var(--text2);display:none;align-items:center;justify-content:center;transition:all 0.15s;">›</button>
+      </div>
+
+      <div class="x-axis-note" style="margin-top:8px;">Sorted by submissions · ties broken by acceptance rate (hardest first) · click a name for details</div>
+    </div>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <!-- Students like me -->
+    <div class="slm-panel">
+      <div class="slm-title">🎯 Students like me — see what schools others with similar stats applied to</div>
+      <div class="slm-inputs">
+        <div class="slm-field">
+          <label>Unweighted GPA</label>
+          <input type="number" id="slm-gpa" placeholder="e.g. 3.8" step="0.01" min="1" max="4" />
+        </div>
+        <div class="slm-field">
+          <label>GPA range ±</label>
+          <select id="slm-gpa-range">
+            <option value="0.2">±0.2 (tight)</option>
+            <option value="0.3" selected>±0.3 (default)</option>
+            <option value="0.5">±0.5 (loose)</option>
+          </select>
+        </div>
+        <div class="slm-field">
+          <label>SAT (optional)</label>
+          <input type="number" id="slm-sat" placeholder="e.g. 1400" step="10" />
+        </div>
+        <div class="slm-field">
+          <label>SAT range ±</label>
+          <select id="slm-sat-range">
+            <option value="50">±50 (tight)</option>
+            <option value="100" selected>±100 (default)</option>
+            <option value="150">±150 (loose)</option>
+          </select>
+        </div>
+        <button class="slm-btn" onclick="applySlm()">Find matches</button>
+        <button class="slm-clear" onclick="clearSlm()" id="slm-clear-btn" style="display:none;">✕ Clear filter</button>
+      </div>
+      <div class="slm-active" id="slm-status" style="display:none;"></div>
+    </div>
+    <div id="dot-tooltip"></div>
+    <div id="entries-header" style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:0.75rem;"></div>
+    <div class="entries" id="entries"></div>
+  </div>
+
+  <div class="page" id="page-submit">
+    <div class="form-wrap">
+      <h2 id="form-title">Add your college results</h2>
+      <p class="form-subtitle" id="form-subtitle">Share your college decisions to help future Live Oak students.</p>
+      <div class="anon-badge" id="anon-badge">🔒 Fully anonymous — your name is never stored</div>
+      <div class="success-msg" id="success-msg">Saved!</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Graduation year (required)</label>
+          <select id="f-year">
+            <option value="">Select year</option>
+            <option>2026</option><option>2025</option><option>2024</option><option>2023</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Unweighted GPA (required, max 4.0)</label>
+          <input type="number" id="f-gpa" step="0.01" min="1" max="4" placeholder="1.0 – 4.0" />
+        </div>
+        <div class="form-group">
+          <label>Weighted GPA (required, max 5.0)</label>
+          <input type="number" id="f-gpa-w" step="0.01" min="1" max="5" placeholder="1.0 – 5.0" />
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>SAT score (optional)</label>
+          <input type="number" id="f-sat" placeholder="e.g. 1480" />
+        </div>
+        <div class="form-group">
+          <label>ACT score (optional)</label>
+          <input type="number" id="f-act" placeholder="e.g. 33" />
+        </div>
+        <div class="form-group">
+          <label>Class rank (optional)</label>
+          <input type="number" id="f-rank" placeholder="e.g. 15" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Intended major (optional)</label>
+        <div style="position:relative;">
+          <input type="text" id="f-major" placeholder="e.g. Computer Science" autocomplete="off"
+            oninput="showMajorSuggestions()" onblur="setTimeout(hideMajorSuggestions,400)"
+            style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:7px;font-size:0.875rem;font-family:inherit;color:var(--text);background:var(--bg);" />
+          <div id="major-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:7px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.12);margin-top:2px;"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Extracurriculars — clubs, sports, jobs, volunteering (optional)</label>
+        <textarea id="f-ecs" placeholder="e.g. Varsity soccer captain, robotics club, part-time job at local bakery"></textarea>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:400;">
+          <input type="checkbox" id="f-sport" style="width:16px;height:16px;cursor:pointer;accent-color:var(--text);flex-shrink:0;" />
+          Sports recruitment</label>
+      </div>
+      <div class="form-group">
+        <label>College decisions (add at least one)</label>
+        <div id="college-inputs"></div>
+        <button type="button" class="add-btn" onclick="addCollege()">+ Add another college</button>
+      </div>
+      <button type="button" class="submit-btn" id="submit-btn" onclick="submitForm()">Submit</button>
+      <div class="delete-wrap" id="delete-wrap">
+        <p style="font-size:0.75rem;color:var(--text3);margin-bottom:0.6rem;">Want to remove your data?</p>
+        <button type="button" class="delete-btn" id="delete-btn" onclick="deleteSubmission()">Delete my submission</button>
+      </div>
+      <!-- Privacy note at bottom of form -->
+      <div style="margin-top:1.5rem;padding:0.85rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:0.75rem;color:var(--text3);line-height:1.6;">
+        <strong style="color:var(--text2);">🔒 Privacy</strong> — Your name is never collected or stored. Submissions are identified only by a random browser ID so you can edit or delete your own entry. No login required. Data is used solely to show aggregated Live Oak college results.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <strong>College Results — Live Oak</strong><br>
+      Aggregated, anonymous college decision data from Live Oak students.
+    </div>
+    <div class="footer-anon">
+      <span class="shield">🔒</span>
+      Fully anonymous · no names stored · no login required
+    </div>
+    <div class="footer-contact">
+      Suggestions or concerns?<br>
+      <a href="/cdn-cgi/l/email-protection#4b272e24252a392f24652d392a2528202e0b2c262a222765282426"><span class="__cf_email__" data-cfemail="3b575e54555a495f54155d495a5558505e7b5c565a525715585456">[email&#160;protected]</span></a>
+    </div>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// Local database API - fetch-based wrapper
+const db = { __local: true };
+const YEARS=[2023,2024,2025,2026];
+const DECISIONS=['Accepted','Rejected','Waitlisted','Deferred','Withdrawn','Pending'];
+const DECISION_ORDER=['Accepted','Waitlisted','Deferred','Rejected','Withdrawn','Pending'];
+const DOT_COLORS={Accepted:'#16a34a',Rejected:'#dc2626',Waitlisted:'#ca8a04',Deferred:'#2563eb',Withdrawn:'#64748b',Pending:'#db2777'};
+const PILL_CLASS={Accepted:'pill-accepted',Rejected:'pill-rejected',Waitlisted:'pill-waitlisted',Deferred:'pill-deferred',Withdrawn:'pill-withdrawn',Pending:'pill-pending'};
+
+const COLLEGE_ACCEPT_RATES={
+  'Harvard':3,'Princeton':4,'MIT':4,'Yale':5,'Columbia':4,'Stanford':4,'Caltech':4,
+  'Penn':7,'UPenn':7,'University of Pennsylvania':7,'Brown':6,'Dartmouth':6,'Cornell':8,
+  'Duke':7,'Northwestern':7,'Johns Hopkins':7,'Harvey Mudd':10,'Harvey Mudd College':10,'Olin College':10,
+  'Vanderbilt':7,'Rice':9,'WashU':11,'Notre Dame':13,'Georgetown':13,
+  'Emory':14,'Carnegie Mellon':14,'Tufts':11,'Northeastern':6,'Tulane':13,
+  'Wake Forest':25,'USC':13,'NYU':12,'Boston College':19,'Boston University':18,
+  'Case Western':30,'University of Rochester':30,'Lehigh':34,'University of Miami':27,
+  'Villanova':28,'University of Richmond':28,'William & Mary':37,'SMU':50,'TCU':48,'Baylor':45,
+  'UC Berkeley':14,'UCLA':14,'UCSD':24,'UC Santa Barbara':29,'UC Davis':39,
+  'UC Irvine':26,'UC Santa Cruz':47,'UC Riverside':57,'UC Merced':69,
+  'Cal Poly SLO':30,'Cal Poly Pomona':55,'Cal State Long Beach':33,
+  'San Jose State':68,'San Francisco State':58,'Fresno State':77,'Sacramento State':73,
+  'Cal State Fullerton':67,'Cal State Northridge':55,'Sonoma State':90,'Cal State East Bay':73,
+  'Chico State':76,'Cal State San Bernardino':75,'Cal State Dominguez Hills':63,
+  'Cal State Los Angeles':64,'Cal State Monterey Bay':71,'Cal State Channel Islands':79,
+  'Cal State San Marcos':79,'Cal State Bakersfield':78,'Humboldt State':80,'Cal Maritime':72,
+  'LMU':50,'Santa Clara':44,'University of San Diego':52,'Pepperdine':37,
+  'University of San Francisco':67,'Chapman':63,'Occidental':38,'University of the Pacific':60,
+  'Whittier College':73,'Azusa Pacific':72,'Biola University':61,'Point Loma Nazarene':72,
+  'Westmont':75,'Cal Lutheran':68,"Saint Mary's College of California":71,
+  'Northwest Nazarene':73,
+  'Claremont McKenna':9,'Scripps':22,'Pitzer':14,'Pomona':8,
+  'Michigan':18,'UVA':21,'UNC Chapel Hill':19,'Georgia Tech':17,'University of Florida':24,
+  'Wisconsin':49,'Ohio State':53,'Penn State':55,'UT Austin':31,'UIUC':45,'Purdue':53,
+  'University of Washington':48,'University of Maryland':44,'University of Georgia':42,
+  'Michigan State':76,'Indiana University':80,'University of Iowa':85,'Arizona State':88,
+  'University of Arizona':85,'Colorado State':90,'University of Alabama':80,
+  'University of South Carolina':67,'University of Tennessee':67,'University of Kentucky':95,
+  'University of Pittsburgh':49,'Virginia Tech':65,'Clemson':47,'University of Delaware':65,
+  'UConn':56,'UMass Amherst':58,'University of Vermont':63,'UNH':80,'Rutgers':61,
+  'Stony Brook':49,'University at Buffalo':58,'George Mason':82,'JMU':71,
+  'University of Oregon':82,'Oregon State':77,'Colorado':77,'University of Denver':60,
+  'Texas A&M':63,'UT Dallas':45,
+  'Swarthmore':7,'Amherst':9,'Williams':9,'Bowdoin':9,'Middlebury':15,'Colby':11,
+  'Bates':13,'Hamilton':14,'Colgate':22,'Vassar':24,'Wesleyan':17,'Haverford':15,
+  'Bryn Mawr':31,'Wellesley':20,'Barnard':11,'Smith':33,'Mount Holyoke':52,
+  'Davidson':19,'Oberlin':33,'Kenyon':36,'Grinnell':12,'Carleton':19,'Macalester':36,
+  'Reed':35,'Whitman':42,'Bucknell':38,'Lafayette':36,'Dickinson':47,'Skidmore':42,
+  'Trinity':34,'Connecticut College':35,
+  'RPI':57,'RIT':57,'WPI':49,'Drexel':68,'Temple':68,'Syracuse':60,'Fordham':46,
+  'American University':35,'GWU':41,'Howard':37,'Spelman':37,'Morehouse':48,
+  'Elon':72,'Furman':65,'College of Charleston':79,'Gonzaga':72,
+  'Loyola Chicago':68,'Marquette':82,'Butler':73,
+};
+const ALL_COLLEGES=Object.keys(COLLEGE_ACCEPT_RATES).sort();
+
+function normalizeName(n){return n.replace(/\b(university|college|institute of technology|state university)\b/gi,'').replace(/\s+/g,' ').trim();}
+function getAcceptRate(name){
+  if(COLLEGE_ACCEPT_RATES[name]) return COLLEGE_ACCEPT_RATES[name];
+  const norm=normalizeName(name).toLowerCase();
+  const m=Object.keys(COLLEGE_ACCEPT_RATES).find(k=>normalizeName(k).toLowerCase()===norm);
+  if(m) return COLLEGE_ACCEPT_RATES[m];
+  const p=Object.keys(COLLEGE_ACCEPT_RATES).find(k=>{const kn=normalizeName(k).toLowerCase();return norm.includes(kn)||kn.includes(norm);});
+  return p?COLLEGE_ACCEPT_RATES[p]:100;
+}
+
+const SESSION_ID=localStorage.getItem('cr_sid')||(()=>{const id=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('cr_sid',id);return id;})();
+const HAS_SUBMITTED=()=>localStorage.getItem('cr_submitted')==='1';
+
+let activeYear=2026,allData=[],scatterData=[],searchFilter='',collegeCount=0,activeChartType='gpa',activeFilter=null,slmFilter=null,statsAnimated=false,minSubs=1;
+const PAGE_ORDER=['results','submit'];
+let currentPage='results';
+function goToResults(){ showPage('results'); }
+function goToSubmit(){ showPage('submit'); }
+
+// THEME
+function toggleTheme(){
+  const dk=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',dk?'light':'dark');
+  document.getElementById('theme-btn').textContent=dk?'Dark':'Light';
+  localStorage.setItem('cr_theme',dk?'light':'dark');
+  buildChart(scatterData,false);
+}
+(()=>{
+  const t=localStorage.getItem('cr_theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  window.addEventListener('DOMContentLoaded',()=>{document.getElementById('theme-btn').textContent=t==='dark'?'Light':'Dark';});
+})();
+
+function dismissCta(){
+  const cta=document.getElementById('top-cta');
+  if(cta) cta.style.display='none';
+  sessionStorage.setItem('cr_cta_dismissed','1');
+}
+function updateNav(){
+  const submitted=HAS_SUBMITTED();
+  document.getElementById('nav-submit').textContent=submitted?'Edit Submission':'Submit yours';
+  const cta=document.getElementById('top-cta');
+  if(cta){
+    const dismissed=sessionStorage.getItem('cr_cta_dismissed')==='1';
+    cta.style.display=(!submitted&&!dismissed)?'flex':'none';
+  }
+}
+function showPage(name){
+  if(name===currentPage) return;
+  const oldEl=document.getElementById('page-'+currentPage);
+  const newEl=document.getElementById('page-'+name);
+  const goRight=PAGE_ORDER.indexOf(name)>PAGE_ORDER.indexOf(currentPage);
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById('nav-'+name).classList.add('active');
+  document.getElementById('dot-tooltip').style.display='none';
+  updateNav();
+
+  const container=document.querySelector('.container');
+  const h=oldEl.offsetHeight;
+  container.style.minHeight=h+'px';
+
+  oldEl.style.position='absolute';
+  oldEl.style.top='0';
+  oldEl.style.left='0';
+  oldEl.style.right='0';
+  oldEl.style.animation=(goRight?'slideOutLeft':'slideOutRight')+' 0.25s ease forwards';
+
+  newEl.style.display='block';
+  newEl.style.position='static';
+  newEl.style.animation=(goRight?'slideInRight':'slideInLeft')+' 0.3s cubic-bezier(0.16,1,0.3,1) forwards';
+
+  setTimeout(()=>{
+    oldEl.removeAttribute('style');
+    oldEl.classList.remove('active');
+    newEl.removeAttribute('style');
+    newEl.classList.remove('slide-in-right','slide-in-left');
+    newEl.classList.add('active');
+    container.style.minHeight='';
+    currentPage=name;
+    if(name==='results') loadData();
+    if(name==='submit') loadExistingSubmission();
+  },300);
+}
+
+async function loadData(){
+  try {
+    const res = await fetch('/api/submissions');
+    const data = await res.json();
+    allData = Array.isArray(data) ? data : [];
+    renderResults();
+  } catch(error) {
+    console.error('Error loading data:', error);
+  }
+}
+
+function renderResults(){
+  renderTabs();
+  const d=allData.filter(r=>r.grad_year==activeYear);
+  renderStats(d);renderCharts(d);renderEntries(d);
+}
+function setYear(y){activeYear=y;activeFilter=null;minSubs=1;setMinSubsUI(1);renderResults();}
+function renderTabs(){
+  document.getElementById('year-tabs').innerHTML=YEARS.map(y=>
+    `<button class="tab${y==activeYear?' active':''}" onclick="setYear(${y})">${y}</button>`
+  ).join('');
+}
+
+function animateNum(el,target,isFloat,suffix){
+  const dur=700,steps=40,step=dur/steps;
+  let cur=0,i=0;
+  const t=setInterval(()=>{
+    i++;cur=target*(i/steps);
+    el.textContent=(isFloat?cur.toFixed(2):Math.round(cur))+suffix;
+    if(i>=steps){el.textContent=(isFloat?target.toFixed(2):target)+suffix;clearInterval(t);}
+  },step);
+}
+
+function renderStats(data){
+  const p=new Map();
+  data.forEach(r=>{
+    const k=r.session_id||`${r.gpa}|${r.sat}|${r.act}`;
+    if(!p.has(k)) p.set(k,{gpa:r.gpa,ok:false});
+    if(r.decision==='Accepted') p.get(k).ok=true;
+  });
+  const t=p.size,a=[...p.values()].filter(x=>x.ok).length;
+  const gSum=[...p.values()].reduce((s,x)=>s+(x.gpa||0),0);
+  const g=t?gSum/t:0;
+
+  const doAnim=!statsAnimated;
+  statsAnimated=true;
+
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-card"><div class="num" id="s0">${doAnim?'0':t}</div><div class="label">Students</div></div>
+    <div class="stat-card"><div class="num" id="s1">${doAnim?'0':a}</div><div class="label">Got in somewhere</div></div>
+    <div class="stat-card"><div class="num" id="s2">${doAnim?'0%':t?Math.round(a/t*100)+'%':'—'}</div><div class="label">Accept rate</div></div>
+    <div class="stat-card"><div class="num" id="s3">${doAnim?'—':t?g.toFixed(2):'—'}</div><div class="label">Avg UW GPA</div></div>`;
+
+  if(doAnim){
+    animateNum(document.getElementById('s0'),t,false,'');
+    animateNum(document.getElementById('s1'),a,false,'');
+    if(t) animateNum(document.getElementById('s2'),Math.round(a/t*100),false,'%');
+    else document.getElementById('s2').textContent='—';
+    if(t) animateNum(document.getElementById('s3'),g,true,'');
+    else document.getElementById('s3').textContent='—';
+  }
+}
+
+// SCHOOLS LIKE ME
+function applySlm(){
+  const gpa=parseFloat(document.getElementById('slm-gpa').value);
+  if(!gpa){alert('Enter your GPA to find matches.');return;}
+  const gpaRange=parseFloat(document.getElementById('slm-gpa-range').value);
+  const sat=parseInt(document.getElementById('slm-sat').value)||null;
+  const satRange=parseInt(document.getElementById('slm-sat-range').value);
+  slmFilter={gpa,gpaRange,sat,satRange};
+  document.getElementById('slm-clear-btn').style.display='inline-block';
+  const status=document.getElementById('slm-status');
+  status.style.display='block';
+  let desc=`Showing students with GPA <strong>${(gpa-gpaRange).toFixed(1)} – ${(gpa+gpaRange).toFixed(1)}</strong>`;
+  if(sat) desc+=` · SAT <strong>${sat-satRange} – ${sat+satRange}</strong>`;
+  status.innerHTML=desc;
+  buildChart(scatterData,false);
+  renderEntries(scatterData);
+}
+
+function clearSlm(){
+  slmFilter=null;
+  document.getElementById('slm-gpa').value='';
+  document.getElementById('slm-sat').value='';
+  document.getElementById('slm-clear-btn').style.display='none';
+  document.getElementById('slm-status').style.display='none';
+  buildChart(scatterData,false);
+  renderEntries(scatterData);
+}
+
+function slmMatches(r){
+  if(!slmFilter) return true;
+  const {gpa,gpaRange,sat,satRange}=slmFilter;
+  const studentRows=scatterData.filter(x=>x.session_id===r.session_id);
+  if(!studentRows.length) return false;
+  const sGpa=parseFloat(studentRows[0].gpa);
+  const sSat=parseInt(studentRows[0].sat)||null;
+  if(isNaN(sGpa)||Math.abs(sGpa-gpa)>gpaRange) return false;
+  if(sat&&sSat&&Math.abs(sSat-sat)>satRange) return false;
+  return true;
+}
+
+function renderCharts(data){scatterData=data;buildChart(data,false);}
+function filterChart(val){searchFilter=val.toLowerCase().trim();buildChart(scatterData,false);}
+function switchChart(type,btn){
+  activeChartType=type;
+  document.querySelectorAll('.chart-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildChart(scatterData,false);
+}
+
+function toggleFilter(decision){
+  activeFilter=activeFilter===decision?null:decision;
+  buildChart(scatterData,false);
+}
+
+function toggleChartFullscreen(){
+  const card=document.querySelector('.chart-card');
+  if(!document.fullscreenElement){
+    (card.requestFullscreen||card.webkitRequestFullscreen||card.mozRequestFullScreen).call(card);
+  } else {
+    (document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen).call(document);
+  }
+}
+document.addEventListener('fullscreenchange',()=>{
+  const btn=document.getElementById('fs-btn');
+  const inFs=!!document.fullscreenElement;
+  if(btn) btn.title=inFs?'Exit fullscreen':'Fullscreen';
+  if(btn) btn.textContent=inFs?'✕':'⛶';
+  // Rebuild chart at new size
+  buildChart(scatterData,false);
+});
+
+function setMinSubsUI(n){
+  document.querySelectorAll('.minsub-btn').forEach(b=>b.classList.remove('minsub-active'));
+  const el=document.getElementById('minsub-'+n);
+  if(el) el.classList.add('minsub-active');
+}
+function setMinSubs(n,btn){
+  minSubs=n;
+  setMinSubsUI(n);
+  buildChart(scatterData,false);
+}
+
+const SCROLL_COLS=8; // how many columns to jump per arrow click
+function scrollChart(dir){
+  const wrap=document.getElementById('chart-scroll-wrap');
+  const svg=wrap.querySelector('svg');
+  if(!wrap||!svg) return;
+  // estimate column width from SVG total width and col count
+  const colCount=wrap.querySelector('svg').getAttribute('data-cols');
+  const svgW=parseFloat(svg.getAttribute('width'));
+  const colW=colCount?(svgW-75)/colCount:80;
+  wrap.scrollBy({left:dir*colW*SCROLL_COLS,behavior:'smooth'});
+}
+
+function updateScrollArrows(){
+  const wrap=document.getElementById('chart-scroll-wrap');
+  const prev=document.getElementById('chart-prev');
+  const next=document.getElementById('chart-next');
+  const hintL=document.getElementById('chart-scroll-hint-l');
+  const hintR=document.getElementById('chart-scroll-hint-r');
+  const track=document.getElementById('chart-scroll-track');
+  const thumb=document.getElementById('chart-scroll-thumb');
+  if(!wrap||!prev||!next) return;
+  const scrollable=wrap.scrollWidth>wrap.clientWidth+4;
+  const atStart=wrap.scrollLeft<=4;
+  const atEnd=wrap.scrollLeft+wrap.clientWidth>=wrap.scrollWidth-4;
+  const isMobile=window.innerWidth<=600;
+
+  // Desktop arrow buttons
+  prev.style.display=(!isMobile&&scrollable)?'flex':'none';
+  next.style.display=(!isMobile&&scrollable)?'flex':'none';
+  prev.style.opacity=atStart?'0.3':'1';
+  prev.style.pointerEvents=atStart?'none':'auto';
+  next.style.opacity=atEnd?'0.3':'1';
+  next.style.pointerEvents=atEnd?'none':'auto';
+
+  // Edge fades
+  if(hintL) hintL.style.display=(scrollable&&!atStart)?'block':'none';
+  if(hintR) hintR.style.display=(scrollable&&!atEnd)?'block':'none';
+
+  // Mobile scroll track pill
+  if(track&&thumb){
+    track.style.display=(isMobile&&scrollable)?'block':'none';
+    if(scrollable){
+      // thumb width = viewport/totalWidth proportion, min 20%
+      const ratio=Math.min(wrap.clientWidth/wrap.scrollWidth,1);
+      const thumbW=Math.max(ratio*100,20);
+      const maxScroll=wrap.scrollWidth-wrap.clientWidth;
+      const thumbLeft=maxScroll>0?(wrap.scrollLeft/maxScroll)*(100-thumbW):0;
+      thumb.style.width=thumbW+'%';
+      thumb.style.left=thumbLeft+'%';
+      // Pulse when at start to signal "there's more"
+      if(atStart) thumb.classList.add('is-start');
+      else thumb.classList.remove('is-start');
+    }
+  }
+}
+
+function buildChart(data,animate){
+  const allCols=[...new Set(data.map(r=>r.college_name).filter(Boolean))];
+  allCols.sort((a,b)=>{
+    const at=data.filter(r=>r.college_name===a).length;
+    const bt=data.filter(r=>r.college_name===b).length;
+    if(bt!==at) return bt-at;
+    return getAcceptRate(a)-getAcceptRate(b);
+  });
+  // Apply min submissions filter
+  const allColsFiltered=allCols.filter(c=>data.filter(r=>r.college_name===c).length>=minSubs);
+  const cols=searchFilter?allColsFiltered.filter(c=>c.toLowerCase().includes(searchFilter)):allColsFiltered;
+
+  // Update col count badge
+  const colCount=document.getElementById('chart-col-count');
+  if(colCount) colCount.textContent=cols.length?`${cols.length} college${cols.length!==1?'s':''}`:'';
+  const el=document.getElementById('chart-main');
+  el.innerHTML='';
+  if(!cols.length){document.getElementById('legend').innerHTML='';return;}
+
+  // GPA chart now plots weighted GPA (gpa_weighted), SAT still plots sat
+  const isGpa=activeChartType==='gpa';
+  const yKey=isGpa?'gpa_weighted':'sat';
+  const yLabel=isGpa?'Weighted GPA':'SAT Score';
+  const yMin=isGpa?1:400;
+  const yMax=isGpa?5:1600;
+
+  const filtered=data.filter(r=>r[yKey]!=null&&cols.includes(r.college_name));
+
+  const dk=document.documentElement.getAttribute('data-theme')==='dark';
+  const gridC=dk?'#2c2c2e':'#f0ede8',axisC=dk?'#3a3a3c':'#e0ddd8',tickC=dk?'#636366':'#999',lblC=dk?'#aeaeb2':'#555';
+
+  const isFullscreen=!!document.fullscreenElement;
+  const isMobile=window.innerWidth<=600;
+  const H=isFullscreen?Math.max(window.innerHeight-220,500):isMobile?260:420;
+  const PAD={top:20,right:20,bottom:isMobile?80:100,left:55};
+  const MIN_COL_W=58;
+  const containerW=el.closest('.chart-card').clientWidth-40;
+  const naturalColW=containerW/cols.length;
+  const colW=Math.max(naturalColW,MIN_COL_W);
+  const W=Math.max(PAD.left+PAD.right+colW*cols.length, containerW, 400);
+  const plotW=W-PAD.left-PAD.right,plotH=H-PAD.top-PAD.bottom;
+
+  // y-axis tick steps
+  const ySteps=isGpa?[1,1.5,2,2.5,3,3.5,4,4.5,5]:[400,600,800,1000,1200,1400,1600];
+  // monospace font for axis tick labels
+  const monoFont=`'DM Mono',monospace`;
+
+  let svg=`<svg width="${W}" height="${H}" data-cols="${cols.length}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;">`;
+  ySteps.forEach(v=>{
+    const y=PAD.top+plotH-(v-yMin)/(yMax-yMin)*plotH;
+    svg+=`<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+plotW}" y2="${y}" stroke="${gridC}" stroke-width="1"/>`;
+    svg+=`<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="11" fill="${tickC}" font-family="${monoFont}">${isGpa?v.toFixed(1):v}</text>`;
+  });
+  svg+=`<text x="14" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="11" fill="${tickC}" font-family="Inter,sans-serif" transform="rotate(-90,14,${PAD.top+plotH/2})">${yLabel}</text>`;
+  svg+=`<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="${axisC}" stroke-width="1"/>`;
+
+  cols.forEach((col,i)=>{
+    const x=PAD.left+i*colW+colW/2, y=PAD.top+plotH+12;
+    svg+=`<text x="${x}" y="${y}" text-anchor="end" font-size="10" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-40,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')">
+      <title>Click to see ${col} details</title>${col}</text>`;
+  });
+
+  // Seeded jitter: deterministic per (session_id + college_name) so dots
+  // don't jump on re-render, but overlapping dots are visually separated and
+  // individually clickable.
+  function seededJitter(seed, range){
+    // fast 32-bit integer hash (fmix-style)
+    let h=0;
+    for(let i=0;i<seed.length;i++){h=Math.imul(h^seed.charCodeAt(i),0x9e3779b9)|0;}
+    h=Math.imul(h^(h>>>16),0x85ebca6b)|0;
+    h=Math.imul(h^(h>>>13),0xc2b2ae35)|0;
+    h=((h^(h>>>16))>>>0)/0xffffffff;  // 0–1
+    return (h-0.5)*2*range;           // -range … +range
+  }
+
+  filtered.forEach((r,ri)=>{
+    const i=cols.indexOf(r.college_name);
+    const baseX=PAD.left+i*colW+colW/2;
+    const baseY=PAD.top+plotH-(parseFloat(r[yKey])-yMin)/(yMax-yMin)*plotH;
+    // Unique seed per dot so jitter is stable across re-renders
+    const seed=(r.session_id||String(ri))+(r.college_name||'')+(r.decision||'');
+    const jx=seededJitter(seed+'x', 5);
+    const jy=0; // no Y jitter — dots must sit at their exact GPA/SAT position
+    const x=(baseX+jx).toFixed(2);
+    const y=(baseY+jy).toFixed(2);
+    const col=DOT_COLORS[r.decision]||'#888';
+    const dimmed=(activeFilter&&r.decision!==activeFilter)||(slmFilter&&!slmMatches(r));
+    const delay=animate?ri*55:0;
+    const anim=animate?`transform-box:fill-box;transform-origin:center;animation:dotSpring 0.55s cubic-bezier(0.34,1.56,0.64,1) ${delay}ms both;`:'';
+    const opacity=dimmed?0.12:1;
+    svg+=`<circle cx="${x}" cy="${y}" r="6" fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${opacity}" style="cursor:pointer;${anim};transition:opacity 0.2s;" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
+  });
+  svg+=`</svg>`;
+  el.innerHTML=svg;
+
+  // Wire up arrow nav and edge hints
+  const wrap=document.getElementById('chart-scroll-wrap');
+  if(wrap){
+    wrap.scrollLeft=0;
+    wrap.onscroll=updateScrollArrows;
+    // Use rAF so scrollWidth is available after paint
+    requestAnimationFrame(updateScrollArrows);
+  }
+
+  const used=DECISION_ORDER.filter(d=>filtered.find(r=>r.decision===d));
+  document.getElementById('legend').innerHTML=used.map(d=>`
+    <span class="legend-item${activeFilter&&activeFilter!==d?' dimmed':''}" onclick="toggleFilter('${d}')">
+      <span class="legend-dot" style="background:${DOT_COLORS[d]};"></span>${d}
+    </span>`).join('');
+
+  updateChartSubtitle(filtered, data);
+}
+
+function updateChartSubtitle(filtered, allYearData){
+  const hdr=document.getElementById('entries-header');
+  if(!hdr) return;
+  const sessions=new Set(allYearData.map(r=>r.session_id));
+  const total=sessions.size;
+  if(!total){hdr.innerHTML='';return;}
+
+  let title=`All submissions — ${activeYear}`;
+  let sub='';
+
+  if(slmFilter){
+    const matched=new Set(allYearData.filter(r=>slmMatches(r)).map(r=>r.session_id)).size;
+    title=`${matched} student${matched!==1?'s':''} with similar stats`;
+    sub=`GPA ${(slmFilter.gpa-slmFilter.gpaRange).toFixed(1)}–${(slmFilter.gpa+slmFilter.gpaRange).toFixed(1)}${slmFilter.sat?` · SAT ${slmFilter.sat-slmFilter.satRange}–${slmFilter.sat+slmFilter.satRange}`:''}`;
+  } else if(searchFilter){
+    title=`Submissions mentioning "${searchFilter}"`;
+  } else {
+    sub=`${total} student${total!==1?'s':''} · ${activeYear}`;
+  }
+
+  hdr.innerHTML=`
+    <div>
+      <div style="font-size:0.95rem;font-weight:600;color:var(--text);">${title}</div>
+      ${sub?`<div style="font-size:0.75rem;color:var(--text3);margin-top:2px;">${sub}</div>`:''}
+    </div>`;
+}
+
+function handleDotClick(evt,idx){evt.stopPropagation();showTooltip(evt,scatterData[idx]);}
+
+function showTooltip(evt,r){
+  const key=r.session_id||`${r.gpa}|${r.sat}|${r.act}`;
+  const sibs=scatterData.filter(x=>(x.session_id||`${x.gpa}|${x.sat}|${x.act}`)===key);
+  const tip=document.getElementById('dot-tooltip');
+  const gpaLine=`<div><span class="tip-label">UW GPA</span> <span class="tip-num">${r.gpa}</span>${r.gpa_weighted?` &nbsp;·&nbsp; <span class="tip-label">W</span> <span class="tip-num">${r.gpa_weighted}</span>`:''}</div>`;
+  const testLine=(r.sat||r.act)?`<div style="margin-top:3px;">${r.sat?`<span class="tip-label">SAT</span> <span class="tip-num">${r.sat}</span>`:''}${r.sat&&r.act?' · ':''}${r.act?`<span class="tip-label">ACT</span> <span class="tip-num">${r.act}</span>`:''}</div>`:'';
+  const rankLine=r.class_rank?`<div style="margin-top:3px;"><span class="tip-label">Rank</span> <span class="tip-num">#${r.class_rank}</span></div>`:'';
+  const majorLine=r.major?`<div style="margin-top:3px;"><span class="tip-label">Major</span> ${r.major}</div>`:'';
+  const sportLine=r.sport==='yes'?`<div style="margin-top:3px;"><span class="tip-label">Sport</span> 🏅 Recruited athlete</div>`:'';
+  const ecsLine=r.extracurriculars?`<div style="margin-top:4px;"><span class="tip-label">Extracurriculars</span><div style="opacity:0.75;font-size:0.72rem;margin-top:2px;">${r.extracurriculars}</div></div>`:'';
+  const decisions=sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
+  tip.innerHTML=`${gpaLine}${testLine}${rankLine}${majorLine}${sportLine}${ecsLine}<div style="border-top:1px solid rgba(128,128,128,0.3);margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
+  tip.style.display='block';
+  tip.style.left=Math.min(evt.clientX+16,window.innerWidth-270)+'px';
+  tip.style.top=Math.max(evt.clientY-10,10)+'px';
+}
+document.addEventListener('click',e=>{
+  const t=document.getElementById('dot-tooltip');
+  if(t&&!e.target.closest('circle')) t.style.display='none';
+});
+
+// COLLEGE DETAIL MODAL
+function openCollegeDetail(name){
+  // Use weighted GPA for detail modal when chart is on GPA mode
+  const rows=scatterData.filter(r=>r.college_name===name);
+  if(!rows.length) return;
+  const total=rows.length;
+  const accepted=rows.filter(r=>r.decision==='Accepted').length;
+  const rate=Math.round(accepted/total*100);
+  // Show both UW and W GPA ranges
+  const gpas=rows.filter(r=>r.gpa).map(r=>parseFloat(r.gpa));
+  const gpasW=rows.filter(r=>r.gpa_weighted).map(r=>parseFloat(r.gpa_weighted));
+  const gpaAvg=gpas.length?(gpas.reduce((a,b)=>a+b,0)/gpas.length).toFixed(2):'—';
+  const gpaMin=gpas.length?Math.min(...gpas).toFixed(2):'—';
+  const gpaMax=gpas.length?Math.max(...gpas).toFixed(2):'—';
+  const gpaWAvg=gpasW.length?(gpasW.reduce((a,b)=>a+b,0)/gpasW.length).toFixed(2):'—';
+
+  const decCounts=DECISION_ORDER.map(d=>({d,n:rows.filter(r=>r.decision===d).length})).filter(x=>x.n>0);
+  const bars=decCounts.map(({d,n})=>`
+    <div class="decision-bar">
+      <div class="decision-bar-label">${d}</div>
+      <div class="decision-bar-track"><div class="decision-bar-fill" style="width:${Math.round(n/total*100)}%;background:${DOT_COLORS[d]};"></div></div>
+      <div class="decision-bar-count">${n}</div>
+    </div>`).join('');
+
+  const extRate=getAcceptRate(name);
+  const extLine=extRate<100?`<p style="font-size:0.78rem;color:var(--text3);margin-top:0.75rem;">National acceptance rate: ~${extRate}%</p>`:'';
+
+  document.getElementById('college-modal-content').innerHTML=`
+    <h2>${name}</h2>
+    <p class="modal-sub">${total} submission${total!==1?'s':''} from Live Oak</p>
+    <div class="modal-stats">
+      <div class="modal-stat"><div class="mn">${total}</div><div class="ml">Applied</div></div>
+      <div class="modal-stat"><div class="mn">${accepted}</div><div class="ml">Accepted</div></div>
+      <div class="modal-stat"><div class="mn">${rate}%</div><div class="ml">Accept rate</div></div>
+    </div>
+    <div class="modal-section">
+      <h3>Decisions</h3>${bars}
+    </div>
+    <div class="modal-section">
+      <h3>GPA range (unweighted)</h3>
+      <div style="display:flex;gap:16px;font-size:0.85rem;color:var(--text2);">
+        <span>Min <strong style="color:var(--text);font-family:var(--mono)">${gpaMin}</strong></span>
+        <span>Avg <strong style="color:var(--text);font-family:var(--mono)">${gpaAvg}</strong></span>
+        <span>Max <strong style="color:var(--text);font-family:var(--mono)">${gpaMax}</strong></span>
+      </div>
+    </div>
+    ${gpasW.length?`<div class="modal-section">
+      <h3>Avg Weighted GPA</h3>
+      <div style="font-size:0.85rem;color:var(--text2);">Avg <strong style="color:var(--text);font-family:var(--mono)">${gpaWAvg}</strong></div>
+    </div>`:''}
+    ${extLine}`;
+  document.getElementById('college-modal').classList.add('open');
+}
+
+// COMPARE MODAL
+function openCompare(){
+  const colleges=[...new Set(scatterData.map(r=>r.college_name).filter(Boolean))].sort();
+  if(colleges.length<2){alert('Need at least 2 colleges with submissions to compare.');return;}
+  const opts=colleges.map(c=>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('compare-modal-content').innerHTML=`
+    <h2 style="margin-bottom:0.5rem;">Compare colleges</h2>
+    <p class="modal-sub">Pick two colleges to compare side by side.</p>
+    <div class="compare-pick">
+      <select id="cmp-a">${opts}</select>
+      <select id="cmp-b">${colleges.length>1?`<option value="${colleges[1]}">${colleges[1]}</option>`:''}${opts}</select>
+      <button class="compare-btn" onclick="renderCompare()">Compare</button>
+    </div>
+    <div id="cmp-result"></div>`;
+  document.getElementById('compare-modal').classList.add('open');
+}
+
+function renderCompare(){
+  const a=document.getElementById('cmp-a').value;
+  const b=document.getElementById('cmp-b').value;
+  if(a===b){document.getElementById('cmp-result').innerHTML='<p style="color:var(--text3);font-size:0.85rem;">Pick two different colleges.</p>';return;}
+  document.getElementById('cmp-result').innerHTML=`<div class="compare-grid">${colStats(a)}${colStats(b)}</div>`;
+}
+
+function colStats(name){
+  const rows=scatterData.filter(r=>r.college_name===name);
+  const total=rows.length,acc=rows.filter(r=>r.decision==='Accepted').length;
+  const gpas=rows.filter(r=>r.gpa).map(r=>parseFloat(r.gpa));
+  const gpaAvg=gpas.length?(gpas.reduce((a,b)=>a+b,0)/gpas.length).toFixed(2):'—';
+  const decRows=DECISION_ORDER.map(d=>({d,n:rows.filter(r=>r.decision===d).length})).filter(x=>x.n>0)
+    .map(({d,n})=>`<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:3px 0;border-bottom:1px solid var(--border);"><span style="color:${DOT_COLORS[d]}">${d}</span><span style="font-family:var(--mono)">${n}</span></div>`).join('');
+  return `<div class="compare-col">
+    <h3>${name}</h3>
+    <div style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem;">
+      <span style="font-family:var(--mono)">${total}</span> applied · <span style="font-family:var(--mono)">${acc}</span> accepted · <span style="font-family:var(--mono)">${total?Math.round(acc/total*100):0}%</span> rate<br>
+      Avg UW GPA: <strong style="color:var(--text);font-family:var(--mono)">${gpaAvg}</strong>
+    </div>
+    ${decRows}
+  </div>`;
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('college-modal');closeModal('compare-modal');}});
+
+// ENTRIES
+function renderEntries(data){
+  const el=document.getElementById('entries');
+  let displayData=data;
+  if(slmFilter){
+    const matchedSessions=new Set(data.filter(r=>slmMatches(r)).map(r=>r.session_id));
+    displayData=data.filter(r=>matchedSessions.has(r.session_id));
+  }
+  if(!displayData.length){
+    el.innerHTML=slmFilter
+      ? `<div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h3>No matches found</h3>
+          <p>No submissions match your stats yet. Try widening the range or check back as more people submit.</p>
+          <button onclick="clearSlm()">Clear filter</button>
+        </div>`
+      : `<div class="empty-state">
+          <div class="empty-icon">🎓</div>
+          <h3>No results yet for ${activeYear}</h3>
+          <p>Be the first from Live Oak to share your college decisions.</p>
+          <button onclick="showPage('submit')">Add your results</button>
+        </div>`;
+    return;
+  }
+  const groups=[],seen=new Map();
+  displayData.forEach(r=>{
+    const k=r.session_id||`${r.gpa}|${r.sat}|${r.act}|${r.major}|${r.extracurriculars}`;
+    if(!seen.has(k)){seen.set(k,groups.length);groups.push({...r,colleges:[]});}
+    groups[seen.get(k)].colleges.push({name:r.college_name,decision:r.decision});
+  });
+  el.innerHTML=groups.map(g=>`
+    <div class="entry-card">
+      <div class="entry-top">
+        <span class="pill pill-gray">UW ${g.gpa}</span>
+        ${g.gpa_weighted?`<span class="pill pill-gray">W ${g.gpa_weighted}</span>`:''}
+        ${g.sat?`<span class="pill pill-gray">SAT ${g.sat}</span>`:''}
+        ${g.act?`<span class="pill pill-gray">ACT ${g.act}</span>`:''}
+        ${g.class_rank?`<span class="pill pill-gray">Rank #${g.class_rank}</span>`:''}
+        ${g.major?`<span class="pill pill-gray" style="font-family:inherit;font-size:0.72rem;">${g.major}</span>`:''}
+        ${g.sport==='yes'?`<span class="pill pill-gray" style="font-family:inherit;">🏅 Recruited</span>`:''}
+      </div>
+      ${g.extracurriculars?`<div class="ecs"><span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);font-weight:600;">Extracurriculars</span><br>${g.extracurriculars}</div>`:''}
+      <div class="decisions">${g.colleges.map(c=>`<span class="pill ${PILL_CLASS[c.decision]||'pill-gray'}" style="font-family:inherit;">${c.name} — ${c.decision}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+// FORM
+const ALL_MAJORS=[
+  'Accounting','Aerospace Engineering','African American Studies','Agriculture','Anthropology',
+  'Architecture','Art','Art History','Biochemistry','Biology','Biomedical Engineering',
+  'Business','Business Administration','Chemical Engineering','Chemistry','Civil Engineering',
+  'Classics','Cognitive Science','Communication','Computer Engineering','Computer Science',
+  'Creative Writing','Criminal Justice','Data Science','Economics','Education',
+  'Electrical Engineering','English','Environmental Science','Environmental Studies',
+  'Film','Finance','Fine Arts','French','Gender Studies','Geography','Geology',
+  'German','Global Studies','Graphic Design','History','Human Biology','Humanities',
+  'Industrial Engineering','Information Systems','International Business',
+  'International Relations','Italian','Japanese','Journalism','Kinesiology',
+  'Latin American Studies','Law','Linguistics','Management','Marine Biology',
+  'Marketing','Mathematics','Mechanical Engineering','Media Studies','Medicine',
+  'Middle Eastern Studies','Music','Neuroscience','Nursing','Nutrition',
+  'Philosophy','Physics','Political Science','Pre-Dental','Pre-Law','Pre-Med',
+  'Pre-Pharmacy','Pre-Veterinary','Psychology','Public Health','Public Policy',
+  'Religious Studies','Russian','Social Work','Sociology','Software Engineering',
+  'Spanish','Statistics','Studio Art','Supply Chain','Sustainability',
+  'Theater','Undeclared','Urban Studies','Women\'s Studies',
+];
+
+function showMajorSuggestions(){
+  const input=document.getElementById('f-major');
+  const sug=document.getElementById('major-sug');
+  const val=input.value.toLowerCase().trim();
+  if(!val){sug.style.display='none';return;}
+  const matches=ALL_MAJORS.filter(m=>m.toLowerCase().includes(val));
+  if(!matches.length){sug.style.display='none';return;}
+  sug.innerHTML=matches.slice(0,7).map(m=>
+    `<div onclick="document.getElementById('f-major').value='${m}';hideMajorSuggestions();event.preventDefault();"
+      style="padding:8px 12px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid var(--border);color:var(--text);"
+      onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">${m}</div>`
+  ).join('');
+  sug.style.display='block';
+}
+function hideMajorSuggestions(){document.getElementById('major-sug').style.display='none';}
+
+function getKnownColleges(){
+  const submitted=allData.map(r=>r.college_name).filter(Boolean);
+  return [...new Set([...ALL_COLLEGES,...submitted])].sort();
+}
+
+function addCollege(name='',decision='Accepted'){
+  const id=collegeCount++;
+  const div=document.createElement('div');
+  div.id=`cr-${id}`;
+  div.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+  div.innerHTML=`
+    <div style="flex:2;position:relative;">
+      <input placeholder="College name" id="cn-${id}" value="${name}" autocomplete="off"
+        oninput="showSuggestions('cn-${id}')" onblur="setTimeout(()=>hideSuggestions('cn-${id}'),400)"
+        style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:7px;font-size:0.875rem;font-family:inherit;background:var(--bg);color:var(--text);box-sizing:border-box;"/>
+      <div id="sug-${id}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:7px;z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.12);margin-top:2px;"></div>
+    </div>
+    <select id="cd-${id}" style="flex:1;padding:9px 12px;border:1px solid var(--border2);border-radius:7px;font-size:0.875rem;font-family:inherit;background:var(--bg);color:var(--text);">${DECISIONS.map(d=>`<option${d===decision?' selected':''}>${d}</option>`).join('')}</select>
+    <button type="button" onclick="document.getElementById('cr-${id}').remove()" style="background:none;border:1px solid var(--border2);border-radius:7px;padding:8px 12px;cursor:pointer;color:var(--text3);font-size:1rem;flex-shrink:0;">×</button>`;
+  document.getElementById('college-inputs').appendChild(div);
+}
+
+function showSuggestions(inputId){
+  const input=document.getElementById(inputId);
+  const sug=document.getElementById(inputId.replace('cn-','sug-'));
+  const val=input.value.toLowerCase().trim();
+  if(!val){sug.style.display='none';return;}
+  const matches=getKnownColleges().filter(c=>c.toLowerCase().includes(val));
+  if(!matches.length){sug.style.display='none';return;}
+  sug.innerHTML=matches.slice(0,6).map(c=>
+    `<div onclick="selectSuggestion('${inputId}','${c.replace(/'/g,"\\'")}');event.preventDefault();"
+      style="padding:8px 12px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid var(--border);color:var(--text);"
+      onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">${c}</div>`
+  ).join('');
+  sug.style.display='block';
+}
+function selectSuggestion(inputId,val){document.getElementById(inputId).value=val;hideSuggestions(inputId);}
+function hideSuggestions(inputId){const s=document.getElementById(inputId.replace('cn-','sug-'));if(s)s.style.display='none';}
+
+async function loadExistingSubmission(){
+  const res = await fetch(`/api/submissions/${SESSION_ID}`);
+  const data = await res.json();
+  document.getElementById('college-inputs').innerHTML='';collegeCount=0;
+  if(data&&data.length>0){
+    const r=data[0];
+    document.getElementById('f-gpa').value=r.gpa||'';
+    document.getElementById('f-gpa-w').value=r.gpa_weighted||'';
+    document.getElementById('f-sat').value=r.sat||'';
+    document.getElementById('f-act').value=r.act||'';
+    document.getElementById('f-rank').value=r.class_rank||'';
+    document.getElementById('f-major').value=r.major||'';
+    document.getElementById('f-ecs').value=r.extracurriculars||'';
+    document.getElementById('f-sport').checked=r.sport==='yes';
+    document.getElementById('f-year').value=r.grad_year||'';
+    data.forEach(row=>addCollege(row.college_name||'',row.decision||'Accepted'));
+    document.getElementById('submit-btn').textContent='Update Submission';
+    document.getElementById('form-title').textContent='Edit your Submission';
+    document.getElementById('form-subtitle').textContent='Update your results below.';
+    document.getElementById('anon-badge').style.display='none';
+    document.getElementById('delete-wrap').style.display='block';
+  } else {
+    ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs','f-year'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-sport').checked=false;
+    addCollege();
+    document.getElementById('submit-btn').textContent='Submit';
+    document.getElementById('form-title').textContent='Add your college results';
+    document.getElementById('form-subtitle').textContent='Share your college decisions to help future Live Oak students.';
+    document.getElementById('anon-badge').style.display='inline-flex';
+    document.getElementById('delete-wrap').style.display='none';
+  }
+}
+
+async function submitForm(){
+  const gpa=parseFloat(document.getElementById('f-gpa').value);
+  const gpaW=parseFloat(document.getElementById('f-gpa-w').value)||null;
+  const year=parseInt(document.getElementById('f-year').value);
+  if(!gpa||!gpaW||!year){alert('Unweighted GPA, weighted GPA, and graduation year are required!');return;}
+  if(gpa>4){alert('Unweighted GPA cannot exceed 4.0');return;}
+  if(gpaW>5){alert('Weighted GPA cannot exceed 5.0');return;}
+  const rows=[];
+  for(let i=0;i<collegeCount;i++){
+    const cn=document.getElementById(`cn-${i}`),cd=document.getElementById(`cd-${i}`);
+    if(cn&&cn.value.trim()) rows.push({
+      gpa,grad_year:year,gpa_weighted:gpaW,
+      sat:parseInt(document.getElementById('f-sat').value)||null,
+      act:parseInt(document.getElementById('f-act').value)||null,
+      class_rank:parseInt(document.getElementById('f-rank').value)||null,
+      major:document.getElementById('f-major').value.trim()||null,
+      extracurriculars:document.getElementById('f-ecs').value.trim()||null,
+      sport:document.getElementById('f-sport').checked?'yes':null,
+      college_name:cn.value.trim(),decision:cd.value,session_id:SESSION_ID
+    });
+  }
+  if(!rows.length){alert('Add at least one college!');return;}
+
+  // Send all colleges to API for upsert
+  try {
+    const res = await fetch('/api/submissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: SESSION_ID,
+        colleges: rows
+      })
+    });
+    const result = await res.json();
+    if (!result.success) { alert('Something went wrong. Try again.'); return; }
+  } catch(error) {
+    alert('Something went wrong. Try again.');
+    console.error(error);
+    return;
+  }
+  localStorage.setItem('cr_submitted','1');
+  updateNav();
+
+  const submitPage=document.getElementById('page-submit');
+  const resultsPage=document.getElementById('page-results');
+  const container=document.querySelector('.container');
+  container.style.minHeight=submitPage.offsetHeight+'px';
+
+  submitPage.style.position='absolute';
+  submitPage.style.top='0';
+  submitPage.style.left='0';
+  submitPage.style.right='0';
+  submitPage.style.animation='slideOutRight 0.25s ease forwards';
+
+  resultsPage.style.display='block';
+  resultsPage.style.position='static';
+  resultsPage.style.animation='slideInLeft 0.3s cubic-bezier(0.16,1,0.3,1) forwards';
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById('nav-results').classList.add('active');
+
+  setTimeout(async()=>{
+    submitPage.removeAttribute('style');
+    submitPage.classList.remove('active');
+    resultsPage.removeAttribute('style');
+    resultsPage.classList.add('active');
+    currentPage='results';
+
+    const res2 = await fetch('/api/submissions');
+    allData = await res2.json();
+    renderTabs();
+    const d=allData.filter(r=>r.grad_year==activeYear);
+    renderStats(d);renderEntries(d);scatterData=d;
+    buildChart(d,true);
+  },300);
+}
+
+async function deleteSubmission(){
+  if(!confirm('Delete your submission? This cannot be undone.')) return;
+  try {
+    await fetch(`/api/submissions/${SESSION_ID}`, { method: 'DELETE' });
+    localStorage.removeItem('cr_submitted');
+    updateNav();
+    loadExistingSubmission();
+    loadData();
+  } catch(error) {
+    alert('Error deleting submission.');
+    console.error(error);
+  }
+}
+
+updateNav();
+loadData();
+window.addEventListener('resize',()=>{
+  if(scatterData.length) buildChart(scatterData,false);
+});
+</script>
+</body>
+</html>
