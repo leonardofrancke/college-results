@@ -457,6 +457,11 @@
           Sports recruitment</label>
       </div>
       <div class="form-group">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:400;">
+          <input type="checkbox" id="f-first-gen" style="width:16px;height:16px;cursor:pointer;accent-color:var(--text);flex-shrink:0;" />
+          First generation college student</label>
+      </div>
+      <div class="form-group">
         <label>College decisions (add at least one)</label>
         <div id="college-inputs"></div>
         <button type="button" class="add-btn" onclick="addCollege()">+ Add another college</button>
@@ -1232,6 +1237,7 @@ async function loadExistingSubmission(){
     document.getElementById('f-major').value=r.major||'';
     document.getElementById('f-ecs').value=r.extracurriculars||'';
     document.getElementById('f-sport').checked=r.sport==='yes';
+    document.getElementById('f-first-gen').checked=r.first_gen==='yes';
     document.getElementById('f-year').value=r.grad_year||'';
     data.forEach(row=>addCollege(row.college_name||'',row.decision||'Accepted'));
     document.getElementById('submit-btn').textContent='Update Submission';
@@ -1242,6 +1248,7 @@ async function loadExistingSubmission(){
   } else {
     ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs','f-year'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f-sport').checked=false;
+    document.getElementById('f-first-gen').checked=false;
     addCollege();
     document.getElementById('submit-btn').textContent='Submit';
     document.getElementById('form-title').textContent='Add your college results';
@@ -1269,6 +1276,7 @@ async function submitForm(){
       major:document.getElementById('f-major').value.trim()||null,
       extracurriculars:document.getElementById('f-ecs').value.trim()||null,
       sport:document.getElementById('f-sport').checked?'yes':null,
+      first_gen:document.getElementById('f-first-gen').checked?'yes':null,
       college_name:cn.value.trim(),decision:cd.value,session_id:SESSION_ID
     });
   }
