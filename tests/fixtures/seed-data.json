@@ -1,0 +1,227 @@
+[
+  {
+    "session_id": "demo-leo",
+    "colleges": [
+      {
+        "college_name": "Massachusetts Institute of Technology",
+        "grad_year": 2030,
+        "gpa": 3.92,
+        "gpa_weighted": 4.35,
+        "sat": 1540,
+        "act": 35,
+        "class_rank": "Top 5%",
+        "major": "Computer Science",
+        "extracurriculars": "Robotics Club (President), Math Team, Science Olympiad, Varsity Tennis",
+        "sport": "yes",
+        "first_gen": "no",
+        "decision": "Accepted",
+        "decision_type": "Regular Decision"
+      },
+      {
+        "college_name": "Stanford University",
+        "grad_year": 2030,
+        "gpa": 3.92,
+        "gpa_weighted": 4.35,
+        "sat": 1540,
+        "act": 35,
+        "class_rank": "Top 5%",
+        "major": "Computer Science",
+        "extracurriculars": "Robotics Club (President), Math Team, Science Olympiad, Varsity Tennis",
+        "sport": "yes",
+        "first_gen": "no",
+        "decision": "Waitlisted",
+        "decision_type": "Regular Decision"
+      },
+      {
+        "college_name": "Georgia Institute of Technology",
+        "grad_year": 2030,
+        "gpa": 3.92,
+        "gpa_weighted": 4.35,
+        "sat": 1540,
+        "act": 35,
+        "class_rank": "Top 5%",
+        "major": "Computer Science",
+        "extracurriculars": "Robotics Club (President), Math Team, Science Olympiad, Varsity Tennis",
+        "sport": "yes",
+        "first_gen": "no",
+        "decision": "Accepted",
+        "decision_type": "Early Action"
+      },
+      {
+        "college_name": "Carnegie Mellon University",
+        "grad_year": 2030,
+        "gpa": 3.92,
+        "gpa_weighted": 4.35,
+        "sat": 1540,
+        "class_rank": "Top 5%",
+        "major": "Computer Science",
+        "extracurriculars": "Robotics Club (President), Math Team, Science Olympiad, Varsity Tennis",
+        "decision": "Accepted",
+        "decision_type": "Regular Decision"
+      }
+    ]
+  },
+  {
+    "session_id": "demo-sarah",
+    "colleges": [
+      {
+        "college_name": "University of Virginia",
+        "grad_year": 2030,
+        "gpa": 3.78,
+        "gpa_weighted": 4.1,
+        "sat": 1420,
+        "class_rank": "Top 15%",
+        "major": "Biology",
+        "extracurriculars": "Student Government (VP), Volunteer at Children's Hospital, Model UN",
+        "first_gen": "yes",
+        "decision": "Accepted",
+        "decision_type": "Early Action"
+      },
+      {
+        "college_name": "University of Michigan",
+        "grad_year": 2030,
+        "gpa": 3.78,
+        "gpa_weighted": 4.1,
+        "sat": 1420,
+        "class_rank": "Top 15%",
+        "major": "Biology",
+        "extracurriculars": "Student Government (VP), Volunteer at Children's Hospital, Model UN",
+        "first_gen": "yes",
+        "decision": "Accepted",
+        "decision_type": "Regular Decision"
+      },
+      {
+        "college_name": "Johns Hopkins University",
+        "grad_year": 2030,
+        "gpa": 3.78,
+        "gpa_weighted": 4.1,
+        "sat": 1420,
+        "class_rank": "Top 15%",
+        "major": "Biology",
+        "extracurriculars": "Student Government (VP), Volunteer at Children's Hospital, Model UN",
+        "first_gen": "yes",
+        "decision": "Rejected",
+        "decision_type": "Early Decision"
+      }
+    ]
+  },
+  {
+    "session_id": "demo-marcus",
+    "colleges": [
+      {
+        "college_name": "University of Texas at Austin",
+        "grad_year": 2030,
+        "gpa": 3.65,
+        "sat": 1380,
+        "act": 31,
+        "major": "Mechanical Engineering",
+        "extracurriculars": "FIRST Robotics, Track & Field, Church Youth Group",
+        "sport": "yes",
+        "decision": "Accepted",
+        "decision_type": "Regular Decision"
+      },
+      {
+        "college_name": "Texas A&M University",
+        "grad_year": 2030,
+        "gpa": 3.65,
+        "sat": 1380,
+        "act": 31,
+        "major": "Mechanical Engineering",
+        "extracurriculars": "FIRST Robotics, Track & Field, Church Youth Group",
+        "sport": "yes",
+        "decision": "Accepted",
+        "decision_type": "Regular Decision"
+      },
+      {
+        "college_name": "Rice University",
+        "grad_year": 2030,
+        "gpa": 3.65,
+        "sat": 1380,
+        "act": 31,
+        "major": "Mechanical Engineering",
+        "extracurriculars": "FIRST Robotics, Track & Field, Church Youth Group",
+        "sport": "yes",
+        "decision": "Waitlisted",
+        "decision_type": "Regular Decision"
+      }
+    ]
+  },
+  {
+    "session_id": "demo-emily",
+    "colleges": [
+      {
+        "college_name": "New York University",
+        "grad_year": 2030,
+        "gpa": 3.88,
+        "gpa_weighted": 4.25,
+        "sat": 1490,
+        "class_rank": "Top 10%",
+        "major": "Film & Television",
+        "extracurriculars": "Film Club (Director), School Newspaper (Editor), Drama Club, Photography",
+        "decision": "Accepted",
+        "decision_type": "Early Decision"
+      },
+      {
+        "college_name": "University of Southern California",
+        "grad_year": 2030,
+        "gpa": 3.88,
+        "gpa_weighted": 4.25,
+        "sat": 1490,
+        "class_rank": "Top 10%",
+        "major": "Film Production",
+        "extracurriculars": "Film Club (Director), School Newspaper (Editor), Drama Club, Photography",
+        "decision": "Pending",
+        "decision_type": "Regular Decision"
+      },
+      {
+        "college_name": "Emory University",
+        "grad_year": 2030,
+        "gpa": 3.88,
+        "gpa_weighted": 4.25,
+        "sat": 1490,
+        "class_rank": "Top 10%",
+        "major": "English",
+        "extracurriculars": "Film Club (Director), School Newspaper (Editor), Drama Club, Photography",
+        "decision": "Accepted",
+        "decision_type": "Early Action"
+      }
+    ]
+  },
+  {
+    "session_id": "demo-aiden",
+    "colleges": [
+      {
+        "college_name": "University of Florida",
+        "grad_year": 2031,
+        "gpa": 3.45,
+        "sat": 1280,
+        "major": "Business Administration",
+        "extracurriculars": "DECA, Part-time Job, Volunteer Tutor",
+        "first_gen": "yes",
+        "decision": "Pending"
+      },
+      {
+        "college_name": "Florida State University",
+        "grad_year": 2031,
+        "gpa": 3.45,
+        "sat": 1280,
+        "major": "Business Administration",
+        "extracurriculars": "DECA, Part-time Job, Volunteer Tutor",
+        "first_gen": "yes",
+        "decision": "Accepted",
+        "decision_type": "Regular Decision"
+      },
+      {
+        "college_name": "University of Central Florida",
+        "grad_year": 2031,
+        "gpa": 3.45,
+        "sat": 1280,
+        "major": "Business Administration",
+        "extracurriculars": "DECA, Part-time Job, Volunteer Tutor",
+        "first_gen": "yes",
+        "decision": "Accepted",
+        "decision_type": "Regular Decision"
+      }
+    ]
+  }
+]
