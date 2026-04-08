@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  leo-app:
+    build:
+      context: ../..
+    container_name: leo-app
+    restart: unless-stopped
+    ports:
+      - "37461:80"
+    volumes:
+      - /var/local/docker/leo-app/html:/app/html:ro
+      - /var/local/docker/leo-app/api/server.js:/app/api/server.js
+      - /var/local/docker/leo-app/prod/db:/app/db
+    environment:
+      - ADMIN_SECRET=${ADMIN_SECRET}
+    networks:
+      - webinfra_frontend
+    labels:
+      com.docker.compose.project: leo-app
+
+networks:
+  webinfra_frontend:
+    external: true
