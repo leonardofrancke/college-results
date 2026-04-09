@@ -1,15 +1,14 @@
 version: '3.8'
 services:
   leo-app-staging:
-    build:
-      context: ../..
+    image: leo-app:v3-fc94b62
     container_name: leo-app-staging
     restart: unless-stopped
     ports:
       - "58293:80"
     volumes:
-      - /var/local/docker/leo-app/html:/app/html:ro
-      - /var/local/docker/leo-app/api/server.js:/app/api/server.js
+      - /var/local/docker/leo-app/staging/html:/app/html:ro
+      - /var/local/docker/leo-app/staging/api/server.js:/app/api/server.js
       - /var/local/docker/leo-app/staging/db:/app/db
     environment:
       - ADMIN_SECRET=${ADMIN_SECRET}

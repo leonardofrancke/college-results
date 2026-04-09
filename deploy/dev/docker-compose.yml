@@ -1,15 +1,14 @@
 version: '3.8'
 services:
   leo-app-dev:
-    build:
-      context: ../..
+    image: leo-app:v3-fc94b62
     container_name: leo-app-dev
     restart: unless-stopped
     ports:
       - "48392:80"
     volumes:
-      - /var/local/docker/leo-app/html:/app/html:ro
-      - /var/local/docker/leo-app/api/server.js:/app/api/server.js
+      - /var/local/docker/leo-app/dev/html:/app/html:ro
+      - /var/local/docker/leo-app/dev/api/server.js:/app/api/server.js
       - /var/local/docker/leo-app/dev/db:/app/db
     environment:
       - ADMIN_SECRET=${ADMIN_SECRET}

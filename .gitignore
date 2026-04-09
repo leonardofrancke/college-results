@@ -5,3 +5,5 @@ tests/node_modules/
 tests/coverage/
 tests/node_modules/
 tests/coverage/
+.env
+deploy/**/.env
