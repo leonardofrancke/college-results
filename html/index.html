@@ -577,11 +577,11 @@
   [data-theme="dark"] .empty-state p { color: var(--text-3); }
   [data-theme="dark"] .theme-toggle:hover { background: var(--surface-2); }
   .theme-toggle {
-    margin-left: 10px; padding: 6px 10px; font-size: 16px; line-height: 1;
-    color: var(--text-2); border: 1px solid transparent; border-radius: 6px;
+    margin-left: 10px; padding: 7px 14px; font-size: 13px; font-weight: 500; line-height: 1;
+    color: var(--text-2); border: 1px solid var(--border-2); border-radius: 6px;
     cursor: pointer; background: none; font-family: inherit; transition: all 0.15s;
   }
-  .theme-toggle:hover { background: var(--surface-2); border-color: var(--border-2); }
+  .theme-toggle:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text); }
 
   @media (max-width: 600px) {
     .content { padding: 24px 20px; }
@@ -600,7 +600,7 @@
   <div class="nav-logo">Live Oak <span>/ admissions</span></div>
   <div class="nav-link active" id="nav-results" onclick="showPage('results')">Results</div>
   <div class="nav-link" id="nav-submit" onclick="showPage('submit')">Submit yours</div>
-  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()" title="Toggle dark mode">Dark</button>
 </nav>
 
 <!-- College detail modal -->
@@ -1501,9 +1501,9 @@ function openCollegeDetail(name) {
     <div class="modal-section"><h3>Decisions</h3>${bars}</div>
     <div class="modal-section"><h3>GPA range (unweighted)</h3>
       <div style="display:flex;gap:16px;font-size:13px;color:#666;">
-        <span>Min <strong style="color:#1c1c1c;font-family:var(--mono)">${gpaMin}</strong></span>
-        <span>Avg <strong style="color:#1c1c1c;font-family:var(--mono)">${gpaAvg}</strong></span>
-        <span>Max <strong style="color:#1c1c1c;font-family:var(--mono)">${gpaMax}</strong></span>
+        <span>Min <strong style="color:var(--text);font-family:var(--mono)">${gpaMin}</strong></span>
+        <span>Avg <strong style="color:var(--text);font-family:var(--mono)">${gpaAvg}</strong></span>
+        <span>Max <strong style="color:var(--text);font-family:var(--mono)">${gpaMax}</strong></span>
       </div>
     </div>`;
   document.getElementById('college-modal').classList.add('open');
@@ -1570,7 +1570,7 @@ function colStats(name) {
     const r_t = rows.filter(r=>r.decision_type===t);
     if (!r_t.length) return null;
     const a_t = r_t.filter(r=>r.decision==='Accepted').length;
-    return `<div style="font-size:12px;color:#666;line-height:1.6;">${t}: <strong style="color:#1c1c1c;font-family:var(--mono);">${a_t}/${r_t.length}</strong> <span style="color:#999;">(${Math.round(a_t/r_t.length*100)}%)</span></div>`;
+    return `<div style="font-size:12px;color:#666;line-height:1.6;">${t}: <strong style="color:var(--text);font-family:var(--mono);">${a_t}/${r_t.length}</strong> <span style="color:#999;">(${Math.round(a_t/r_t.length*100)}%)</span></div>`;
   }).filter(Boolean).join('');
   return `<div class="cmp-col">
     <h3 style="margin-bottom:14px;">${name}</h3>
@@ -1581,9 +1581,9 @@ function colStats(name) {
     </div>
     <div style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Accepted students</div>
     <div style="font-size:13px;color:#444;line-height:1.8;margin-bottom:14px;">
-      ${avgGpaAcc!==null ? `<div>UW GPA: <strong style="color:#1c1c1c;font-family:var(--mono)">${avgGpaAcc.toFixed(2)}</strong>${minG?` <span style="color:#999;font-size:11px;">(${minG}–${maxG})</span>`:''}</div>` : ''}
-      ${avgGpaWAcc!==null ? `<div>W GPA: <strong style="color:#1c1c1c;font-family:var(--mono)">${avgGpaWAcc.toFixed(2)}</strong></div>` : ''}
-      ${avgSATAcc!==null ? `<div>SAT: <strong style="color:#1c1c1c;font-family:var(--mono)">${Math.round(avgSATAcc)}</strong></div>` : ''}
+      ${avgGpaAcc!==null ? `<div>UW GPA: <strong style="color:var(--text);font-family:var(--mono)">${avgGpaAcc.toFixed(2)}</strong>${minG?` <span style="color:#999;font-size:11px;">(${minG}–${maxG})</span>`:''}</div>` : ''}
+      ${avgGpaWAcc!==null ? `<div>W GPA: <strong style="color:var(--text);font-family:var(--mono)">${avgGpaWAcc.toFixed(2)}</strong></div>` : ''}
+      ${avgSATAcc!==null ? `<div>SAT: <strong style="color:var(--text);font-family:var(--mono)">${Math.round(avgSATAcc)}</strong></div>` : ''}
     </div>
     <div style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Decisions</div>
     <div style="margin-bottom:14px;">${decBars}</div>
@@ -1910,7 +1910,7 @@ function addCollege(name='', decision='Accepted', decisionType='RD', schoolType=
   div.className = 'college-row';
   div.style.cssText = 'animation:none;opacity:1;flex-wrap:wrap;';
   setTimeout(() => { div.style.cssText = 'flex-wrap:wrap;'; }, 50);
-  const inputStyle = "padding:9px 12px;border:1px solid #e4e4e2;border-radius:6px;font-size:14px;font-family:inherit;color:#1c1c1c;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;";
+  const inputStyle = "padding:9px 12px;border:1px solid var(--border-2);border-radius:6px;font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;";
   div.innerHTML = `
     <div class="college-row-name">
       <input type="text" id="cn-${id}" placeholder="College name" value="${name.replace(/"/g,'&quot;')}" autocomplete="off"
@@ -2117,7 +2117,7 @@ function sendChat() {
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
   const btn = document.getElementById('theme-toggle');
-  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  if (btn) btn.textContent = theme === 'dark' ? 'Light' : 'Dark';
 }
 function toggleTheme() {
   const cur = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
