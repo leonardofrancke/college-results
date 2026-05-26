@@ -1070,7 +1070,7 @@ function buildChart(data, animate) {
     const y = by.toFixed(2);
     const col = DOT_COLORS[r.decision] || '#888';
     const dimmed = (activeFilter && r.decision !== activeFilter) || (slmFilter && !slmMatches(r));
-    svg += `<circle class="chart-dot" data-cidx="${i}" cx="${x}" cy="${y}" r="${dotR}" fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${dimmed?0.1:1}" style="cursor:pointer;" onmouseover="setSpotCol(${i})" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
+    svg += `<circle class="chart-dot" data-cidx="${i}" cx="${x}" cy="${y}" r="${dotR}" fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${dimmed?0.1:1}" style="cursor:pointer;" onmouseover="setSpotCol(${i})" onmouseout="clearSpot()" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
   });
   svg += '</svg>';
   el.innerHTML = svg;
@@ -1151,8 +1151,9 @@ function updateDotHighlight(colIdx) {
     }
   });
 }
-let _waveMode = 'none';
+let _waveMode = 'none', _spotClearTimer = 0;
 function setWaveCol(idx) {
+  if (_spotClearTimer) { clearTimeout(_spotClearTimer); _spotClearTimer = 0; }
   if (idx === _lastWaveIdx && _waveMode === 'wave') return;
   _lastWaveIdx = idx;
   _waveMode = 'wave';
@@ -1160,11 +1161,21 @@ function setWaveCol(idx) {
   _waveRaf = requestAnimationFrame(() => chartWave(idx));
 }
 function setSpotCol(idx) {
+  if (_spotClearTimer) { clearTimeout(_spotClearTimer); _spotClearTimer = 0; }
   if (idx === _lastWaveIdx && _waveMode === 'spot') return;
   _lastWaveIdx = idx;
   _waveMode = 'spot';
   if (_waveRaf) cancelAnimationFrame(_waveRaf);
   _waveRaf = requestAnimationFrame(() => chartSpot(idx));
+}
+function clearSpot() {
+  if (_waveMode !== 'spot') return;
+  if (_spotClearTimer) clearTimeout(_spotClearTimer);
+  _spotClearTimer = setTimeout(() => {
+    _spotClearTimer = 0;
+    _lastWaveIdx = -2; _waveMode = 'none';
+    chartWave(-1);
+  }, 60);
 }
 function chartSpot(idx) {
   const labels = document.querySelectorAll('[id^="col-lbl-"]');
@@ -1192,7 +1203,21 @@ function chartSpot(idx) {
 function chartMouseleave() { _lastWaveIdx = -2; _waveMode = 'none'; chartWave(-1); }
 
 // ── Dot tooltip ────────────────────────────────────────────────────────────
-function handleDotClick(evt, idx) { evt.stopPropagation(); showTooltip(evt, scatterData[idx]); }
+let _tooltipDot = null;
+function handleDotClick(evt, idx) { evt.stopPropagation(); _tooltipDot = evt.currentTarget; showTooltip(evt, scatterData[idx]); }
+function positionTooltipNear(x, y) {
+  const tip = document.getElementById('dot-tooltip');
+  tip.style.left = Math.min(x + 16, window.innerWidth - 330) + 'px';
+  tip.style.top = Math.max(y - 10, 10) + 'px';
+}
+function repositionTooltip() {
+  if (!_tooltipDot) return;
+  const tip = document.getElementById('dot-tooltip');
+  if (tip.style.display === 'none' || !tip.style.display) return;
+  if (!_tooltipDot.isConnected) { tip.style.display = 'none'; _tooltipDot = null; return; }
+  const rect = _tooltipDot.getBoundingClientRect();
+  positionTooltipNear(rect.right, rect.top);
+}
 function showTooltip(evt, r) {
   const key = r.session_id || `${r.gpa}|${r.sat}|${r.act}`;
   const sibs = scatterData.filter(x => (x.session_id||`${x.gpa}|${x.sat}|${x.act}`) === key);
@@ -1239,11 +1264,19 @@ function showTooltip(evt, r) {
 
   tip.innerHTML = html;
   tip.style.display = 'block';
-  tip.style.left = Math.min(evt.clientX+16, window.innerWidth-320) + 'px';
-  tip.style.top = Math.max(evt.clientY-10, 10) + 'px';
+  positionTooltipNear(evt.clientX, evt.clientY);
 }
 document.addEventListener('click', e => {
-  if (!e.target.closest('circle')) document.getElementById('dot-tooltip').style.display = 'none';
+  if (!e.target.closest('circle')) {
+    document.getElementById('dot-tooltip').style.display = 'none';
+    _tooltipDot = null;
+  }
+});
+window.addEventListener('scroll', repositionTooltip, { passive: true });
+window.addEventListener('resize', repositionTooltip, { passive: true });
+document.addEventListener('DOMContentLoaded', () => {
+  const wrap = document.getElementById('chart-scroll-wrap');
+  if (wrap) wrap.addEventListener('scroll', repositionTooltip, { passive: true });
 });
 
 // ── College modal ──────────────────────────────────────────────────────────
