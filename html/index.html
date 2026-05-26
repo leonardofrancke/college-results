@@ -195,7 +195,7 @@
   .chart-axis-note { font-size: 13px; color: #666; margin-top: 6px; font-family: var(--mono); }
 
   /* ── DOT TOOLTIP ── */
-  #dot-tooltip { display: none; position: fixed; background: #1c1c1c; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.7; max-width: 260px; pointer-events: none; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+  #dot-tooltip { display: none; position: fixed; background: #1c1c1c; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.7; max-width: 320px; pointer-events: none; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
   #dot-tooltip .tip-label { color: #aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
   #dot-tooltip .tip-num { font-family: var(--mono); }
 
@@ -261,10 +261,10 @@
   .dpill-entry { font-size: 12px; padding: 3px 9px; border-radius: 4px; font-weight: 500; }
   .dp-acc { background: #f0fdf4; color: #2e9b66; }
   .dp-den { background: #fef2f2; color: #c84040; }
-  .dp-wl  { background: #fefce8; color: #a07030; }
-  .dp-def { background: #eff6ff; color: var(--accent); }
-  .dp-wdr { background: #f8fafc; color: #94a3b8; }
-  .dp-pnd { background: #ccfbf1; color: #0d9488; }
+  .dp-wl  { background: #fff7ed; color: #d97706; }
+  .dp-def { background: #eff6ff; color: #2563eb; }
+  .dp-wdr { background: #f1f5f9; color: #64748b; }
+  .dp-pnd { background: #fdf2f8; color: #ec4899; }
   .empty-state { text-align: center; padding: 3rem 1rem; }
   .empty-icon { font-size: 2rem; margin-bottom: 12px; }
   .empty-state h3 { font-size: 14px; font-weight: 600; color: #1c1c1c; margin-bottom: 6px; }
@@ -666,7 +666,7 @@
 // ── Constants ──────────────────────────────────────────────────────────────
 const DECISIONS = ['Accepted','Rejected','Waitlisted','Deferred','Withdrawn','Pending'];
 const DECISION_ORDER = ['Accepted','Waitlisted','Deferred','Rejected','Withdrawn','Pending'];
-const DOT_COLORS = {Accepted:'#2e9b66',Rejected:'#c84040',Waitlisted:'#a07030',Deferred:'#4f72c4',Withdrawn:'#94a3b8',Pending:'#0d9488'};
+const DOT_COLORS = {Accepted:'#2e9b66',Rejected:'#c84040',Waitlisted:'#d97706',Deferred:'#2563eb',Withdrawn:'#64748b',Pending:'#ec4899'};
 const PILL_CLASS = {Accepted:'dp-acc',Rejected:'dp-den',Waitlisted:'dp-wl',Deferred:'dp-def',Withdrawn:'dp-wdr',Pending:'dp-pnd'};
 
 // ── College categorization ─────────────────────────────────────────────────
@@ -1012,9 +1012,9 @@ function buildChart(data, animate) {
   // Estimate the vertical extent of the longest rotated college name so PAD.bottom
   // fits without leaving big empty space. sin(38°) ~= 0.616; char width ~= 0.55em.
   const maxNameLen = Math.max(10, ...cols.map(c => shortenForChart(c).length));
-  const lblPxPerChar = (baseLblSize + 6) * 0.55; // include some hover headroom
+  const lblPxPerChar = (baseLblSize + 9) * 0.55; // include hover headroom up to peak
   const labelExtent = Math.ceil(maxNameLen * lblPxPerChar * 0.616);
-  const padBottom = Math.max(100, 22 + labelExtent + 10);
+  const padBottom = Math.max(110, 22 + labelExtent + 18);
   const plotHTarget = isMobile ? 220 : isWide ? 420 : 320;
   const H = 20 + plotHTarget + padBottom;
   const PAD = {top:20, right:20, bottom: padBottom, left:58};
@@ -1088,10 +1088,9 @@ function chartWave(fIdx) {
     return;
   }
   const base = parseFloat(labels[0].getAttribute('font-size') || 10);
-  const peak = Math.max(base + 16, 26);
+  const peak = Math.max(base + 9, 19);
   labels.forEach((el, i) => {
     const dist = Math.abs(i - fIdx);
-    // Sharp gaussian: dramatic falloff. d=0:1, d=1:0.58, d=2:0.11, d=3:~0
     const factor = dist > 3 ? 0 : Math.exp(-(dist*dist) / 1.8);
     el.style.fontSize = (base + (peak - base) * factor) + 'px';
     if (dist < 0.6) { el.style.fill = '#1c1c1c'; el.style.fontWeight = '600'; }
@@ -1109,17 +1108,19 @@ function chartMousemove(e) {
   const rect = svg.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
-  // Only react when mouse is below the axis line (i.e. over the college labels)
-  if (y < pb) {
+  // Only react when mouse is in the label area (below the axis, small buffer)
+  if (y < pb - 4) {
     if (_lastWaveIdx !== -1) { _lastWaveIdx = -1; chartWave(-1); }
     return;
   }
-  const fIdx = (x - pl - cw/2) / cw;
-  if (fIdx < -0.5 || fIdx > n - 0.5) {
+  const rawIdx = (x - pl - cw/2) / cw;
+  // Generous bounds; clamp to valid index so edges don't flicker
+  if (rawIdx < -2 || rawIdx > n + 1) {
     if (_lastWaveIdx !== -1) { _lastWaveIdx = -1; chartWave(-1); }
     return;
   }
-  if (Math.abs(fIdx - _lastWaveIdx) < 0.08) return;
+  const fIdx = Math.max(0, Math.min(n - 1, rawIdx));
+  if (Math.abs(fIdx - _lastWaveIdx) < 0.05) return;
   _lastWaveIdx = fIdx;
   if (_waveRaf) cancelAnimationFrame(_waveRaf);
   _waveRaf = requestAnimationFrame(() => chartWave(fIdx));
@@ -1132,12 +1133,45 @@ function showTooltip(evt, r) {
   const key = r.session_id || `${r.gpa}|${r.sat}|${r.act}`;
   const sibs = scatterData.filter(x => (x.session_id||`${x.gpa}|${x.sat}|${x.act}`) === key);
   const tip = document.getElementById('dot-tooltip');
-  const gpaLine = `<div><span class="tip-label">UW GPA</span> <span class="tip-num">${r.gpa}</span>${r.gpa_weighted?` · <span class="tip-label">W</span> <span class="tip-num">${r.gpa_weighted}</span>`:''}</div>`;
-  const testLine = (r.sat||r.act) ? `<div>${r.sat?`<span class="tip-label">SAT</span> <span class="tip-num">${r.sat}</span>`:''} ${r.act?`<span class="tip-label">ACT</span> <span class="tip-num">${r.act}</span>`:''}</div>` : '';
-  const decisions = sibs.map(s=>`<span style="color:${DOT_COLORS[s.decision]||'#aaa'}">${s.college_name} — ${s.decision}</span>`).join('<br>');
-  tip.innerHTML = `${gpaLine}${testLine}<div style="border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;line-height:1.9;">${decisions}</div>`;
+
+  const stats = [];
+  if (r.gpa) {
+    let s = `<span class="tip-label">UW GPA</span> <span class="tip-num">${r.gpa}</span>`;
+    if (r.gpa_weighted) s += ` · <span class="tip-label">W</span> <span class="tip-num">${r.gpa_weighted}</span>`;
+    stats.push(s);
+  }
+  const tests = [];
+  if (r.sat) tests.push(`<span class="tip-label">SAT</span> <span class="tip-num">${r.sat}</span>`);
+  if (r.act) tests.push(`<span class="tip-label">ACT</span> <span class="tip-num">${r.act}</span>`);
+  if (tests.length) stats.push(tests.join(' · '));
+  if (r.class_rank) stats.push(`<span class="tip-label">Rank</span> <span class="tip-num">#${r.class_rank}</span>`);
+  if (r.essay_rating) stats.push(`<span class="tip-label">Essay</span> <span class="tip-num">${r.essay_rating}/5</span>`);
+
+  const profile = [];
+  if (r.major) profile.push(`<div><span class="tip-label">Major</span> ${r.major}</div>`);
+  if (r.first_gen === 'yes') profile.push('<div style="color:#9be3b8;">First-generation student</div>');
+
+  const decisions = sibs.map(s => {
+    const extras = [];
+    if (s.decision_type) extras.push(s.decision_type);
+    if (s.school_type && s.school_type !== 'University') extras.push(s.school_type);
+    if (s.enrolling === 'yes') extras.push('🎓 Enrolling');
+    if (s.scholarship === 'yes') extras.push('💰 Scholarship');
+    if (s.sport === 'yes') extras.push('🏅 Recruited');
+    const extrasStr = extras.length ? ` <span style="opacity:0.7;font-size:10.5px;">(${extras.join(' · ')})</span>` : '';
+    return `<div style="color:${DOT_COLORS[s.decision]||'#aaa'};">${s.college_name} — ${s.decision}${extrasStr}</div>`;
+  }).join('');
+
+  let html = stats.map(s => `<div>${s}</div>`).join('');
+  if (profile.length) html += `<div style="border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;">${profile.join('')}</div>`;
+  if (r.extracurriculars) {
+    html += `<div style="border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;font-size:11px;color:#bbb;line-height:1.5;"><span class="tip-label" style="display:block;margin-bottom:3px;">Extracurriculars</span>${r.extracurriculars}</div>`;
+  }
+  html += `<div style="border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;line-height:1.7;">${decisions}</div>`;
+
+  tip.innerHTML = html;
   tip.style.display = 'block';
-  tip.style.left = Math.min(evt.clientX+16, window.innerWidth-275) + 'px';
+  tip.style.left = Math.min(evt.clientX+16, window.innerWidth-320) + 'px';
   tip.style.top = Math.max(evt.clientY-10, 10) + 'px';
 }
 document.addEventListener('click', e => {
@@ -1227,7 +1261,7 @@ function colStats(name) {
   const maxG = accGpas.length ? Math.max(...accGpas).toFixed(2) : null;
   const enrolled = rows.filter(r=>r.enrolling==='yes').length;
   const scholarship = rows.filter(r=>r.scholarship==='yes').length;
-  const accColor = accRate >= 50 ? '#2e9b66' : accRate >= 25 ? '#a07030' : '#c84040';
+  const accColor = accRate >= 50 ? '#2e9b66' : accRate >= 25 ? '#d97706' : '#c84040';
   const decBars = DECISION_ORDER.filter(d=>rows.some(r=>r.decision===d)).map(d => {
     const n = rows.filter(r=>r.decision===d).length;
     const pct = Math.round(n/total*100);
@@ -1403,7 +1437,7 @@ function renderStatsInline(data) {
       <div class="sp-bar-label" title="${name}">${name}</div>
       <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(apps/maxApp*100)}%;background:#4f72c4;opacity:0.7"></div></div>
       <div class="sp-bar-val">${apps}</div>
-      <div style="font-size:13px;color:${pct>=50?'#2e9b66':pct>=30?'#a07030':'#c84040'};min-width:42px;text-align:right;font-family:var(--mono)">${pct}%✓</div>
+      <div style="font-size:13px;color:${pct>=50?'#2e9b66':pct>=30?'#d97706':'#c84040'};min-width:42px;text-align:right;font-family:var(--mono)">${pct}%✓</div>
     </div>`;
   }).join('');
 
@@ -1460,7 +1494,7 @@ function renderStatsInline(data) {
   const bracketHTML = bracketStats.map(b => {
     const pct = b.apps ? Math.round(b.acc/b.apps*100) : null;
     const widthPct = Math.round(b.apps/maxBracketApps*100);
-    const pctColor = pct === null ? '#aaa' : pct >= 50 ? '#2e9b66' : pct >= 30 ? '#a07030' : '#c84040';
+    const pctColor = pct === null ? '#aaa' : pct >= 50 ? '#2e9b66' : pct >= 30 ? '#d97706' : '#c84040';
     return `<div class="sp-bar-row">
       <div class="sp-bar-label" style="min-width:78px;">${b.label}</div>
       <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${widthPct}%;background:${pctColor};opacity:0.7"></div></div>
@@ -1504,7 +1538,7 @@ function renderStatsInline(data) {
     const s = appStat[t];
     const pct = s.total ? Math.round(s.acc/s.total*100) : 0;
     return `<div class="sp-type-pill">
-      <div class="tp-pct" style="color:${pct>50?'#2e9b66':pct>25?'#a07030':'#888'}">${pct}%</div>
+      <div class="tp-pct" style="color:${pct>50?'#2e9b66':pct>25?'#d97706':'#888'}">${pct}%</div>
       <div class="tp-label">${t}</div>
       <div class="tp-count">${s.acc}/${s.total}</div>
     </div>`;
@@ -1593,23 +1627,23 @@ function addCollege(name='', decision='Accepted', decisionType='RD', schoolType=
       </select>
     </div>
     <button class="college-row-remove" onclick="removeCollege('cr-${id}')">×</button>
-    <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;margin-top:4px;margin-left:2px;">
-      <label style="font-size:14px;color:#444;font-weight:500;">School type</label>
-      <select id="st-${id}" style="${inputStyle}padding:7px 12px;font-size:14px;"
+    <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:2px;margin-left:2px;">
+      <label style="font-size:12px;color:#666;">School type</label>
+      <select id="st-${id}" style="${inputStyle}padding:5px 9px;font-size:12.5px;"
         onfocus="this.style.borderColor='#a8b8d8';this.style.boxShadow='0 0 0 3px rgba(79,114,196,0.08)'"
         onblur="this.style.borderColor='#e4e4e2';this.style.boxShadow='none'">
         <option value="University"${schoolType==='University'?' selected':''}>4-year university</option>
         <option value="Community"${schoolType==='Community'?' selected':''}>Community college</option>
         <option value="Trade"${schoolType==='Trade'?' selected':''}>Trade / vocational school</option>
       </select>
-      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <input type="checkbox" id="en-${id}" ${enrolling==='yes'?'checked':''} style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer;"> Enrolling here
+      <label style="font-size:12.5px;color:#555;display:flex;align-items:center;gap:5px;cursor:pointer;">
+        <input type="checkbox" id="en-${id}" ${enrolling==='yes'?'checked':''} style="width:13px;height:13px;accent-color:var(--accent);cursor:pointer;"> Enrolling here
       </label>
-      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer;"> Got scholarship
+      <label style="font-size:12.5px;color:#555;display:flex;align-items:center;gap:5px;cursor:pointer;">
+        <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:13px;height:13px;accent-color:var(--accent);cursor:pointer;"> Got scholarship
       </label>
-      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <input type="checkbox" id="sp-${id}" ${sport==='yes'?'checked':''} style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer;"> Sports recruitment
+      <label style="font-size:12.5px;color:#555;display:flex;align-items:center;gap:5px;cursor:pointer;">
+        <input type="checkbox" id="sp-${id}" ${sport==='yes'?'checked':''} style="width:13px;height:13px;accent-color:var(--accent);cursor:pointer;"> Sports recruitment
       </label>
     </div>`;
   document.getElementById('college-inputs').appendChild(div);
