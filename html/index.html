@@ -192,6 +192,7 @@
     50% { transform: translate(-8px, -50%); opacity: 1; }
   }
   [id^="col-lbl-"] { transition: font-size 0.08s linear, fill 0.1s ease; }
+  .chart-dot { transition: r 0.14s ease, opacity 0.14s ease; }
   .chart-axis-note { font-size: 13px; color: #666; margin-top: 6px; font-family: var(--mono); }
 
   /* ── DOT TOOLTIP ── */
@@ -1025,7 +1026,7 @@ function buildChart(data, animate) {
   const plotW = W - PAD.left - PAD.right, plotH = H - PAD.top - PAD.bottom;
 
   const gridC = '#f0f0ee', axisC = '#e4e4e2', tickC = '#555', lblC = '#333';
-  let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" data-pad-left="${PAD.left}" data-col-w="${colW}" data-plot-bottom="${PAD.top + plotH}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;" onmousemove="chartMousemove(event)" onmouseleave="chartMouseleave(event)">`;
+  let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" data-pad-left="${PAD.left}" data-col-w="${colW}" data-plot-bottom="${PAD.top + plotH}" data-dot-r="${dotR}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;" onmousemove="chartMousemove(event)" onmouseleave="chartMouseleave(event)">`;
 
   ySteps.forEach(v => {
     const y = PAD.top + plotH - (v-yMin)/(yMax-yMin)*plotH;
@@ -1050,7 +1051,7 @@ function buildChart(data, animate) {
     const y = by.toFixed(2);
     const col = DOT_COLORS[r.decision] || '#888';
     const dimmed = (activeFilter && r.decision !== activeFilter) || (slmFilter && !slmMatches(r));
-    svg += `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${dimmed?0.1:1}" style="cursor:pointer;transition:opacity 0.2s;" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
+    svg += `<circle class="chart-dot" data-cidx="${i}" cx="${x}" cy="${y}" r="${dotR}" fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${dimmed?0.1:1}" style="cursor:pointer;" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
   });
   svg += '</svg>';
   el.innerHTML = svg;
@@ -1079,12 +1080,13 @@ function updateScrollHint() {
   wrap.onscroll = check;
 }
 
-let _lastWaveIdx = -2, _waveRaf = 0;
+let _lastWaveIdx = -2, _waveRaf = 0, _lastWaveDotCol = -2;
 function chartWave(fIdx) {
   const labels = document.querySelectorAll('[id^="col-lbl-"]');
   if (!labels.length) return;
   if (fIdx < 0) {
     labels.forEach(el => { el.style.fontSize = ''; el.style.fill = ''; el.style.fontWeight = ''; });
+    updateDotHighlight(-1);
     return;
   }
   const base = parseFloat(labels[0].getAttribute('font-size') || 10);
@@ -1097,6 +1099,29 @@ function chartWave(fIdx) {
     else if (dist < 1.6) { el.style.fill = '#222'; el.style.fontWeight = '500'; }
     else if (dist < 2.5) { el.style.fill = '#444'; el.style.fontWeight = ''; }
     else { el.style.fill = ''; el.style.fontWeight = ''; }
+  });
+  updateDotHighlight(Math.round(fIdx));
+}
+function updateDotHighlight(colIdx) {
+  if (colIdx === _lastWaveDotCol) return;
+  _lastWaveDotCol = colIdx;
+  const svgEl = document.querySelector('#chart-main svg');
+  if (!svgEl) return;
+  const baseR = parseFloat(svgEl.dataset.dotR) || 6;
+  const dots = svgEl.querySelectorAll('.chart-dot');
+  if (colIdx < 0) {
+    dots.forEach(c => { c.style.opacity = ''; c.setAttribute('r', baseR); });
+    return;
+  }
+  dots.forEach(c => {
+    const ci = parseInt(c.dataset.cidx);
+    if (ci === colIdx) {
+      c.style.opacity = '1';
+      c.setAttribute('r', baseR * 1.6);
+    } else {
+      c.style.opacity = '0.12';
+      c.setAttribute('r', baseR);
+    }
   });
 }
 function chartMousemove(e) {
@@ -1627,23 +1652,23 @@ function addCollege(name='', decision='Accepted', decisionType='RD', schoolType=
       </select>
     </div>
     <button class="college-row-remove" onclick="removeCollege('cr-${id}')">×</button>
-    <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:2px;margin-left:2px;">
-      <label style="font-size:12px;color:#666;">School type</label>
-      <select id="st-${id}" style="${inputStyle}padding:5px 9px;font-size:12.5px;"
+    <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-top:2px;margin-left:2px;">
+      <label style="font-size:11px;color:#777;">School type</label>
+      <select id="st-${id}" style="${inputStyle}padding:3px 7px;font-size:11px;height:24px;"
         onfocus="this.style.borderColor='#a8b8d8';this.style.boxShadow='0 0 0 3px rgba(79,114,196,0.08)'"
         onblur="this.style.borderColor='#e4e4e2';this.style.boxShadow='none'">
         <option value="University"${schoolType==='University'?' selected':''}>4-year university</option>
         <option value="Community"${schoolType==='Community'?' selected':''}>Community college</option>
         <option value="Trade"${schoolType==='Trade'?' selected':''}>Trade / vocational school</option>
       </select>
-      <label style="font-size:12.5px;color:#555;display:flex;align-items:center;gap:5px;cursor:pointer;">
-        <input type="checkbox" id="en-${id}" ${enrolling==='yes'?'checked':''} style="width:13px;height:13px;accent-color:var(--accent);cursor:pointer;"> Enrolling here
+      <label style="font-size:11px;color:#666;display:flex;align-items:center;gap:4px;cursor:pointer;">
+        <input type="checkbox" id="en-${id}" ${enrolling==='yes'?'checked':''} style="width:11px;height:11px;accent-color:var(--accent);cursor:pointer;margin:0;"> Enrolling here
       </label>
-      <label style="font-size:12.5px;color:#555;display:flex;align-items:center;gap:5px;cursor:pointer;">
-        <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:13px;height:13px;accent-color:var(--accent);cursor:pointer;"> Got scholarship
+      <label style="font-size:11px;color:#666;display:flex;align-items:center;gap:4px;cursor:pointer;">
+        <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:11px;height:11px;accent-color:var(--accent);cursor:pointer;margin:0;"> Got scholarship
       </label>
-      <label style="font-size:12.5px;color:#555;display:flex;align-items:center;gap:5px;cursor:pointer;">
-        <input type="checkbox" id="sp-${id}" ${sport==='yes'?'checked':''} style="width:13px;height:13px;accent-color:var(--accent);cursor:pointer;"> Sports recruitment
+      <label style="font-size:11px;color:#666;display:flex;align-items:center;gap:4px;cursor:pointer;">
+        <input type="checkbox" id="sp-${id}" ${sport==='yes'?'checked':''} style="width:11px;height:11px;accent-color:var(--accent);cursor:pointer;margin:0;"> Sports recruitment
       </label>
     </div>`;
   document.getElementById('college-inputs').appendChild(div);
