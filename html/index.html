@@ -13,27 +13,27 @@
 
   /* ── NAV ── */
   nav {
-    display: flex; align-items: center; padding: 0 40px; height: 52px;
+    display: flex; align-items: center; padding: 0 40px; height: 64px;
     border-bottom: 1px solid #e8e8e6; background: rgba(250,250,249,0.92);
     position: sticky; top: 0; z-index: 100;
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   }
-  .nav-logo { font-size: 13px; font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; margin-right: auto; }
+  .nav-logo { font-size: 18px; font-weight: 600; color: #1c1c1c; letter-spacing: -0.015em; margin-right: auto; }
   .nav-logo span { color: #777; font-weight: 400; }
   .nav-link {
-    padding: 0 16px; height: 52px; display: flex; align-items: center;
-    font-size: 13px; color: #444; cursor: pointer;
+    padding: 0 18px; height: 64px; display: flex; align-items: center;
+    font-size: 15px; color: #444; cursor: pointer;
     border-bottom: 1.5px solid transparent; margin-bottom: -1px;
     transition: color 0.15s;
   }
   .nav-link:hover { color: #1c1c1c; }
   .nav-link.active { color: #1c1c1c; border-bottom-color: var(--accent); font-weight: 500; }
   .nav-submit {
-    margin-left: 16px; padding: 6px 14px; font-size: 13px; font-weight: 500;
-    color: #444; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;
+    margin-left: 16px; padding: 7px 16px; font-size: 14px; font-weight: 500;
+    color: #444; border: 1px solid #ccc; border-radius: 6px; cursor: pointer;
     background: none; font-family: inherit; transition: all 0.15s;
   }
-  .nav-submit:hover { border-color: #999; color: #1c1c1c; background: #f3f3f1; }
+  .nav-submit:hover { border-color: #888; color: #1c1c1c; background: #f3f3f1; }
 
   /* ── LAYOUT ── */
   .main-wrap { flex: 1; }
@@ -91,10 +91,9 @@
   .stat-label { font-size: 13px; color: #444; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; }
 
   /* ── COLLEGE FILTER TABS ── */
-  .filter-bar { display: flex; align-items: center; gap: 0; margin-bottom: 20px; border-bottom: 1px solid #ebebeb; overflow-x: auto; scrollbar-width: none; }
-  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 0 2px; margin-bottom: 20px; border-bottom: 1px solid #ebebeb; }
   .filter-label { font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; margin-right: 10px; white-space: nowrap; flex-shrink: 0; }
-  .filter-pill { font-size: 14px; padding: 9px 16px; border: none; border-bottom: 2px solid transparent; background: none; cursor: pointer; font-family: inherit; color: #555; margin-bottom: -1px; white-space: nowrap; transition: color 0.15s; }
+  .filter-pill { font-size: 14px; padding: 9px 14px; border: none; border-bottom: 2px solid transparent; background: none; cursor: pointer; font-family: inherit; color: #555; margin-bottom: -1px; white-space: nowrap; transition: color 0.15s; }
   .filter-pill:hover { color: #1c1c1c; }
   .filter-pill.active { color: #1c1c1c; border-bottom-color: var(--accent); font-weight: 500; }
 
@@ -109,10 +108,10 @@
   .compare-btn-sm { padding: 4px 10px; font-size: 13px; color: #444; border: 1px solid #e4e4e2; border-radius: 5px; background: none; cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .compare-btn-sm:hover { color: #1c1c1c; border-color: #aaa; }
   .chart-spacer { flex: 1; }
-  .chart-search { padding: 5px 10px; font-size: 13px; border: 1px solid #e8e8e6; border-radius: 5px; font-family: inherit; color: #1c1c1c; outline: none; width: 180px; background: #fafaf9; transition: all 0.15s; }
-  .chart-search::placeholder { color: #aaa; }
-  .chart-search:focus { border-color: #aaa; background: #fff; }
-  .minsub-row { display: flex; align-items: center; gap: 6px; padding: 10px 20px; border-bottom: 1px solid #f0f0ee; flex-wrap: wrap; }
+  .chart-search { padding: 7px 12px 7px 32px; font-size: 14px; border: 1.5px solid #b8b8b4; border-radius: 6px; font-family: inherit; color: #1c1c1c; outline: none; width: 220px; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'><circle cx='6' cy='6' r='4.5' stroke='%23555' stroke-width='1.5'/><line x1='9.5' y1='9.5' x2='12.5' y2='12.5' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/></svg>") 10px center no-repeat; transition: all 0.15s; }
+  .chart-search::placeholder { color: #777; }
+  .chart-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,114,196,0.12); }
+  .minsub-row { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid #f0f0ee; flex-wrap: wrap; }
   .minsub-label { font-size: 13px; color: #444; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
   .minsub-help {
     display: inline-flex; align-items: center; justify-content: center;
@@ -129,9 +128,40 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   }
   .minsub-help:hover::after { display: block; }
-  .minsub-btn { font-size: 13px; padding: 3px 10px; border: 1px solid #e4e4e2; border-radius: 5px; background: none; cursor: pointer; font-family: inherit; color: #444; transition: all 0.12s; }
-  .minsub-btn:hover { color: #1c1c1c; border-color: #aaa; }
-  .minsub-active { background: #1c1c1c !important; color: #fff !important; border-color: #1c1c1c !important; }
+  .minsub-slider {
+    -webkit-appearance: none; appearance: none;
+    flex: 1 1 240px; min-width: 200px; max-width: 320px;
+    height: 22px; background: transparent; cursor: pointer; margin: 0;
+    --fill: 0%;
+  }
+  .minsub-slider::-webkit-slider-runnable-track {
+    height: 6px; border-radius: 3px;
+    background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--fill), #e4e4e2 var(--fill), #e4e4e2 100%);
+    transition: none;
+  }
+  .minsub-slider.snap::-webkit-slider-runnable-track { transition: background 0.18s cubic-bezier(0.34,1.56,0.64,1); }
+  .minsub-slider.snap::-webkit-slider-thumb { animation: snap-pulse 0.22s ease; }
+  @keyframes snap-pulse { 0%{transform:scale(1);} 40%{transform:scale(1.25);} 100%{transform:scale(1);} }
+  .minsub-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; background: #fff;
+    border: 2.5px solid var(--accent); border-radius: 50%;
+    margin-top: -7px; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  .minsub-slider:hover::-webkit-slider-thumb { transform: scale(1.12); box-shadow: 0 3px 10px rgba(0,0,0,0.18); }
+  .minsub-slider:active::-webkit-slider-thumb { transform: scale(0.95); }
+  .minsub-slider::-moz-range-track {
+    height: 6px; border-radius: 3px;
+    background: linear-gradient(to right, var(--accent) var(--fill), #e4e4e2 var(--fill));
+  }
+  .minsub-slider::-moz-range-thumb {
+    width: 20px; height: 20px; background: #fff;
+    border: 2.5px solid var(--accent); border-radius: 50%;
+    cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  }
+  .minsub-val { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); min-width: 32px; text-align: center; }
   .minsub-count { font-size: 13px; color: #666; margin-left: 4px; }
   #legend { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px; border-bottom: 1px solid #f0f0ee; }
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #444; cursor: pointer; padding: 3px 8px; border-radius: 4px; border: 1px solid transparent; transition: all 0.12s; user-select: none; }
@@ -149,7 +179,7 @@
     animation: scroll-pulse 1.8s ease-in-out infinite;
   }
   @keyframes scroll-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.1; } }
-  [id^="col-lbl-"] { transition: font-size 0.12s ease; }
+  [id^="col-lbl-"] { transition: font-size 0.08s linear, fill 0.1s ease; }
   .chart-axis-note { font-size: 13px; color: #666; margin-top: 6px; font-family: var(--mono); }
 
   /* ── DOT TOOLTIP ── */
@@ -158,13 +188,13 @@
   #dot-tooltip .tip-num { font-family: var(--mono); }
 
   /* ── STUDENTS LIKE ME ── */
-  .slm-panel { border: 1px solid #e8e8e6; border-radius: 8px; padding: 16px 20px; margin-bottom: 28px; background: #fff; }
-  .slm-title { font-size: 14px; font-weight: 600; color: #1c1c1c; margin-bottom: 12px; }
-  .slm-inputs { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-  .slm-field { display: flex; flex-direction: column; gap: 4px; }
+  .slm-panel { border: 1px solid #e8e8e6; border-radius: 8px; padding: 18px 22px; margin-bottom: 28px; background: #fff; }
+  .slm-title { font-size: 14px; font-weight: 600; color: #1c1c1c; margin-bottom: 14px; }
+  .slm-inputs { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; row-gap: 14px; }
+  .slm-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
   .slm-field label { font-size: 12px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
-  .slm-field input, .slm-field select { padding: 7px 10px; border: 1px solid #e4e4e2; border-radius: 6px; font-size: 14px; font-family: var(--mono); color: #1c1c1c; background: #fafaf9; outline: none; width: 100px; transition: all 0.15s; }
-  .slm-field select { font-family: inherit; width: auto; }
+  .slm-field input, .slm-field select { padding: 8px 11px; border: 1px solid #d4d4d0; border-radius: 6px; font-size: 14px; font-family: var(--mono); color: #1c1c1c; background: #fff; outline: none; width: 120px; transition: all 0.15s; }
+  .slm-field select { font-family: inherit; width: auto; min-width: 140px; padding-right: 28px; }
   .slm-field input:focus, .slm-field select:focus { border-color: #a8b8d8; box-shadow: 0 0 0 3px rgba(79,114,196,0.07); }
   .slm-btn { padding: 7px 14px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
   .slm-btn:hover { opacity: 0.8; }
@@ -180,7 +210,7 @@
   .sp-card-wide { grid-column: 1 / -1; }
   .sp-card h3 { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
   .sp-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
-  .sp-bar-label { font-size: 13px; color: #333; min-width: 110px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .sp-bar-label { font-size: 13px; color: #333; width: 150px; min-width: 150px; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
   .sp-bar-track { flex: 1; height: 8px; background: #f0f0ee; border-radius: 4px; overflow: hidden; }
   .sp-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s cubic-bezier(0.16,1,0.3,1); }
   .sp-bar-val { font-size: 13px; color: #555; font-family: var(--mono); min-width: 36px; text-align: right; flex-shrink: 0; }
@@ -290,7 +320,8 @@
   .chat-send:hover { color: #1c1c1c; }
 
   /* ── FORM ── */
-  .form-wrap { max-width: 540px; margin: 0 auto; }
+  .form-wrap { max-width: 640px; margin: 0 auto; }
+  @media (min-width: 1180px) { .form-wrap { max-width: 760px; } }
   .form-title { font-size: 18px; font-weight: 600; color: #1c1c1c; letter-spacing: -0.02em; margin-bottom: 5px; }
   .form-subtitle { font-size: 13px; color: #666; margin-bottom: 20px; }
   .anon-note { font-size: 13px; color: #2e9b66; margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
@@ -453,11 +484,8 @@
       <div class="minsub-row">
         <span class="minsub-label">Min. submissions</span>
         <span class="minsub-help" data-tip="Only show colleges that at least this many Live Oak students applied to">?</span>
-        <span style="width:6px;"></span>
-        <button id="minsub-1" class="minsub-btn minsub-active" onclick="setMinSubs(1,this)">Any</button>
-        <button id="minsub-2" class="minsub-btn" onclick="setMinSubs(2,this)">2+</button>
-        <button id="minsub-3" class="minsub-btn" onclick="setMinSubs(3,this)">3+</button>
-        <button id="minsub-5" class="minsub-btn" onclick="setMinSubs(5,this)">5+</button>
+        <input type="range" id="minsub-slider" class="minsub-slider" min="1" max="5" step="any" value="1" oninput="onMinSubsInput(this.value)" onchange="onMinSubsChange(this.value)">
+        <span class="minsub-val" id="minsub-val">1+</span>
         <span class="minsub-count" id="chart-col-count"></span>
       </div>
       <div id="legend"></div>
@@ -898,10 +926,27 @@ function switchChart(type, btn) {
   buildChart(scatterData, false);
 }
 function toggleFilter(d) { activeFilter = activeFilter===d ? null : d; buildChart(scatterData, false); }
-function setMinSubs(n, btn) {
-  minSubs = n;
-  document.querySelectorAll('.minsub-btn').forEach(b => b.classList.remove('minsub-active'));
-  btn.classList.add('minsub-active');
+function onMinSubsInput(v) {
+  const f = parseFloat(v) || 1;
+  const slider = document.getElementById('minsub-slider');
+  if (slider) {
+    slider.classList.remove('snap');
+    slider.style.setProperty('--fill', (((f - 1) / 4) * 100) + '%');
+  }
+  const val = document.getElementById('minsub-val');
+  if (val) val.textContent = Math.round(f) + '+';
+}
+function onMinSubsChange(v) {
+  const snapped = Math.round(parseFloat(v) || 1);
+  const slider = document.getElementById('minsub-slider');
+  if (slider) {
+    slider.classList.add('snap');
+    slider.value = snapped;
+    slider.style.setProperty('--fill', (((snapped - 1) / 4) * 100) + '%');
+  }
+  const val = document.getElementById('minsub-val');
+  if (val) val.textContent = snapped + '+';
+  minSubs = snapped;
   buildChart(scatterData, false);
 }
 
@@ -939,8 +984,9 @@ function buildChart(data, animate) {
   const ySteps = isGpa ? [1,1.5,2,2.5,3,3.5,4,4.5,5] : [400,600,800,1000,1200,1400,1600];
 
   const isMobile = window.innerWidth <= 600;
-  const H = isMobile ? 280 : 420;
-  const PAD = {top:20, right:20, bottom: isMobile?110:120, left:58};
+  const isWide = window.innerWidth >= 1180;
+  const H = isMobile ? 300 : isWide ? 560 : 460;
+  const PAD = {top:20, right:20, bottom: isMobile?110:130, left:58};
   const containerW = el.closest('.chart-area').clientWidth - 40;
   const minColW = cols.length > 28 ? 26 : cols.length > 18 ? 34 : cols.length > 12 ? 44 : 56;
   const colW = Math.max(containerW / cols.length, minColW);
@@ -1002,44 +1048,44 @@ function updateScrollHint() {
   wrap.onscroll = check;
 }
 
-let _lastWaveIdx = -2;
-function chartWave(idx) {
+let _lastWaveIdx = -2, _waveRaf = 0;
+function chartWave(fIdx) {
   const labels = document.querySelectorAll('[id^="col-lbl-"]');
   if (!labels.length) return;
-  if (idx < 0) {
+  if (fIdx < 0) {
     labels.forEach(el => { el.style.fontSize = ''; el.style.fill = ''; el.style.fontWeight = ''; });
     return;
   }
   const base = parseFloat(labels[0].getAttribute('font-size') || 10);
-  const peak = Math.max(base + 9, 18);
+  const peak = Math.max(base + 10, 19);
+  const RAD = 4; // wave radius in column-widths
   labels.forEach((el, i) => {
-    const dist = Math.abs(i - idx);
+    const dist = Math.abs(i - fIdx);
     let factor;
-    if (dist === 0) factor = 1.0;
-    else if (dist === 1) factor = 0.72;
-    else if (dist === 2) factor = 0.45;
-    else if (dist === 3) factor = 0.24;
-    else if (dist === 4) factor = 0.10;
-    else factor = 0;
+    if (dist >= RAD) factor = 0;
+    else factor = 0.5 * (1 + Math.cos(Math.PI * dist / RAD)); // 1 at d=0, 0.5 at d=RAD/2, 0 at d=RAD
     el.style.fontSize = (base + (peak - base) * factor) + 'px';
-    if (dist === 0) { el.style.fill = '#1c1c1c'; el.style.fontWeight = '500'; }
-    else if (dist <= 2) { el.style.fill = '#333'; el.style.fontWeight = ''; }
+    if (dist < 0.6) { el.style.fill = '#1c1c1c'; el.style.fontWeight = '500'; }
+    else if (dist < 2) { el.style.fill = '#333'; el.style.fontWeight = ''; }
     else { el.style.fill = ''; el.style.fontWeight = ''; }
   });
 }
 function chartMousemove(e) {
   const svg = e.currentTarget;
-  const rect = svg.getBoundingClientRect();
-  const x = e.clientX - rect.left;
   const pl = parseFloat(svg.dataset.padLeft);
   const cw = parseFloat(svg.dataset.colW);
   const n = parseInt(svg.dataset.cols);
-  const idx = Math.round((x - pl - cw/2) / cw);
-  if (idx < 0 || idx >= n) {
+  const rect = svg.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const fIdx = (x - pl - cw/2) / cw;
+  if (fIdx < -0.5 || fIdx > n - 0.5) {
     if (_lastWaveIdx !== -1) { _lastWaveIdx = -1; chartWave(-1); }
     return;
   }
-  if (idx !== _lastWaveIdx) { _lastWaveIdx = idx; chartWave(idx); }
+  if (Math.abs(fIdx - _lastWaveIdx) < 0.08) return;
+  _lastWaveIdx = fIdx;
+  if (_waveRaf) cancelAnimationFrame(_waveRaf);
+  _waveRaf = requestAnimationFrame(() => chartWave(fIdx));
 }
 function chartMouseleave() { _lastWaveIdx = -2; chartWave(-1); }
 
