@@ -425,7 +425,7 @@
 </div>
 <!-- Compare modal -->
 <div class="modal-overlay" id="compare-modal" onclick="if(event.target===this)closeModal('compare-modal')">
-  <div class="modal" style="max-width:600px;">
+  <div class="modal" style="max-width:880px;">
     <button class="modal-close" onclick="closeModal('compare-modal')">×</button>
     <div id="compare-modal-content"></div>
   </div>
@@ -993,8 +993,8 @@ function buildChart(data, animate) {
 
   const isMobile = window.innerWidth <= 600;
   const isWide = window.innerWidth >= 1180;
-  const H = isMobile ? 300 : isWide ? 560 : 460;
-  const PAD = {top:20, right:20, bottom: isMobile?110:130, left:58};
+  const H = isMobile ? 340 : isWide ? 620 : 520;
+  const PAD = {top:20, right:20, bottom: isMobile?150:180, left:58};
   const containerW = el.closest('.chart-area').clientWidth - 40;
   const minColW = cols.length > 28 ? 26 : cols.length > 18 ? 34 : cols.length > 12 ? 44 : 56;
   const colW = Math.max(containerW / cols.length, minColW);
@@ -1014,7 +1014,7 @@ function buildChart(data, animate) {
 
   const baseLblSize = cols.length > 40 ? 8 : cols.length > 28 ? 9 : cols.length > 18 ? 10 : cols.length > 12 ? 11 : 13;
   cols.forEach((col, i) => {
-    const x = PAD.left + i*colW + colW/2, y = PAD.top + plotH + 10;
+    const x = PAD.left + i*colW + colW/2, y = PAD.top + plotH + 28;
     svg += `<text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title>${col}</text>`;
   });
 
@@ -1162,32 +1162,89 @@ function openCompare() {
   const colleges = [...new Set(scatterData.map(r=>r.college_name).filter(Boolean))].sort();
   if (colleges.length < 2) { alert('Need at least 2 colleges with submissions to compare.'); return; }
   const opts = colleges.map(c=>`<option value="${c}">${c}</option>`).join('');
+  const optsB = colleges.slice(1).map(c=>`<option value="${c}">${c}</option>`).join('') + colleges.slice(0,1).map(c=>`<option value="${c}">${c}</option>`).join('');
+  const optsC = '<option value="">— none —</option>' + colleges.slice(2).map(c=>`<option value="${c}">${c}</option>`).join('') + colleges.slice(0,2).map(c=>`<option value="${c}">${c}</option>`).join('');
   document.getElementById('compare-modal-content').innerHTML = `
     <h2 style="margin-bottom:4px;">Compare colleges</h2>
-    <p class="modal-sub">Pick two colleges to compare side by side.</p>
+    <p class="modal-sub">Pick up to three colleges to compare side by side.</p>
     <div class="compare-pick">
-      <select id="cmp-a">${opts}</select>
-      <select id="cmp-b">${colleges.length>1?`<option value="${colleges[1]}">${colleges[1]}</option>`:''} ${opts}</select>
-      <button onclick="renderCompare()">Compare</button>
+      <select id="cmp-a" onchange="renderCompare()">${opts}</select>
+      <select id="cmp-b" onchange="renderCompare()">${optsB}</select>
+      <select id="cmp-c" onchange="renderCompare()">${optsC}</select>
     </div>
     <div id="cmp-result"></div>`;
   document.getElementById('compare-modal').classList.add('open');
+  renderCompare();
 }
 function renderCompare() {
-  const a = document.getElementById('cmp-a').value, b = document.getElementById('cmp-b').value;
-  if (a === b) { document.getElementById('cmp-result').innerHTML = '<p style="font-size:13px;color:#888;">Pick two different colleges.</p>'; return; }
-  document.getElementById('cmp-result').innerHTML = `<div class="cmp-grid">${colStats(a)}${colStats(b)}</div>`;
+  const a = document.getElementById('cmp-a').value;
+  const b = document.getElementById('cmp-b').value;
+  const c = document.getElementById('cmp-c').value;
+  const picks = [a, b, c].filter(Boolean);
+  const unique = [...new Set(picks)];
+  if (unique.length < 2) {
+    document.getElementById('cmp-result').innerHTML = '<p style="font-size:13px;color:#888;">Pick at least two different colleges.</p>';
+    return;
+  }
+  document.getElementById('cmp-result').innerHTML = `<div class="cmp-grid" style="grid-template-columns:repeat(${unique.length},1fr);">${unique.map(colStats).join('')}</div>`;
 }
 function colStats(name) {
   const rows = scatterData.filter(r=>r.college_name===name);
-  const total = rows.length, acc = rows.filter(r=>r.decision==='Accepted').length;
-  const gpas = rows.filter(r=>r.gpa).map(r=>parseFloat(r.gpa));
-  const gpaAvg = gpas.length ? (gpas.reduce((a,b)=>a+b,0)/gpas.length).toFixed(2) : '—';
-  const decRows = DECISION_ORDER.map(d=>({d,n:rows.filter(r=>r.decision===d).length})).filter(x=>x.n>0)
-    .map(({d,n})=>`<div class="cmp-row"><span style="color:${DOT_COLORS[d]}">${d}</span><span style="font-family:var(--mono)">${n}</span></div>`).join('');
-  return `<div class="cmp-col"><h3>${name}</h3>
-    <div style="font-size:13px;color:#666;margin-bottom:10px;">${total} applied · ${acc} accepted · ${total?Math.round(acc/total*100):0}% rate<br>Avg UW GPA: <strong style="color:#1c1c1c;font-family:var(--mono)">${gpaAvg}</strong></div>
-    ${decRows}</div>`;
+  const total = rows.length;
+  const acc = rows.filter(r=>r.decision==='Accepted').length;
+  const accRate = total ? Math.round(acc/total*100) : 0;
+  const natRate = getAcceptRate(name);
+  const accRows = rows.filter(r=>r.decision==='Accepted');
+  const accGpas = accRows.filter(r=>r.gpa).map(r=>parseFloat(r.gpa));
+  const accGpaW = accRows.filter(r=>r.gpa_weighted).map(r=>parseFloat(r.gpa_weighted));
+  const accSAT = accRows.filter(r=>r.sat).map(r=>parseInt(r.sat));
+  const avg = a => a.length ? (a.reduce((s,v)=>s+v,0)/a.length) : null;
+  const avgGpaAcc = avg(accGpas), avgGpaWAcc = avg(accGpaW), avgSATAcc = avg(accSAT);
+  const minG = accGpas.length ? Math.min(...accGpas).toFixed(2) : null;
+  const maxG = accGpas.length ? Math.max(...accGpas).toFixed(2) : null;
+  const enrolled = rows.filter(r=>r.enrolling==='yes').length;
+  const scholarship = rows.filter(r=>r.scholarship==='yes').length;
+  const accColor = accRate >= 50 ? '#2e9b66' : accRate >= 25 ? '#a07030' : '#c84040';
+  const decBars = DECISION_ORDER.filter(d=>rows.some(r=>r.decision===d)).map(d => {
+    const n = rows.filter(r=>r.decision===d).length;
+    const pct = Math.round(n/total*100);
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px;">
+      <span style="color:${DOT_COLORS[d]};min-width:74px;">${d}</span>
+      <div style="flex:1;height:4px;background:#f0f0ee;border-radius:2px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${DOT_COLORS[d]};"></div></div>
+      <span style="font-family:var(--mono);color:#666;min-width:22px;text-align:right;">${n}</span>
+    </div>`;
+  }).join('');
+  const appTypes = ['EA','ED','RD','Rolling'];
+  const appRows = appTypes.map(t => {
+    const r_t = rows.filter(r=>r.decision_type===t);
+    if (!r_t.length) return null;
+    const a_t = r_t.filter(r=>r.decision==='Accepted').length;
+    return `<div style="font-size:12px;color:#666;line-height:1.6;">${t}: <strong style="color:#1c1c1c;font-family:var(--mono);">${a_t}/${r_t.length}</strong> <span style="color:#999;">(${Math.round(a_t/r_t.length*100)}%)</span></div>`;
+  }).filter(Boolean).join('');
+  return `<div class="cmp-col">
+    <h3 style="margin-bottom:14px;">${name}</h3>
+    <div style="text-align:center;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #f0f0ee;">
+      <div style="font-size:30px;font-weight:600;color:${accColor};font-family:var(--mono);line-height:1;">${accRate}%</div>
+      <div style="font-size:12px;color:#666;margin-top:5px;">${acc} of ${total} accepted</div>
+      ${natRate ? `<div style="font-size:11px;color:#999;margin-top:2px;">~${natRate}% national</div>` : ''}
+    </div>
+    <div style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Accepted students</div>
+    <div style="font-size:13px;color:#444;line-height:1.8;margin-bottom:14px;">
+      ${avgGpaAcc!==null ? `<div>UW GPA: <strong style="color:#1c1c1c;font-family:var(--mono)">${avgGpaAcc.toFixed(2)}</strong>${minG?` <span style="color:#999;font-size:11px;">(${minG}–${maxG})</span>`:''}</div>` : ''}
+      ${avgGpaWAcc!==null ? `<div>W GPA: <strong style="color:#1c1c1c;font-family:var(--mono)">${avgGpaWAcc.toFixed(2)}</strong></div>` : ''}
+      ${avgSATAcc!==null ? `<div>SAT: <strong style="color:#1c1c1c;font-family:var(--mono)">${Math.round(avgSATAcc)}</strong></div>` : ''}
+    </div>
+    <div style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Decisions</div>
+    <div style="margin-bottom:14px;">${decBars}</div>
+    ${appRows ? `
+      <div style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">By app type</div>
+      <div style="margin-bottom:14px;">${appRows}</div>
+    ` : ''}
+    ${(enrolled || scholarship) ? `<div style="font-size:12px;color:#444;line-height:1.7;border-top:1px solid #f0f0ee;padding-top:10px;">
+      ${enrolled ? `<div style="color:#2e9b66;">🎓 ${enrolled} enrolled</div>` : ''}
+      ${scholarship ? `<div>💰 ${scholarship} got scholarship</div>` : ''}
+    </div>` : ''}
+  </div>`;
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.addEventListener('keydown', e => { if (e.key==='Escape') { closeModal('college-modal'); closeModal('compare-modal'); } });
@@ -1515,23 +1572,23 @@ function addCollege(name='', decision='Accepted', decisionType='RD', schoolType=
       </select>
     </div>
     <button class="college-row-remove" onclick="removeCollege('cr-${id}')">×</button>
-    <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-top:-2px;margin-left:2px;">
-      <label style="font-size:11px;color:#777;text-transform:uppercase;letter-spacing:0.05em;">School type</label>
-      <select id="st-${id}" style="${inputStyle}padding:5px 10px;font-size:13px;"
+    <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;margin-top:4px;margin-left:2px;">
+      <label style="font-size:14px;color:#444;font-weight:500;">School type</label>
+      <select id="st-${id}" style="${inputStyle}padding:7px 12px;font-size:14px;"
         onfocus="this.style.borderColor='#a8b8d8';this.style.boxShadow='0 0 0 3px rgba(79,114,196,0.08)'"
         onblur="this.style.borderColor='#e4e4e2';this.style.boxShadow='none'">
         <option value="University"${schoolType==='University'?' selected':''}>4-year university</option>
         <option value="Community"${schoolType==='Community'?' selected':''}>Community college</option>
         <option value="Trade"${schoolType==='Trade'?' selected':''}>Trade / vocational school</option>
       </select>
-      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <input type="checkbox" id="en-${id}" ${enrolling==='yes'?'checked':''} style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;"> Enrolling here
+      <label style="font-size:14px;color:#444;display:flex;align-items:center;gap:7px;cursor:pointer;">
+        <input type="checkbox" id="en-${id}" ${enrolling==='yes'?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"> Enrolling here
       </label>
-      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;"> Got scholarship
+      <label style="font-size:14px;color:#444;display:flex;align-items:center;gap:7px;cursor:pointer;">
+        <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"> Got scholarship
       </label>
-      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <input type="checkbox" id="sp-${id}" ${sport==='yes'?'checked':''} style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;"> Sports recruitment
+      <label style="font-size:14px;color:#444;display:flex;align-items:center;gap:7px;cursor:pointer;">
+        <input type="checkbox" id="sp-${id}" ${sport==='yes'?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"> Sports recruitment
       </label>
     </div>`;
   document.getElementById('college-inputs').appendChild(div);
