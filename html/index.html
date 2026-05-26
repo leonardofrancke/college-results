@@ -1177,15 +1177,20 @@ function clearWave() {
     chartWave(-1);
   }, 180);
 }
-// Keep the wave alive while cursor is still in the label-area strip
+// Keep the wave alive while cursor is in the label-area strip, but kill it
+// as soon as the cursor moves up into the plot area (axis line crossing)
 function chartLabelAreaMove(e) {
   if (_waveMode === 'none') return;
   const svg = e.currentTarget;
   const pb = parseFloat(svg.dataset.plotBottom);
   const rect = svg.getBoundingClientRect();
   const y = e.clientY - rect.top;
-  if (y > pb - 4 && _clearWaveTimer) {
-    clearTimeout(_clearWaveTimer); _clearWaveTimer = 0;
+  if (y > pb - 4) {
+    if (_clearWaveTimer) { clearTimeout(_clearWaveTimer); _clearWaveTimer = 0; }
+  } else if (_waveMode === 'wave') {
+    if (_clearWaveTimer) { clearTimeout(_clearWaveTimer); _clearWaveTimer = 0; }
+    _lastWaveIdx = -2; _waveMode = 'none';
+    chartWave(-1);
   }
 }
 // kept for backward compat
