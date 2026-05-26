@@ -19,18 +19,18 @@
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   }
   .nav-logo { font-size: 13px; font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; margin-right: auto; }
-  .nav-logo span { color: #aaa; font-weight: 400; }
+  .nav-logo span { color: #777; font-weight: 400; }
   .nav-link {
     padding: 0 16px; height: 52px; display: flex; align-items: center;
-    font-size: 13px; color: #999; cursor: pointer;
+    font-size: 13px; color: #444; cursor: pointer;
     border-bottom: 1.5px solid transparent; margin-bottom: -1px;
     transition: color 0.15s;
   }
-  .nav-link:hover { color: #444; }
+  .nav-link:hover { color: #1c1c1c; }
   .nav-link.active { color: #1c1c1c; border-bottom-color: var(--accent); font-weight: 500; }
   .nav-submit {
-    margin-left: 16px; padding: 6px 14px; font-size: 12.5px; font-weight: 500;
-    color: #555; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;
+    margin-left: 16px; padding: 6px 14px; font-size: 13px; font-weight: 500;
+    color: #444; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;
     background: none; font-family: inherit; transition: all 0.15s;
   }
   .nav-submit:hover { border-color: #999; color: #1c1c1c; background: #f3f3f1; }
@@ -51,7 +51,7 @@
     position: relative;
   }
   .cta-banner-text { font-size: 14px; font-weight: 600; color: #fff; }
-  .cta-banner-sub { font-size: 12.5px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+  .cta-banner-sub { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 2px; }
   .cta-banner-btn {
     padding: 9px 20px; background: #fff; color: #1c1c1c;
     border: none; border-radius: 6px; font-size: 13.5px; font-weight: 600;
@@ -72,7 +72,7 @@
   /* ── PAGE HEADER ── */
   .page-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; }
   .page-title { font-size: 20px; font-weight: 600; color: #1c1c1c; letter-spacing: -0.02em; }
-  .page-meta { font-size: 12.5px; color: #bbb; }
+  .page-meta { font-size: 13px; color: #666; }
 
   /* ── STATS ROW ── */
   .stats-row {
@@ -83,80 +83,127 @@
   .stat-cell:last-child { border-right: none; }
   .stat-cell:hover { background: #f5f5f3; }
   .stat-num { font-size: 26px; font-weight: 500; color: #1c1c1c; font-family: var(--mono); letter-spacing: -0.03em; line-height: 1; margin-bottom: 6px; }
-  .stat-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; }
+  .stat-label { font-size: 13px; color: #444; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; }
 
-  /* ── YEAR TABS ── */
-  .filter-bar { display: flex; align-items: center; gap: 0; margin-bottom: 20px; border-bottom: 1px solid #ebebeb; }
-  .filter-label { font-size: 11px; color: #bbb; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; margin-right: 14px; }
-  .filter-pill { font-size: 13px; padding: 8px 14px; border: none; border-bottom: 1.5px solid transparent; background: none; cursor: pointer; font-family: inherit; color: #999; margin-bottom: -1px; transition: color 0.15s; }
-  .filter-pill:hover { color: #444; }
+  /* ── COLLEGE FILTER TABS ── */
+  .filter-bar { display: flex; align-items: center; gap: 0; margin-bottom: 20px; border-bottom: 1px solid #ebebeb; overflow-x: auto; scrollbar-width: none; }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-label { font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; margin-right: 10px; white-space: nowrap; flex-shrink: 0; }
+  .filter-pill { font-size: 14px; padding: 9px 16px; border: none; border-bottom: 2px solid transparent; background: none; cursor: pointer; font-family: inherit; color: #555; margin-bottom: -1px; white-space: nowrap; transition: color 0.15s; }
+  .filter-pill:hover { color: #1c1c1c; }
   .filter-pill.active { color: #1c1c1c; border-bottom-color: var(--accent); font-weight: 500; }
 
   /* ── CHART CARD ── */
   .chart-area { border: 1px solid #e8e8e6; border-radius: 8px; margin-bottom: 28px; background: #fff; }
   .chart-toolbar { display: flex; align-items: center; gap: 8px; padding: 14px 20px; border-bottom: 1px solid #f0f0ee; flex-wrap: wrap; }
-  .chart-tab { font-size: 12.5px; color: #bbb; background: none; border: none; cursor: pointer; padding: 4px 0; font-family: inherit; font-weight: 500; transition: color 0.15s; }
+  .chart-tab { font-size: 14px; color: #555; background: none; border: none; cursor: pointer; padding: 4px 0; font-family: inherit; font-weight: 500; transition: color 0.15s; }
   .chart-tab + .chart-tab { margin-left: 16px; }
-  .chart-tab:hover { color: #666; }
+  .chart-tab:hover { color: #1c1c1c; }
   .chart-tab.active { color: #1c1c1c; }
   .chart-tab.active::after { content: ''; display: block; height: 1.5px; background: var(--accent); margin-top: 2px; border-radius: 1px; }
-  .compare-btn-sm { padding: 4px 10px; font-size: 12px; color: #999; border: 1px solid #e4e4e2; border-radius: 5px; background: none; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-  .compare-btn-sm:hover { color: #444; border-color: #aaa; }
+  .compare-btn-sm { padding: 4px 10px; font-size: 13px; color: #444; border: 1px solid #e4e4e2; border-radius: 5px; background: none; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .compare-btn-sm:hover { color: #1c1c1c; border-color: #aaa; }
   .chart-spacer { flex: 1; }
-  .chart-search { padding: 5px 10px; font-size: 12.5px; border: 1px solid #e8e8e6; border-radius: 5px; font-family: inherit; color: #1c1c1c; outline: none; width: 180px; background: #fafaf9; transition: all 0.15s; }
-  .chart-search::placeholder { color: #ccc; }
+  .chart-search { padding: 5px 10px; font-size: 13px; border: 1px solid #e8e8e6; border-radius: 5px; font-family: inherit; color: #1c1c1c; outline: none; width: 180px; background: #fafaf9; transition: all 0.15s; }
+  .chart-search::placeholder { color: #aaa; }
   .chart-search:focus { border-color: #aaa; background: #fff; }
-  .minsub-row { display: flex; align-items: center; gap: 6px; padding: 10px 20px; border-bottom: 1px solid #f0f0ee; }
-  .minsub-label { font-size: 11px; color: #bbb; text-transform: uppercase; letter-spacing: 0.06em; }
-  .minsub-btn { font-size: 12px; padding: 3px 10px; border: 1px solid #e4e4e2; border-radius: 5px; background: none; cursor: pointer; font-family: inherit; color: #999; transition: all 0.12s; }
-  .minsub-btn:hover { color: #444; border-color: #aaa; }
+  .minsub-row { display: flex; align-items: center; gap: 6px; padding: 10px 20px; border-bottom: 1px solid #f0f0ee; flex-wrap: wrap; }
+  .minsub-label { font-size: 13px; color: #444; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .minsub-help {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%; border: 1px solid #ccc;
+    font-size: 10px; color: #888; cursor: default; position: relative; flex-shrink: 0;
+  }
+  .minsub-help::after {
+    content: attr(data-tip);
+    display: none; position: absolute; left: 50%; bottom: calc(100% + 7px);
+    transform: translateX(-50%); background: #1c1c1c; color: #fff;
+    font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none;
+    white-space: nowrap; padding: 5px 10px; border-radius: 5px;
+    pointer-events: none; z-index: 50; font-family: 'Inter', sans-serif;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .minsub-help:hover::after { display: block; }
+  .minsub-btn { font-size: 13px; padding: 3px 10px; border: 1px solid #e4e4e2; border-radius: 5px; background: none; cursor: pointer; font-family: inherit; color: #444; transition: all 0.12s; }
+  .minsub-btn:hover { color: #1c1c1c; border-color: #aaa; }
   .minsub-active { background: #1c1c1c !important; color: #fff !important; border-color: #1c1c1c !important; }
-  .minsub-count { font-size: 11px; color: #ccc; margin-left: 4px; }
+  .minsub-count { font-size: 13px; color: #666; margin-left: 4px; }
   #legend { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px; border-bottom: 1px solid #f0f0ee; }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #777; cursor: pointer; padding: 3px 8px; border-radius: 4px; border: 1px solid transparent; transition: all 0.12s; user-select: none; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #444; cursor: pointer; padding: 3px 8px; border-radius: 4px; border: 1px solid transparent; transition: all 0.12s; user-select: none; }
   .legend-item:hover { border-color: #e4e4e2; }
   .legend-item.dimmed { opacity: 0.3; }
   .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-  .chart-body { padding: 16px 20px 20px; }
+  .chart-body { padding: 16px 20px 12px; }
   #chart-scroll-wrap { width: 100%; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; border-radius: 4px; }
   #chart-scroll-wrap::-webkit-scrollbar { display: none; }
-  .chart-axis-note { font-size: 11px; color: #ccc; margin-top: 8px; font-family: var(--mono); }
+  .chart-scroll-hint { display: none; align-items: center; justify-content: center; gap: 6px; padding: 6px 0 2px; font-size: 13px; color: #888; }
+  .chart-axis-note { font-size: 13px; color: #666; margin-top: 6px; font-family: var(--mono); }
 
   /* ── DOT TOOLTIP ── */
-  #dot-tooltip { display: none; position: fixed; background: #1c1c1c; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 12px; line-height: 1.7; max-width: 260px; pointer-events: none; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-  #dot-tooltip .tip-label { color: #888; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  #dot-tooltip { display: none; position: fixed; background: #1c1c1c; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.7; max-width: 260px; pointer-events: none; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+  #dot-tooltip .tip-label { color: #aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
   #dot-tooltip .tip-num { font-family: var(--mono); }
 
   /* ── STUDENTS LIKE ME ── */
   .slm-panel { border: 1px solid #e8e8e6; border-radius: 8px; padding: 16px 20px; margin-bottom: 28px; background: #fff; }
-  .slm-title { font-size: 13px; font-weight: 600; color: #1c1c1c; margin-bottom: 12px; }
+  .slm-title { font-size: 14px; font-weight: 600; color: #1c1c1c; margin-bottom: 12px; }
   .slm-inputs { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
   .slm-field { display: flex; flex-direction: column; gap: 4px; }
-  .slm-field label { font-size: 10.5px; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; }
-  .slm-field input, .slm-field select { padding: 7px 10px; border: 1px solid #e4e4e2; border-radius: 6px; font-size: 13px; font-family: var(--mono); color: #1c1c1c; background: #fafaf9; outline: none; width: 100px; transition: all 0.15s; }
+  .slm-field label { font-size: 12px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+  .slm-field input, .slm-field select { padding: 7px 10px; border: 1px solid #e4e4e2; border-radius: 6px; font-size: 14px; font-family: var(--mono); color: #1c1c1c; background: #fafaf9; outline: none; width: 100px; transition: all 0.15s; }
   .slm-field select { font-family: inherit; width: auto; }
   .slm-field input:focus, .slm-field select:focus { border-color: #a8b8d8; box-shadow: 0 0 0 3px rgba(79,114,196,0.07); }
   .slm-btn { padding: 7px 14px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
   .slm-btn:hover { opacity: 0.8; }
   .slm-clear { padding: 7px 12px; background: #fef2f2; color: #c84040; border: 1px solid #f0b8b8; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; display: none; }
   .slm-clear:hover { background: #fee2e2; }
-  .slm-status { font-size: 12px; color: #aaa; margin-top: 8px; display: none; }
-  .slm-status strong { color: #555; font-family: var(--mono); }
+  .slm-status { font-size: 13px; color: #555; margin-top: 8px; display: none; }
+  .slm-status strong { color: #333; font-family: var(--mono); }
+
+  /* ── INLINE STATS ── */
+  .sp-section-header { font-size: 16px; font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; margin-bottom: 16px; }
+  .sp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 28px; }
+  .sp-card { background: #fff; border: 1px solid #e8e8e6; border-radius: 8px; padding: 18px 20px; }
+  .sp-card-wide { grid-column: 1 / -1; }
+  .sp-card h3 { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+  .sp-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .sp-bar-label { font-size: 13px; color: #333; min-width: 110px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .sp-bar-track { flex: 1; height: 8px; background: #f0f0ee; border-radius: 4px; overflow: hidden; }
+  .sp-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s cubic-bezier(0.16,1,0.3,1); }
+  .sp-bar-val { font-size: 13px; color: #555; font-family: var(--mono); min-width: 36px; text-align: right; flex-shrink: 0; }
+  .sp-hist { display: flex; align-items: flex-end; gap: 3px; height: 60px; }
+  .sp-hist-col { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
+  .sp-hist-bar { width: 100%; background: var(--accent); border-radius: 2px 2px 0 0; opacity: 0.7; }
+  .sp-hist-label { font-size: 12px; color: #555; white-space: nowrap; }
+  .sp-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sp-big-num { font-size: 2rem; font-weight: 600; font-family: var(--mono); color: #1c1c1c; line-height: 1; }
+  .sp-big-label { font-size: 13px; color: #555; margin-top: 4px; }
+  .sp-type-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .sp-type-pill { display: inline-flex; flex-direction: column; align-items: center; padding: 8px 14px; border: 1px solid #e8e8e6; border-radius: 6px; gap: 2px; }
+  .sp-type-pill .tp-pct { font-size: 1.1rem; font-weight: 600; font-family: var(--mono); }
+  .sp-type-pill .tp-label { font-size: 12px; color: #555; }
+  .sp-type-pill .tp-count { font-size: 11px; color: #777; }
+  .sp-divider { height: 1px; background: #f0f0ee; margin: 12px 0; }
+  .sp-dec-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .sp-dec-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .sp-dec-name { font-size: 13px; color: #333; min-width: 80px; }
+  .sp-dec-count { font-size: 13px; font-family: var(--mono); color: #444; min-width: 28px; text-align: right; }
+  .sp-dec-pct { font-size: 13px; color: #666; min-width: 36px; text-align: right; }
 
   /* ── ENTRIES ── */
   .entries-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
   .entries-title { font-size: 14px; font-weight: 600; color: #1c1c1c; }
-  .entries-sub { font-size: 12px; color: #bbb; }
+  .entries-sub { font-size: 13px; color: #666; }
   .entries { display: flex; flex-direction: column; gap: 8px; }
   .entry-card { background: #fff; border: 1px solid #e8e8e6; border-radius: 8px; padding: 14px 16px; transition: border-color 0.15s; }
   .entry-card:hover { border-color: #ccc; }
   .entry-top { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-  .epill { font-size: 11.5px; padding: 3px 8px; border-radius: 4px; font-family: var(--mono); font-weight: 400; }
-  .epill-gray { background: #f2f2f0; color: #666; }
-  .entry-ecs { font-size: 12.5px; color: #888; margin-bottom: 8px; line-height: 1.5; }
-  .entry-ecs span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #bbb; font-weight: 600; font-family: inherit; }
+  .epill { font-size: 12px; padding: 3px 8px; border-radius: 4px; font-family: var(--mono); font-weight: 400; }
+  .epill-gray { background: #f2f2f0; color: #444; }
+  .entry-ecs { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.5; }
+  .entry-ecs span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; font-weight: 600; font-family: inherit; }
   .entry-decisions { display: flex; flex-wrap: wrap; gap: 5px; }
-  .dpill-entry { font-size: 11.5px; padding: 3px 9px; border-radius: 4px; font-weight: 500; }
+  .dpill-entry { font-size: 12px; padding: 3px 9px; border-radius: 4px; font-weight: 500; }
   .dp-acc { background: #f0fdf4; color: #2e9b66; }
   .dp-den { background: #fef2f2; color: #c84040; }
   .dp-wl  { background: #fefce8; color: #a07030; }
@@ -166,7 +213,7 @@
   .empty-state { text-align: center; padding: 3rem 1rem; }
   .empty-icon { font-size: 2rem; margin-bottom: 12px; }
   .empty-state h3 { font-size: 14px; font-weight: 600; color: #1c1c1c; margin-bottom: 6px; }
-  .empty-state p { font-size: 13px; color: #bbb; margin-bottom: 16px; }
+  .empty-state p { font-size: 13px; color: #666; margin-bottom: 16px; }
   .empty-state button { padding: 8px 18px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; }
 
   /* ── MODALS ── */
@@ -177,28 +224,25 @@
   .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #bbb; line-height: 1; transition: color 0.15s; }
   .modal-close:hover { color: #1c1c1c; }
   .modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #1c1c1c; }
-  .modal-sub { font-size: 12px; color: #bbb; margin-bottom: 16px; }
+  .modal-sub { font-size: 13px; color: #666; margin-bottom: 16px; }
   .modal-stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
   .modal-stat { background: #fafaf9; border-radius: 6px; padding: 12px; text-align: center; }
   .modal-stat .mn { font-size: 20px; font-weight: 500; color: #1c1c1c; font-family: var(--mono); }
-  .modal-stat .ml { font-size: 10px; color: #bbb; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+  .modal-stat .ml { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
   .modal-section { margin-bottom: 14px; }
-  .modal-section h3 { font-size: 10.5px; font-weight: 600; color: #bbb; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+  .modal-section h3 { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
   .dec-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-  .dec-bar-label { font-size: 12.5px; color: #555; width: 75px; flex-shrink: 0; }
+  .dec-bar-label { font-size: 13px; color: #444; width: 75px; flex-shrink: 0; }
   .dec-bar-track { flex: 1; height: 4px; background: #f0f0ee; border-radius: 2px; overflow: hidden; }
   .dec-bar-fill { height: 100%; border-radius: 2px; }
-  .dec-bar-count { font-size: 11px; color: #bbb; width: 20px; text-align: right; font-family: var(--mono); }
+  .dec-bar-count { font-size: 12px; color: #666; width: 20px; text-align: right; font-family: var(--mono); }
   .cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .cmp-col h3 { font-size: 14px; font-weight: 600; color: #1c1c1c; margin-bottom: 10px; border-bottom: 1px solid #f0f0ee; padding-bottom: 8px; }
-  .cmp-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 4px 0; border-bottom: 1px solid #f8f8f6; }
+  .cmp-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 1px solid #f8f8f6; }
   .cmp-row:last-child { border-bottom: none; }
   .compare-pick { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   .compare-pick select { flex: 1; padding: 8px 10px; border: 1px solid #e4e4e2; border-radius: 6px; font-size: 13px; font-family: inherit; color: #1c1c1c; background: #fff; min-width: 160px; }
   .compare-pick button { padding: 8px 16px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; }
-
-  /* ── SECTION LABEL ── */
-  .section-label { font-size: 11px; font-weight: 600; color: #bbb; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
 
   /* ── CHATBOT ── */
   #chat-fab {
@@ -220,7 +264,7 @@
   #chat-panel.open { display: block; }
   .chat-head { background: #1c1c1c; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
   .chat-head-title { font-size: 13.5px; font-weight: 600; color: #fff; }
-  .chat-head-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+  .chat-head-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 1px; }
   .chat-head-close { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 1.1rem; line-height: 1; transition: color 0.15s; }
   .chat-head-close:hover { color: #fff; }
   .chat-msgs { padding: 14px 14px 6px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; max-height: 220px; overflow-y: auto; }
@@ -228,47 +272,18 @@
   .chat-msg-user { background: #1c1c1c; border-radius: 8px 8px 2px 8px; padding: 9px 12px; font-size: 13px; color: #fff; line-height: 1.5; max-width: 90%; align-self: flex-end; }
   .chat-input-row { display: flex; border-top: 1px solid #f0f0ee; }
   .chat-input { flex: 1; padding: 11px 14px; font-size: 13px; border: none; font-family: inherit; color: #1c1c1c; outline: none; background: #fff; }
-  .chat-input::placeholder { color: #ccc; }
-  .chat-send { padding: 0 16px; background: none; border: none; border-left: 1px solid #f0f0ee; font-size: 12.5px; font-weight: 500; color: #aaa; cursor: pointer; font-family: inherit; transition: color 0.15s; }
+  .chat-input::placeholder { color: #aaa; }
+  .chat-send { padding: 0 16px; background: none; border: none; border-left: 1px solid #f0f0ee; font-size: 13px; font-weight: 500; color: #555; cursor: pointer; font-family: inherit; transition: color 0.15s; }
   .chat-send:hover { color: #1c1c1c; }
-
-  /* ── STATS PAGE ── */
-  .sp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px; }
-  .sp-card { background: #fff; border: 1px solid #e8e8e6; border-radius: 8px; padding: 18px 20px; }
-  .sp-card-wide { grid-column: 1 / -1; }
-  .sp-card h3 { font-size: 11px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; }
-  .sp-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
-  .sp-bar-label { font-size: 12.5px; color: #444; min-width: 110px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
-  .sp-bar-track { flex: 1; height: 8px; background: #f0f0ee; border-radius: 4px; overflow: hidden; }
-  .sp-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s cubic-bezier(0.16,1,0.3,1); }
-  .sp-bar-val { font-size: 12px; color: #888; font-family: var(--mono); min-width: 36px; text-align: right; flex-shrink: 0; }
-  .sp-hist { display: flex; align-items: flex-end; gap: 3px; height: 60px; }
-  .sp-hist-col { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
-  .sp-hist-bar { width: 100%; background: var(--accent); border-radius: 2px 2px 0 0; opacity: 0.7; }
-  .sp-hist-label { font-size: 9.5px; color: #aaa; white-space: nowrap; }
-  .sp-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .sp-big-num { font-size: 2rem; font-weight: 600; font-family: var(--mono); color: #1c1c1c; line-height: 1; }
-  .sp-big-label { font-size: 11.5px; color: #888; margin-top: 4px; }
-  .sp-type-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-  .sp-type-pill { display: inline-flex; flex-direction: column; align-items: center; padding: 8px 14px; border: 1px solid #e8e8e6; border-radius: 6px; gap: 2px; }
-  .sp-type-pill .tp-pct { font-size: 1.1rem; font-weight: 600; font-family: var(--mono); }
-  .sp-type-pill .tp-label { font-size: 10.5px; color: #aaa; }
-  .sp-type-pill .tp-count { font-size: 10px; color: #bbb; }
-  .sp-divider { height: 1px; background: #f0f0ee; margin: 12px 0; }
-  .sp-dec-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .sp-dec-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-  .sp-dec-name { font-size: 12.5px; color: #444; min-width: 80px; }
-  .sp-dec-count { font-size: 12px; font-family: var(--mono); color: #888; min-width: 28px; text-align: right; }
-  .sp-dec-pct { font-size: 11px; color: #bbb; min-width: 36px; text-align: right; }
 
   /* ── FORM ── */
   .form-wrap { max-width: 540px; margin: 0 auto; }
   .form-title { font-size: 18px; font-weight: 600; color: #1c1c1c; letter-spacing: -0.02em; margin-bottom: 5px; }
-  .form-subtitle { font-size: 13px; color: #aaa; margin-bottom: 20px; }
-  .anon-note { font-size: 12.5px; color: #2e9b66; margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
+  .form-subtitle { font-size: 13px; color: #666; margin-bottom: 20px; }
+  .anon-note { font-size: 13px; color: #2e9b66; margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
   .success-msg { background: #f0fdf6; color: #2e9b66; border: 1px solid #c6f0dc; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 13.5px; display: none; }
   .form-group { margin-bottom: 15px; }
-  .form-group label { display: block; font-size: 11.5px; font-weight: 500; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-group label { display: block; font-size: 12px; font-weight: 500; color: #555; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
   .req { color: #dc8080; }
   .form-group input, .form-group select, .form-group textarea {
     width: 100%; padding: 9px 12px; border: 1px solid #e4e4e2; border-radius: 6px;
@@ -282,7 +297,7 @@
   .form-group textarea { resize: vertical; min-height: 70px; }
   .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  .form-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #666; cursor: pointer; margin-bottom: 15px; }
+  .form-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; cursor: pointer; margin-bottom: 15px; }
   .form-check input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
   .form-check:hover { color: #1c1c1c; }
   .major-wrap { position: relative; }
@@ -295,13 +310,13 @@
   .sug-item { padding: 8px 12px; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f5f5f3; transition: background 0.1s; }
   .sug-item:last-child { border-bottom: none; }
   .sug-item:hover { background: #f5f5f3; }
-  .sug-rate { font-size: 11px; color: #bbb; font-family: var(--mono); }
+  .sug-rate { font-size: 12px; color: #888; font-family: var(--mono); }
   .college-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
   .college-row-name { flex: 2; position: relative; }
   .college-row-decision { flex: 1; }
   .college-row-remove { background: none; border: 1px solid #e4e4e2; border-radius: 6px; padding: 8px 10px; cursor: pointer; color: #ccc; font-size: 1rem; flex-shrink: 0; line-height: 1; transition: all 0.15s; }
   .college-row-remove:hover { border-color: #c84040; color: #c84040; background: #fef2f2; }
-  .add-college-btn { width: 100%; padding: 8px; border: 1px dashed #ddd; border-radius: 6px; background: none; cursor: pointer; font-size: 13px; color: #aaa; font-family: inherit; margin-bottom: 18px; transition: all 0.15s; }
+  .add-college-btn { width: 100%; padding: 8px; border: 1px dashed #ddd; border-radius: 6px; background: none; cursor: pointer; font-size: 13px; color: #888; font-family: inherit; margin-bottom: 18px; transition: all 0.15s; }
   .add-college-btn:hover { border-color: #aaa; color: #555; }
   .form-submit { width: 100%; padding: 11px; background: #1c1c1c; color: #fafaf9; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s, transform 0.1s; }
   .form-submit:hover { opacity: 0.82; }
@@ -309,16 +324,16 @@
   .delete-wrap { display: none; text-align: center; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0f0ee; }
   .delete-btn { padding: 7px 18px; background: none; color: #c84040; border: 1px solid #f0b8b8; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .delete-btn:hover { background: #fef2f2; border-color: #c84040; }
-  .privacy-note { margin-top: 18px; padding: 12px 14px; background: #f7f7f5; border: 1px solid #ebebeb; border-radius: 6px; font-size: 12px; color: #aaa; line-height: 1.6; }
-  .privacy-note strong { color: #888; }
+  .privacy-note { margin-top: 18px; padding: 12px 14px; background: #f7f7f5; border: 1px solid #ebebeb; border-radius: 6px; font-size: 13px; color: #666; line-height: 1.6; }
+  .privacy-note strong { color: #444; }
 
   /* ── FOOTER ── */
   footer { border-top: 1px solid #e8e8e6; padding: 24px 40px; background: #1c1c1c; margin-top: auto; }
   .footer-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-  .footer-left { font-size: 12px; color: #666; line-height: 1.6; }
+  .footer-left { font-size: 13px; color: #666; line-height: 1.6; }
   .footer-left strong { color: #aaa; }
-  .footer-anon { font-size: 12px; color: #4ade80; display: flex; align-items: center; gap: 6px; }
-  .footer-contact { font-size: 12px; color: #666; line-height: 1.6; }
+  .footer-anon { font-size: 13px; color: #4ade80; display: flex; align-items: center; gap: 6px; }
+  .footer-contact { font-size: 13px; color: #666; line-height: 1.6; }
   .footer-contact a { color: #aaa; text-decoration: none; border-bottom: 1px solid #444; transition: color 0.15s, border-color 0.15s; }
   .footer-contact a:hover { color: #fff; border-color: #fff; }
 
@@ -338,7 +353,6 @@
 <nav>
   <div class="nav-logo">Live Oak <span>/ admissions</span></div>
   <div class="nav-link active" id="nav-results" onclick="showPage('results')">Results</div>
-  <div class="nav-link" id="nav-stats" onclick="showPage('stats')">Stats</div>
   <div class="nav-link" id="nav-submit" onclick="showPage('submit')">Submit yours</div>
 </nav>
 
@@ -396,7 +410,6 @@
       </div>
     </div>
 
-
     <div class="page-header">
       <div class="page-title">College Results</div>
       <div class="page-meta" id="page-meta">Loading…</div>
@@ -409,7 +422,8 @@
       <div class="stat-cell"><div class="stat-num" id="s3">—</div><div class="stat-label">Avg UW GPA</div></div>
     </div>
 
-    <div class="filter-bar" id="year-tabs"></div>
+    <!-- College type filter tabs -->
+    <div class="filter-bar" id="college-filter-bar"></div>
 
     <div class="chart-area">
       <div class="chart-toolbar">
@@ -420,7 +434,9 @@
         <input class="chart-search" id="college-search" placeholder="Search a college…" type="text" oninput="filterChart(this.value)">
       </div>
       <div class="minsub-row">
-        <span class="minsub-label">Min. submissions:</span>
+        <span class="minsub-label">Min. submissions</span>
+        <span class="minsub-help" data-tip="Only show colleges that at least this many Live Oak students applied to">?</span>
+        <span style="width:6px;"></span>
         <button id="minsub-1" class="minsub-btn minsub-active" onclick="setMinSubs(1,this)">Any</button>
         <button id="minsub-2" class="minsub-btn" onclick="setMinSubs(2,this)">2+</button>
         <button id="minsub-3" class="minsub-btn" onclick="setMinSubs(3,this)">3+</button>
@@ -430,6 +446,11 @@
       <div id="legend"></div>
       <div class="chart-body">
         <div id="chart-scroll-wrap"><div id="chart-main"></div></div>
+        <div class="chart-scroll-hint" id="chart-scroll-hint">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8L10 12" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Scroll to see all colleges</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
         <div class="chart-axis-note">Sorted by submissions · click a college name for details</div>
       </div>
     </div>
@@ -468,19 +489,12 @@
       <div class="slm-status" id="slm-status"></div>
     </div>
 
+    <!-- Inline stats (formerly separate Stats page) -->
+    <div id="stats-inline"></div>
+
     <div class="entries-header" id="entries-header"></div>
     <div class="entries" id="entries"></div>
 
-  </div>
-
-  <!-- ── STATS PAGE ── -->
-  <div class="page" id="page-stats">
-    <div class="page-header">
-      <div class="page-title">Statistics</div>
-      <div class="page-meta" id="stats-page-meta"></div>
-    </div>
-    <div class="filter-bar" id="stats-year-tabs"></div>
-    <div id="stats-page-content"><div class="empty-state"><p style="color:#aaa;font-size:14px;">Loading…</p></div></div>
   </div>
 
   <!-- ── SUBMIT PAGE ── -->
@@ -572,7 +586,7 @@
       <button type="button" class="form-submit" id="submit-btn" onclick="submitForm()">Submit</button>
 
       <div class="delete-wrap" id="delete-wrap">
-        <p style="font-size:12px;color:#ccc;margin-bottom:8px;">Want to remove your data?</p>
+        <p style="font-size:12px;color:#aaa;margin-bottom:8px;">Want to remove your data?</p>
         <button type="button" class="delete-btn" onclick="deleteSubmission()">Delete my submission</button>
       </div>
 
@@ -601,11 +615,45 @@
 
 <script>
 // ── Constants ──────────────────────────────────────────────────────────────
-const YEARS = [2023,2024,2025,2026];
 const DECISIONS = ['Accepted','Rejected','Waitlisted','Deferred','Withdrawn','Pending'];
 const DECISION_ORDER = ['Accepted','Waitlisted','Deferred','Rejected','Withdrawn','Pending'];
 const DOT_COLORS = {Accepted:'#2e9b66',Rejected:'#c84040',Waitlisted:'#a07030',Deferred:'#4f72c4',Withdrawn:'#94a3b8',Pending:'#9333ea'};
 const PILL_CLASS = {Accepted:'dp-acc',Rejected:'dp-den',Waitlisted:'dp-wl',Deferred:'dp-def',Withdrawn:'dp-wdr',Pending:'dp-pnd'};
+
+// ── College categorization ─────────────────────────────────────────────────
+const IVY_SET = new Set(['Harvard','Princeton','Yale','Columbia','Brown','Dartmouth','Cornell','Penn','University of Pennsylvania','UPenn']);
+const UC_RE = /^UC |^University of California/i;
+const CSU_RE = /Cal State|California State|San Jose State|San Francisco State|Fresno State|Sacramento State|Chico State|Humboldt State|Sonoma State|Cal Maritime|Cal Poly/i;
+const PUBLIC_SET = new Set([
+  'UC Berkeley','UCLA','UCSD','UC Santa Barbara','UC Davis','UC Irvine','UC Santa Cruz','UC Riverside','UC Merced',
+  'Cal Poly SLO','Cal Poly Pomona','Cal State Long Beach','San Jose State','San Francisco State','Fresno State',
+  'Sacramento State','Cal State Fullerton','Cal State Northridge','Sonoma State','Cal State East Bay','Chico State',
+  'Cal State San Bernardino','Cal State Dominguez Hills','Cal State Los Angeles','Cal State Monterey Bay',
+  'Cal State Channel Islands','Cal State San Marcos','Cal State Bakersfield','Humboldt State','Cal Maritime',
+  'Michigan','UVA','UNC Chapel Hill','Georgia Tech','University of Florida','Wisconsin','Ohio State','Penn State',
+  'UT Austin','UIUC','Purdue','University of Washington','University of Maryland','University of Georgia',
+  'Michigan State','Indiana University','University of Iowa','Arizona State','University of Arizona',
+  'Colorado State','University of Alabama','University of South Carolina','University of Tennessee',
+  'University of Kentucky','University of Pittsburgh','Virginia Tech','Clemson','University of Delaware',
+  'UConn','UMass Amherst','University of Vermont','UNH','Rutgers','Stony Brook','University at Buffalo',
+  'George Mason','JMU','University of Oregon','Oregon State','Colorado','Texas A&M','UT Dallas',
+]);
+function isPublic(name) {
+  if (IVY_SET.has(name)) return false;
+  if (UC_RE.test(name)) return true;
+  if (CSU_RE.test(name)) return true;
+  return PUBLIC_SET.has(name);
+}
+function matchesCollegeFilter(name, filter) {
+  if (filter === 'All') return true;
+  if (filter === 'Ivies') return IVY_SET.has(name);
+  if (filter === 'UCs') return UC_RE.test(name);
+  if (filter === 'CSUs') return CSU_RE.test(name);
+  if (filter === 'Public') return isPublic(name);
+  if (filter === 'Private') return !isPublic(name);
+  return true;
+}
+const COLLEGE_FILTER_TABS = ['All','Ivies','UCs','CSUs','Public','Private'];
 
 const COLLEGE_ACCEPT_RATES = {
   'Harvard':3,'Princeton':4,'MIT':4,'Yale':5,'Columbia':4,'Stanford':4,'Caltech':4,
@@ -691,9 +739,9 @@ const SESSION_ID = localStorage.getItem('cr_sid') || (()=>{
 const HAS_SUBMITTED = () => localStorage.getItem('cr_submitted') === '1';
 
 // ── State ──────────────────────────────────────────────────────────────────
-let activeYear = 2026, allData = [], scatterData = [], collegeCount = 0;
+let allData = [], scatterData = [], collegeCount = 0, activeCollegeFilter = 'All';
 let activeChartType = 'gpa', searchFilter = '', activeFilter = null, slmFilter = null, minSubs = 1;
-let currentPage = 'results', statsAnimated = false;
+let currentPage = 'results';
 
 // ── Navigation ────────────────────────────────────────────────────────────
 function updateNav() {
@@ -710,7 +758,7 @@ function dismissCta() {
   sessionStorage.setItem('cr_cta_dismissed','1');
 }
 
-// ── Page transitions (clean fade+slide, no layout glitch) ─────────────────
+// ── Page transitions ───────────────────────────────────────────────────────
 function showPage(name) {
   if (name === currentPage) return;
   const oldEl = document.getElementById('page-' + currentPage);
@@ -720,28 +768,23 @@ function showPage(name) {
   document.getElementById('nav-' + name).classList.add('active');
   updateNav();
 
-  // Fade out old
   oldEl.style.cssText = 'opacity:0;transform:translateY(-5px);transition:opacity 0.16s ease,transform 0.16s ease;pointer-events:none;';
 
   setTimeout(() => {
     oldEl.classList.remove('active');
     oldEl.style.cssText = '';
-
-    // Prepare new
     newEl.style.cssText = 'opacity:0;transform:translateY(10px);transition:none;display:block;';
-    void newEl.offsetWidth; // reflow
+    void newEl.offsetWidth;
     newEl.style.cssText = 'opacity:0;transform:translateY(10px);transition:opacity 0.22s ease,transform 0.22s cubic-bezier(0.16,1,0.3,1);display:block;';
     void newEl.offsetWidth;
     newEl.style.opacity = '1';
     newEl.style.transform = 'translateY(0)';
-
     setTimeout(() => {
       newEl.style.cssText = '';
       newEl.classList.add('active');
       currentPage = name;
       if (name === 'results') loadData();
       if (name === 'submit') loadExistingSubmission();
-      if (name === 'stats') renderStatsPage();
     }, 220);
   }, 160);
 }
@@ -756,23 +799,38 @@ async function loadData() {
 }
 
 function renderResults() {
-  statsAnimated = false;
-  renderYearTabs();
-  const d = allData.filter(r => r.grad_year == activeYear);
+  renderCollegeFilterTabs();
+  const allYear = allData.filter(r => r.grad_year == 2026);
+  const d = activeCollegeFilter === 'All'
+    ? allYear
+    : allYear.filter(r => matchesCollegeFilter(r.college_name, activeCollegeFilter));
   renderStats(d);
   scatterData = d;
   buildChart(d, false);
   renderEntries(d);
-}
-function setYear(y) { activeYear = y; activeFilter = null; minSubs = 1; renderYearTabs(); renderResults(); }
-
-function renderYearTabs() {
-  document.getElementById('year-tabs').innerHTML =
-    '<span class="filter-label">Year</span>' +
-    YEARS.map(y => `<button class="filter-pill${y==activeYear?' active':''}" onclick="setYear(${y})">${y}</button>`).join('');
+  renderStatsInline(d);
 }
 
-// ── Stats ──────────────────────────────────────────────────────────────────
+function renderCollegeFilterTabs() {
+  document.getElementById('college-filter-bar').innerHTML =
+    '<span class="filter-label">Schools</span>' +
+    COLLEGE_FILTER_TABS.map(f =>
+      `<button class="filter-pill${f===activeCollegeFilter?' active':''}" onclick="setCollegeFilter('${f}')">${f}</button>`
+    ).join('');
+}
+
+function setCollegeFilter(f) {
+  activeCollegeFilter = f;
+  activeFilter = null;
+  slmFilter = null;
+  document.getElementById('slm-gpa').value = '';
+  document.getElementById('slm-sat').value = '';
+  document.getElementById('slm-clear-btn').style.display = 'none';
+  document.getElementById('slm-status').style.display = 'none';
+  renderResults();
+}
+
+// ── Stats row ──────────────────────────────────────────────────────────────
 function animateNum(el, target, isFloat, suffix) {
   const steps = 38, dur = 650;
   let i = 0;
@@ -796,7 +854,8 @@ function renderStats(data) {
   else document.getElementById('s2').textContent = '—';
   if (t) animateNum(document.getElementById('s3'), g, true, '');
   else document.getElementById('s3').textContent = '—';
-  document.getElementById('page-meta').textContent = `Class of ${activeYear} · ${t} submission${t!==1?'s':''}`;
+  const suffix = activeCollegeFilter !== 'All' ? ` · ${activeCollegeFilter}` : '';
+  document.getElementById('page-meta').textContent = `Class of 2026 · ${t} submission${t!==1?'s':''}${suffix}`;
 }
 
 // ── Chart ──────────────────────────────────────────────────────────────────
@@ -839,7 +898,7 @@ function buildChart(data, animate) {
 
   const el = document.getElementById('chart-main');
   el.innerHTML = '';
-  if (!cols.length) { document.getElementById('legend').innerHTML = ''; return; }
+  if (!cols.length) { document.getElementById('legend').innerHTML = ''; updateScrollHint(); return; }
 
   const isGpa = activeChartType === 'gpa';
   const yKey = isGpa ? 'gpa_weighted' : 'sat';
@@ -849,27 +908,27 @@ function buildChart(data, animate) {
   const ySteps = isGpa ? [1,1.5,2,2.5,3,3.5,4,4.5,5] : [400,600,800,1000,1200,1400,1600];
 
   const isMobile = window.innerWidth <= 600;
-  const H = isMobile ? 260 : 400;
-  const PAD = {top:20, right:20, bottom: isMobile?80:90, left:52};
+  const H = isMobile ? 280 : 420;
+  const PAD = {top:20, right:20, bottom: isMobile?110:120, left:58};
   const containerW = el.closest('.chart-area').clientWidth - 40;
   const colW = Math.max(containerW / cols.length, 56);
   const W = Math.max(PAD.left + PAD.right + colW * cols.length, containerW, 400);
   const plotW = W - PAD.left - PAD.right, plotH = H - PAD.top - PAD.bottom;
 
-  const gridC = '#f0f0ee', axisC = '#e4e4e2', tickC = '#bbb', lblC = '#888';
+  const gridC = '#f0f0ee', axisC = '#e4e4e2', tickC = '#555', lblC = '#333';
   let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;">`;
 
   ySteps.forEach(v => {
     const y = PAD.top + plotH - (v-yMin)/(yMax-yMin)*plotH;
     svg += `<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+plotW}" y2="${y}" stroke="${gridC}" stroke-width="1"/>`;
-    svg += `<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="10" fill="${tickC}" font-family="'IBM Plex Mono',monospace">${isGpa?v.toFixed(1):v}</text>`;
+    svg += `<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="13" fill="${tickC}" font-family="'IBM Plex Mono',monospace">${isGpa?v.toFixed(1):v}</text>`;
   });
-  svg += `<text x="13" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="10" fill="${tickC}" font-family="Inter,sans-serif" transform="rotate(-90,13,${PAD.top+plotH/2})">${yLabel}</text>`;
+  svg += `<text x="13" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="13" fill="${tickC}" font-family="Inter,sans-serif" transform="rotate(-90,13,${PAD.top+plotH/2})">${yLabel}</text>`;
   svg += `<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="${axisC}" stroke-width="1"/>`;
 
   cols.forEach((col, i) => {
     const x = PAD.left + i*colW + colW/2, y = PAD.top + plotH + 10;
-    svg += `<text x="${x}" y="${y}" text-anchor="end" font-size="10" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>Click for ${col} details</title>${col}</text>`;
+    svg += `<text x="${x}" y="${y}" text-anchor="end" font-size="13" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>Click for ${col} details</title>${col}</text>`;
   });
 
   filtered.forEach((r, ri) => {
@@ -894,6 +953,14 @@ function buildChart(data, animate) {
   ).join('');
 
   updateEntriesHeader(filtered, data);
+  updateScrollHint();
+}
+
+function updateScrollHint() {
+  const wrap = document.getElementById('chart-scroll-wrap');
+  const hint = document.getElementById('chart-scroll-hint');
+  if (!wrap || !hint) return;
+  hint.style.display = wrap.scrollWidth > wrap.clientWidth + 10 ? 'flex' : 'none';
 }
 
 // ── Dot tooltip ────────────────────────────────────────────────────────────
@@ -942,7 +1009,7 @@ function openCollegeDetail(name) {
     </div>
     <div class="modal-section"><h3>Decisions</h3>${bars}</div>
     <div class="modal-section"><h3>GPA range (unweighted)</h3>
-      <div style="display:flex;gap:16px;font-size:13px;color:#888;">
+      <div style="display:flex;gap:16px;font-size:13px;color:#666;">
         <span>Min <strong style="color:#1c1c1c;font-family:var(--mono)">${gpaMin}</strong></span>
         <span>Avg <strong style="color:#1c1c1c;font-family:var(--mono)">${gpaAvg}</strong></span>
         <span>Max <strong style="color:#1c1c1c;font-family:var(--mono)">${gpaMax}</strong></span>
@@ -968,7 +1035,7 @@ function openCompare() {
 }
 function renderCompare() {
   const a = document.getElementById('cmp-a').value, b = document.getElementById('cmp-b').value;
-  if (a === b) { document.getElementById('cmp-result').innerHTML = '<p style="font-size:13px;color:#bbb;">Pick two different colleges.</p>'; return; }
+  if (a === b) { document.getElementById('cmp-result').innerHTML = '<p style="font-size:13px;color:#888;">Pick two different colleges.</p>'; return; }
   document.getElementById('cmp-result').innerHTML = `<div class="cmp-grid">${colStats(a)}${colStats(b)}</div>`;
 }
 function colStats(name) {
@@ -979,7 +1046,7 @@ function colStats(name) {
   const decRows = DECISION_ORDER.map(d=>({d,n:rows.filter(r=>r.decision===d).length})).filter(x=>x.n>0)
     .map(({d,n})=>`<div class="cmp-row"><span style="color:${DOT_COLORS[d]}">${d}</span><span style="font-family:var(--mono)">${n}</span></div>`).join('');
   return `<div class="cmp-col"><h3>${name}</h3>
-    <div style="font-size:12px;color:#888;margin-bottom:10px;">${total} applied · ${acc} accepted · ${total?Math.round(acc/total*100):0}% rate<br>Avg UW GPA: <strong style="color:#1c1c1c;font-family:var(--mono)">${gpaAvg}</strong></div>
+    <div style="font-size:13px;color:#666;margin-bottom:10px;">${total} applied · ${acc} accepted · ${total?Math.round(acc/total*100):0}% rate<br>Avg UW GPA: <strong style="color:#1c1c1c;font-family:var(--mono)">${gpaAvg}</strong></div>
     ${decRows}</div>`;
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -1029,13 +1096,13 @@ function updateEntriesHeader(filtered, allYearData) {
   const sessions = new Set(allYearData.map(r=>r.session_id));
   const total = sessions.size;
   if (!total) { hdr.innerHTML = ''; return; }
-  let title = `All submissions — ${activeYear}`, sub = '';
+  let title = 'All submissions', sub = '';
   if (slmFilter) {
     const matched = new Set(allYearData.filter(r=>slmMatches(r)).map(r=>r.session_id)).size;
     title = `${matched} student${matched!==1?'s':''} with similar stats`;
     sub = `GPA ${(slmFilter.gpa-slmFilter.gpaRange).toFixed(1)}–${(slmFilter.gpa+slmFilter.gpaRange).toFixed(1)}${slmFilter.sat?` · SAT ${slmFilter.sat-slmFilter.satRange}–${slmFilter.sat+slmFilter.satRange}`:''}`;
   } else {
-    sub = `${total} student${total!==1?'s':''} · ${activeYear}`;
+    sub = `${total} student${total!==1?'s':''} · Class of 2026${activeCollegeFilter!=='All'?' · '+activeCollegeFilter:''}`;
   }
   hdr.innerHTML = `<div class="entries-title">${title}</div>${sub?`<div class="entries-sub">${sub}</div>`:''}`;
 }
@@ -1049,7 +1116,7 @@ function renderEntries(data) {
   if (!displayData.length) {
     el.innerHTML = slmFilter
       ? `<div class="empty-state"><div class="empty-icon">🔍</div><h3>No matches found</h3><p>No submissions match your stats yet. Try widening the range.</p><button onclick="clearSlm()">Clear filter</button></div>`
-      : `<div class="empty-state"><div class="empty-icon">🎓</div><h3>No results yet for ${activeYear}</h3><p>Be the first from Live Oak to share your college decisions.</p><button onclick="showPage('submit')">Add your results</button></div>`;
+      : `<div class="empty-state"><div class="empty-icon">🎓</div><h3>No results yet for 2026</h3><p>Be the first from Live Oak to share your college decisions.</p><button onclick="showPage('submit')">Add your results</button></div>`;
     return;
   }
   const groups = [], seen = new Map();
@@ -1072,6 +1139,154 @@ function renderEntries(data) {
       ${g.extracurriculars?`<div class="entry-ecs"><span>Extracurriculars</span><br>${g.extracurriculars}</div>`:''}
       <div class="entry-decisions">${g.colleges.map(c=>`<span class="dpill-entry ${PILL_CLASS[c.decision]||'epill-gray'}" style="font-family:inherit">${c.name} — ${c.decision}${c.decision_type?` <span style="opacity:0.55;font-weight:400">${c.decision_type}</span>`:''}</span>`).join('')}</div>
     </div>`).join('');
+}
+
+// ── Inline Stats ───────────────────────────────────────────────────────────
+function renderStatsInline(data) {
+  const el = document.getElementById('stats-inline');
+  if (!el) return;
+
+  if (!data.length) {
+    el.innerHTML = '';
+    return;
+  }
+
+  // Decision breakdown
+  const decCount = {};
+  DECISION_ORDER.forEach(d => decCount[d] = 0);
+  data.forEach(r => { if (r.decision) decCount[r.decision] = (decCount[r.decision]||0) + 1; });
+  const totalDec = data.length;
+  const decHTML = DECISION_ORDER.filter(d => decCount[d]).map(d => {
+    const pct = Math.round(decCount[d]/totalDec*100);
+    return `<div class="sp-dec-row">
+      <div class="sp-dec-dot" style="background:${DOT_COLORS[d]||'#ccc'}"></div>
+      <div class="sp-dec-name">${d}</div>
+      <div style="flex:1;height:7px;background:#f0f0ee;border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${DOT_COLORS[d]||'#ccc'};border-radius:3px;"></div></div>
+      <div class="sp-dec-count">${decCount[d]}</div>
+      <div class="sp-dec-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  // Top colleges
+  const colApps = new Map(), colAcc = new Map();
+  data.forEach(r => {
+    if (!r.college_name) return;
+    colApps.set(r.college_name, (colApps.get(r.college_name)||0)+1);
+    if (r.decision==='Accepted') colAcc.set(r.college_name, (colAcc.get(r.college_name)||0)+1);
+  });
+  const topColleges = [...colApps.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const maxApp = Math.max(1, topColleges[0]?.[1]||1);
+  const collegesHTML = topColleges.map(([name, apps]) => {
+    const acc = colAcc.get(name)||0;
+    const pct = Math.round(acc/apps*100);
+    return `<div class="sp-bar-row">
+      <div class="sp-bar-label" title="${name}">${name}</div>
+      <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(apps/maxApp*100)}%;background:#4f72c4;opacity:0.7"></div></div>
+      <div class="sp-bar-val">${apps}</div>
+      <div style="font-size:13px;color:${pct>=50?'#2e9b66':pct>=30?'#a07030':'#c84040'};min-width:42px;text-align:right;font-family:var(--mono)">${pct}%✓</div>
+    </div>`;
+  }).join('');
+
+  // Hardest gets
+  const hardestGets = [...colAcc.entries()]
+    .filter(([name]) => getAcceptRate(name) && getAcceptRate(name) <= 20)
+    .sort((a,b) => getAcceptRate(a[0]) - getAcceptRate(b[0]))
+    .slice(0, 8);
+  const hardestHTML = hardestGets.length ? hardestGets.map(([name, acc]) => {
+    const apps = colApps.get(name)||1;
+    const natRate = getAcceptRate(name);
+    return `<div class="sp-bar-row">
+      <div class="sp-bar-label" title="${name}">${name}</div>
+      <div style="font-size:13px;color:#888;min-width:68px;text-align:right;">${natRate}% nationally</div>
+      <div style="font-size:13px;color:#2e9b66;font-family:var(--mono);min-width:52px;text-align:right;">${acc}/${apps} in</div>
+    </div>`;
+  }).join('') : '<span style="font-size:13px;color:#888;">No data from selective schools yet</span>';
+
+  // Popular majors
+  const majorCount = new Map();
+  const seenStudents = new Set();
+  data.forEach(r => {
+    const k = r.session_id || `${r.gpa}|${r.sat}`;
+    if (!seenStudents.has(k)) { seenStudents.add(k); if (r.major) majorCount.set(r.major, (majorCount.get(r.major)||0)+1); }
+  });
+  const topMajors = [...majorCount.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxMaj = Math.max(1, topMajors[0]?.[1]||1);
+  const majorsHTML = topMajors.length ? topMajors.map(([m,n]) =>
+    `<div class="sp-bar-row">
+      <div class="sp-bar-label" title="${m}">${m}</div>
+      <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(n/maxMaj*100)}%;background:#9333ea;opacity:0.6"></div></div>
+      <div class="sp-bar-val">${n}</div>
+    </div>`).join('') : '<span style="font-size:13px;color:#888;">No major data yet</span>';
+
+  // Averages
+  const studentGPAs = new Map(), studentGPAW = new Map();
+  let satSum=0, actSum=0, satN=0, actN=0;
+  data.forEach(r => {
+    const k = r.session_id||`${r.gpa}|${r.sat}`;
+    if (!studentGPAs.has(k) && r.gpa) studentGPAs.set(k, parseFloat(r.gpa));
+    if (!studentGPAW.has(k) && r.gpa_weighted) studentGPAW.set(k, parseFloat(r.gpa_weighted));
+    if (r.sat) { satSum+=r.sat; satN++; }
+    if (r.act) { actSum+=r.act; actN++; }
+  });
+  const gpaN = studentGPAs.size, gpaSum = [...studentGPAs.values()].reduce((s,v)=>s+v,0);
+  const gpaWN = studentGPAW.size, gpaWSum = [...studentGPAW.values()].reduce((s,v)=>s+v,0);
+
+  // App type acceptance
+  const appTypes = ['EA','ED','RD','Rolling'];
+  const appStat = {};
+  appTypes.forEach(t => appStat[t] = {total:0, acc:0});
+  data.forEach(r => {
+    const t = r.decision_type;
+    if (t && appStat[t]) { appStat[t].total++; if (r.decision === 'Accepted') appStat[t].acc++; }
+  });
+  const appHTML = appTypes.filter(t => appStat[t].total > 0).map(t => {
+    const s = appStat[t];
+    const pct = s.total ? Math.round(s.acc/s.total*100) : 0;
+    return `<div class="sp-type-pill">
+      <div class="tp-pct" style="color:${pct>50?'#2e9b66':pct>25?'#a07030':'#888'}">${pct}%</div>
+      <div class="tp-label">${t}</div>
+      <div class="tp-count">${s.acc}/${s.total}</div>
+    </div>`;
+  }).join('') || '<span style="font-size:13px;color:#888;">No app type data yet</span>';
+
+  el.innerHTML = `
+    <div class="sp-grid">
+      <div class="sp-card sp-card-wide">
+        <h3>Most Applied Schools</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 24px;">
+          ${collegesHTML || '<span style="font-size:13px;color:#888;">No data yet</span>'}
+        </div>
+      </div>
+      <div class="sp-card sp-card-wide">
+        <h3>Hardest Schools — Live Oak students who got in</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 24px;">
+          ${hardestHTML}
+        </div>
+      </div>
+      <div class="sp-card sp-card-wide">
+        <h3>Popular Majors</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 24px;">
+          ${majorsHTML}
+        </div>
+      </div>
+      <div class="sp-card">
+        <h3>Decisions</h3>
+        ${decHTML}
+      </div>
+      <div class="sp-card">
+        <h3>Acceptance by Application Type</h3>
+        <div class="sp-type-row">${appHTML}</div>
+      </div>
+      <div class="sp-card">
+        <h3>Averages</h3>
+        <div class="sp-2col">
+          <div><div class="sp-big-num">${gpaN?(gpaSum/gpaN).toFixed(2):'—'}</div><div class="sp-big-label">Avg UW GPA</div></div>
+          <div><div class="sp-big-num">${gpaWN?(gpaWSum/gpaWN).toFixed(2):'—'}</div><div class="sp-big-label">Avg W GPA</div></div>
+          <div><div class="sp-big-num">${satN?Math.round(satSum/satN):'—'}</div><div class="sp-big-label">Avg SAT</div></div>
+          <div><div class="sp-big-num">${actN?Math.round(actSum/actN):'—'}</div><div class="sp-big-label">Avg ACT</div></div>
+        </div>
+      </div>
+    </div>`;
 }
 
 // ── College autocomplete ───────────────────────────────────────────────────
@@ -1243,7 +1458,7 @@ async function deleteSubmission() {
   } catch(e) { alert('Error deleting submission.'); }
 }
 
-// ── Chatbot (simulated) ────────────────────────────────────────────────────
+// ── Chatbot ────────────────────────────────────────────────────────────────
 function toggleChat() {
   const panel = document.getElementById('chat-panel');
   panel.classList.toggle('open');
@@ -1254,15 +1469,11 @@ function sendChat() {
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
-
-  // User message
   const um = document.createElement('div');
   um.className = 'chat-msg-user';
   um.textContent = text;
   msgs.appendChild(um);
   msgs.scrollTop = msgs.scrollHeight;
-
-  // Bot response — always redirect to email
   setTimeout(() => {
     const bm = document.createElement('div');
     bm.className = 'chat-msg-bot';
@@ -1272,282 +1483,8 @@ function sendChat() {
   }, 600);
 }
 
-// ── Stats Page ─────────────────────────────────────────────────────────────
-function renderStatsPage() {
-  const data = allData.filter(r => r.grad_year == activeYear);
-  document.getElementById('stats-page-meta').textContent = `Class of ${activeYear} · ${data.length} application${data.length!==1?'s':''}`;
-
-  // Year tabs (reuse activeYear)
-  document.getElementById('stats-year-tabs').innerHTML =
-    '<span class="filter-label">Year</span>' +
-    YEARS.map(y => `<button class="filter-pill${y==activeYear?' active':''}" onclick="activeYear=${y};renderStatsPage();renderYearTabs()">${y}</button>`).join('');
-
-  if (!data.length) {
-    document.getElementById('stats-page-content').innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><h3>No data yet for ' + activeYear + '</h3><p>Submit your results to see statistics.</p></div>';
-    return;
-  }
-
-  // ── Decision breakdown ────────────────────────────────────────────────────
-  const decCount = {};
-  DECISION_ORDER.forEach(d => decCount[d] = 0);
-  data.forEach(r => { if (r.decision) decCount[r.decision] = (decCount[r.decision]||0) + 1; });
-  const totalDec = data.length;
-  const decHTML = DECISION_ORDER.filter(d => decCount[d]).map(d => {
-    const pct = Math.round(decCount[d]/totalDec*100);
-    return `<div class="sp-dec-row">
-      <div class="sp-dec-dot" style="background:${DOT_COLORS[d]||'#ccc'}"></div>
-      <div class="sp-dec-name">${d}</div>
-      <div class="sp-bar-track" style="flex:1;height:7px"><div class="sp-bar-fill" style="width:${pct}%;background:${DOT_COLORS[d]||'#ccc'}"></div></div>
-      <div class="sp-dec-count">${decCount[d]}</div>
-      <div class="sp-dec-pct">${pct}%</div>
-    </div>`;
-  }).join('');
-
-  // ── Application type stats ────────────────────────────────────────────────
-  const appTypes = ['EA','ED','RD','Rolling'];
-  const appStat = {};
-  appTypes.forEach(t => appStat[t] = {total:0, acc:0});
-  data.forEach(r => {
-    const t = r.decision_type;
-    if (t && appStat[t]) {
-      appStat[t].total++;
-      if (r.decision === 'Accepted') appStat[t].acc++;
-    }
-  });
-  const appHTML = appTypes.filter(t => appStat[t].total > 0).map(t => {
-    const s = appStat[t];
-    const pct = s.total ? Math.round(s.acc/s.total*100) : 0;
-    return `<div class="sp-type-pill">
-      <div class="tp-pct" style="color:${pct>50?'#2e9b66':pct>25?'#a07030':'#888'}">${pct}%</div>
-      <div class="tp-label">${t}</div>
-      <div class="tp-count">${s.acc}/${s.total}</div>
-    </div>`;
-  }).join('') || '<span style="color:#bbb;font-size:13px;">No app type data yet</span>';
-
-  // ── GPA histogram ─────────────────────────────────────────────────────────
-  const gpaBuckets = [{l:2.0,h:2.5},{l:2.5,h:3.0},{l:3.0,h:3.3},{l:3.3,h:3.5},{l:3.5,h:3.7},{l:3.7,h:3.85},{l:3.85,h:4.01}];
-  const gpaCount = gpaBuckets.map(() => 0);
-  const studentGPAs = new Map();
-  data.forEach(r => {
-    const k = r.session_id || `${r.gpa}|${r.sat}`;
-    if (!studentGPAs.has(k) && r.gpa) studentGPAs.set(k, r.gpa);
-  });
-  studentGPAs.forEach(g => {
-    const i = gpaBuckets.findIndex(b => g >= b.l && g < b.h);
-    if (i >= 0) gpaCount[i]++;
-  });
-  const maxGpa = Math.max(1,...gpaCount);
-  const gpaHistHTML = gpaBuckets.map((b,i) => {
-    const h = Math.max(2, Math.round(gpaCount[i]/maxGpa*56));
-    return `<div class="sp-hist-col"><div class="sp-hist-bar" style="height:${h}px" title="${gpaCount[i]} students"></div><div class="sp-hist-label">${b.l.toFixed(1)}</div></div>`;
-  }).join('');
-
-  // ── SAT histogram ─────────────────────────────────────────────────────────
-  const satBuckets = [{l:900,h:1100},{l:1100,h:1200},{l:1200,h:1300},{l:1300,h:1400},{l:1400,h:1500},{l:1500,h:1600}];
-  const satCount = satBuckets.map(() => 0);
-  let satTotal = 0;
-  data.forEach(r => {
-    if (r.sat) {
-      const i = satBuckets.findIndex(b => r.sat >= b.l && r.sat < b.h);
-      if (i >= 0) { satCount[i]++; satTotal++; }
-    }
-  });
-  const maxSat = Math.max(1,...satCount);
-  const satHistHTML = satBuckets.map((b,i) => {
-    const h = Math.max(2, Math.round(satCount[i]/maxSat*56));
-    return `<div class="sp-hist-col"><div class="sp-hist-bar" style="height:${h}px;opacity:0.6" title="${satCount[i]} students"></div><div class="sp-hist-label">${b.l}</div></div>`;
-  }).join('');
-
-  // ── Top colleges ──────────────────────────────────────────────────────────
-  const colApps = new Map(), colAcc = new Map();
-  data.forEach(r => {
-    if (!r.college_name) return;
-    colApps.set(r.college_name, (colApps.get(r.college_name)||0)+1);
-    if (r.decision==='Accepted') colAcc.set(r.college_name, (colAcc.get(r.college_name)||0)+1);
-  });
-  const topColleges = [...colApps.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const maxApp = Math.max(1, topColleges[0]?.[1]||1);
-  const collegesHTML = topColleges.map(([name, apps]) => {
-    const acc = colAcc.get(name)||0;
-    const pct = Math.round(acc/apps*100);
-    return `<div class="sp-bar-row">
-      <div class="sp-bar-label" title="${name}">${name}</div>
-      <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(apps/maxApp*100)}%;background:#4f72c4;opacity:0.65"></div></div>
-      <div class="sp-bar-val">${apps}</div>
-      <div style="font-size:11px;color:${pct>=50?'#2e9b66':pct>=30?'#a07030':'#c84040'};min-width:38px;text-align:right;font-family:var(--mono)">${pct}%✓</div>
-    </div>`;
-  }).join('');
-
-  // ── Most popular majors ───────────────────────────────────────────────────
-  const majorCount = new Map();
-  const seenStudents = new Set();
-  data.forEach(r => {
-    const k = r.session_id || `${r.gpa}|${r.sat}`;
-    if (!seenStudents.has(k)) { seenStudents.add(k); if (r.major) majorCount.set(r.major, (majorCount.get(r.major)||0)+1); }
-  });
-  const topMajors = [...majorCount.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const maxMaj = Math.max(1, topMajors[0]?.[1]||1);
-  const majorsHTML = topMajors.length ? topMajors.map(([m,n]) =>
-    `<div class="sp-bar-row">
-      <div class="sp-bar-label" title="${m}">${m}</div>
-      <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(n/maxMaj*100)}%;background:#9333ea;opacity:0.55"></div></div>
-      <div class="sp-bar-val">${n}</div>
-    </div>`).join('') : '<span style="color:#bbb;font-size:13px;">No major data yet</span>';
-
-  // ── First-gen comparison ──────────────────────────────────────────────────
-  const fg = {yes:{apps:0,acc:0}, no:{apps:0,acc:0}};
-  data.forEach(r => {
-    const k = r.first_gen === 'yes' ? 'yes' : 'no';
-    fg[k].apps++;
-    if (r.decision === 'Accepted') fg[k].acc++;
-  });
-  const fgHtml = ['yes','no'].map(k => {
-    const pct = fg[k].apps ? Math.round(fg[k].acc/fg[k].apps*100) : null;
-    return `<div style="text-align:center;padding:10px 0;">
-      <div class="sp-big-num" style="color:${k==='yes'?'var(--accent)':'#1c1c1c'}">${pct !== null ? pct+'%' : '—'}</div>
-      <div class="sp-big-label">${k==='yes'?'First-gen':'Continuing-gen'}<br><span style="color:#bbb;font-size:10.5px;">${fg[k].apps} apps · ${fg[k].acc} accepted</span></div>
-    </div>`;
-  }).join('<div style="width:1px;background:#f0f0ee;"></div>');
-
-  // ── Avg stats ─────────────────────────────────────────────────────────────
-  let gpaSum=0, gpaWSum=0, satSum=0, actSum=0, gpaN=0, gpaWN=0, satN=0, actN=0;
-  studentGPAs.forEach(g => { gpaSum+=g; gpaN++; });
-  const studentGPAW = new Map();
-  data.forEach(r => {
-    const k = r.session_id||`${r.gpa}|${r.sat}`;
-    if (!studentGPAW.has(k) && r.gpa_weighted) studentGPAW.set(k, r.gpa_weighted);
-    if (r.sat) { satSum+=r.sat; satN++; }
-    if (r.act) { actSum+=r.act; actN++; }
-  });
-  studentGPAW.forEach(g => { gpaWSum+=g; gpaWN++; });
-
-  // ── Student spotlights ───────────────────────────────────────────────────
-  const SELECTIVE_SET = new Set(['Harvard','Princeton','MIT','Yale','Columbia','Stanford','Caltech',
-    'Penn','UPenn','University of Pennsylvania','Brown','Dartmouth','Cornell','Duke','Northwestern',
-    'Johns Hopkins','Harvey Mudd','Vanderbilt','Rice','WashU','Notre Dame','Georgetown','Emory',
-    'Carnegie Mellon','Tufts','Northeastern','Claremont McKenna','Pomona','Scripps','Pitzer']);
-  const studentMap = new Map();
-  data.forEach(r => {
-    const k = r.session_id || `${r.gpa}|${r.sat}|${r.gpa_weighted}`;
-    if (!studentMap.has(k)) studentMap.set(k, {gpa:r.gpa,gpaW:r.gpa_weighted,sat:r.sat,act:r.act,major:r.major,sport:r.sport,first_gen:r.first_gen,colleges:[]});
-    if (r.college_name) studentMap.get(k).colleges.push({name:r.college_name,decision:r.decision,type:r.decision_type});
-  });
-  const scored = [...studentMap.values()].map(s => {
-    const acc = s.colleges.filter(c=>c.decision==='Accepted');
-    const selectiveAcc = acc.filter(c=>SELECTIVE_SET.has(c.name));
-    return {...s, acc, selectiveAcc, score: selectiveAcc.length*10 + acc.length + (s.gpa||0)*2 + (s.sat||0)/800};
-  }).filter(s=>s.colleges.length>0).sort((a,b)=>b.score-a.score).slice(0,5);
-
-  const PILL_COLORS = {Accepted:'background:#f0fdf4;color:#2e9b66',Rejected:'background:#fef2f2;color:#c84040',Waitlisted:'background:#fefce8;color:#a07030',Deferred:'background:#eff6ff;color:#4f72c4',Withdrawn:'background:#f8fafc;color:#94a3b8',Pending:'background:#fdf4ff;color:#9333ea'};
-  const spotlightsHTML = scored.length >= 2 ? `
-    <div class="sp-card sp-card-wide">
-      <h3>Student Spotlights — top outcomes this year</h3>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:4px;">
-        ${scored.map((s,i) => {
-          const tags = [];
-          if (s.gpa) tags.push(`<span class="epill epill-gray">${s.gpa.toFixed(2)} UW GPA</span>`);
-          if (s.gpaW) tags.push(`<span class="epill epill-gray">${s.gpaW.toFixed(2)} W GPA</span>`);
-          if (s.sat) tags.push(`<span class="epill epill-gray">${s.sat} SAT</span>`);
-          if (s.act) tags.push(`<span class="epill epill-gray">${s.act} ACT</span>`);
-          if (s.major) tags.push(`<span class="epill epill-gray">${s.major}</span>`);
-          if (s.sport==='yes') tags.push(`<span class="epill epill-gray">🏅 Recruited</span>`);
-          if (s.first_gen==='yes') tags.push(`<span class="epill epill-gray">First-gen</span>`);
-          const decisions = s.colleges.map(c=>`<span style="font-size:11px;padding:2px 8px;border-radius:4px;${PILL_COLORS[c.decision]||'background:#f2f2f0;color:#666'}">${c.name}${c.type?' · '+c.type:''}</span>`).join('');
-          return `<div style="background:#fafaf9;border:1px solid #eee;border-radius:8px;padding:14px 16px;">
-            <div style="font-size:11px;font-weight:600;color:#bbb;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Student ${String.fromCharCode(65+i)}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">${tags.join('')}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:4px;">${decisions}</div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>` : '';
-
-  // ── Hardest gets ─────────────────────────────────────────────────────────
-  const hardestGets = [...colAcc.entries()]
-    .filter(([name]) => getAcceptRate(name) && getAcceptRate(name) <= 20)
-    .sort((a,b) => getAcceptRate(a[0]) - getAcceptRate(b[0]))
-    .slice(0, 8);
-  const hardestHTML = hardestGets.length ? hardestGets.map(([name, acc]) => {
-    const apps = colApps.get(name)||1;
-    const natRate = getAcceptRate(name);
-    return `<div class="sp-bar-row">
-      <div class="sp-bar-label" title="${name}">${name}</div>
-      <div style="font-size:11px;color:#bbb;min-width:60px;text-align:right;">${natRate}% national</div>
-      <div style="font-size:12px;color:#2e9b66;font-family:var(--mono);min-width:50px;text-align:right;">${acc}/${apps} in</div>
-    </div>`;
-  }).join('') : '<span style="color:#bbb;font-size:13px;">No data from selective schools yet</span>';
-
-  // ── Sports recruited ──────────────────────────────────────────────────────
-  const sport = {yes:{apps:0,acc:0}, no:{apps:0,acc:0}};
-  data.forEach(r => {
-    const k = r.sport==='yes'?'yes':'no';
-    sport[k].apps++;
-    if (r.decision==='Accepted') sport[k].acc++;
-  });
-  const sportHTML = ['yes','no'].map(k => {
-    const pct = sport[k].apps ? Math.round(sport[k].acc/sport[k].apps*100) : null;
-    return `<div style="text-align:center;padding:10px 0;">
-      <div class="sp-big-num" style="color:${k==='yes'?'#2e9b66':'#4f72c4'}">${pct!==null?pct+'%':'—'}</div>
-      <div class="sp-big-label">${k==='yes'?'Recruited':'Non-recruited'}<br><span style="color:#bbb;font-size:10.5px;">${sport[k].apps} apps · ${sport[k].acc} accepted</span></div>
-    </div>`;
-  }).join('<div style="width:1px;background:#f0f0ee;"></div>');
-
-  document.getElementById('stats-page-content').innerHTML = `
-    <div class="sp-grid">
-      ${spotlightsHTML}
-      <div class="sp-card">
-        <h3>Decisions</h3>
-        ${decHTML}
-      </div>
-      <div class="sp-card">
-        <h3>Acceptance by Application Type</h3>
-        <div class="sp-type-row">${appHTML}</div>
-      </div>
-      <div class="sp-card">
-        <h3>Averages</h3>
-        <div class="sp-2col">
-          <div><div class="sp-big-num">${gpaN?(gpaSum/gpaN).toFixed(2):'—'}</div><div class="sp-big-label">Avg UW GPA</div></div>
-          <div><div class="sp-big-num">${gpaWN?(gpaWSum/gpaWN).toFixed(2):'—'}</div><div class="sp-big-label">Avg W GPA</div></div>
-          <div><div class="sp-big-num">${satN?Math.round(satSum/satN):'—'}</div><div class="sp-big-label">Avg SAT</div></div>
-          <div><div class="sp-big-num">${actN?Math.round(actSum/actN):'—'}</div><div class="sp-big-label">Avg ACT</div></div>
-        </div>
-      </div>
-      <div class="sp-card">
-        <h3>Sports Recruited vs Non-recruited</h3>
-        <div style="display:flex;gap:0;justify-content:space-around;">${sportHTML}</div>
-      </div>
-      <div class="sp-card">
-        <h3>First-Gen vs Continuing-Gen</h3>
-        <div style="display:flex;gap:0;justify-content:space-around;">${fgHtml}</div>
-      </div>
-      <div class="sp-card">
-        <h3>GPA Distribution (${studentGPAs.size} students)</h3>
-        <div class="sp-hist">${gpaHistHTML}</div>
-      </div>
-      ${satN ? `<div class="sp-card"><h3>SAT Distribution (${satN} students)</h3><div class="sp-hist">${satHistHTML}</div></div>` : ''}
-      <div class="sp-card sp-card-wide">
-        <h3>Hardest Schools — Live Oak students who got in</h3>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 24px;">
-          ${hardestHTML}
-        </div>
-      </div>
-      <div class="sp-card sp-card-wide">
-        <h3>Most Applied Schools</h3>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 24px;">
-          ${collegesHTML || '<span style="color:#bbb;font-size:13px;">No data yet</span>'}
-        </div>
-      </div>
-      <div class="sp-card sp-card-wide">
-        <h3>Popular Majors</h3>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 24px;">
-          ${majorsHTML}
-        </div>
-      </div>
-    </div>`;
-}
-
 // ── Init ───────────────────────────────────────────────────────────────────
-window.addEventListener('resize', () => { if (scatterData.length) buildChart(scatterData, false); });
+window.addEventListener('resize', () => { if (scatterData.length) { buildChart(scatterData, false); } });
 document.addEventListener('DOMContentLoaded', () => {
   updateNav(); loadData();
   fetch('/api/track', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:SESSION_ID})}).catch(()=>{});
