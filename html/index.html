@@ -172,24 +172,39 @@
   #chart-scroll-wrap { width: 100%; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; border-radius: 4px; }
   #chart-scroll-wrap::-webkit-scrollbar { display: none; }
   .chart-scroll-outer { position: relative; }
-  .chart-scroll-outer.has-overflow::before {
-    content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 70px;
-    background: linear-gradient(to right, transparent, #fafaf9 80%);
+  .scroll-fade-right, .scroll-fade-left {
+    display: none; position: absolute; top: 0; bottom: 0; width: 70px;
     pointer-events: none; z-index: 2;
   }
-  .chart-scroll-outer.has-overflow::after {
-    content: '›'; position: absolute; right: 10px; top: 50%;
-    width: 30px; height: 30px;
-    display: flex; align-items: center; justify-content: center;
+  .scroll-fade-right { right: 0; background: linear-gradient(to right, transparent, #fafaf9 80%); }
+  .scroll-fade-left  { left: 0;  background: linear-gradient(to left,  transparent, #fafaf9 80%); }
+  .scroll-chev {
+    display: none; position: absolute; top: 50%;
+    width: 34px; height: 34px;
+    align-items: center; justify-content: center;
     font-size: 22px; font-weight: 600; color: var(--accent);
-    background: #fff; border-radius: 50%;
+    background: #fff; border: none; border-radius: 50%;
     box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    pointer-events: none; z-index: 3;
+    cursor: pointer; z-index: 3; font-family: inherit;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
     animation: scroll-bounce 1.2s ease-in-out infinite;
   }
+  .scroll-chev:hover { animation: none; transform: translate(0, -50%) scale(1.1); box-shadow: 0 3px 14px rgba(0,0,0,0.2); }
+  .scroll-chev:active { transform: translate(0, -50%) scale(0.95); }
+  .scroll-chev-right { right: 8px; }
+  .scroll-chev-left  { left: 8px; }
+  .scroll-chev-left::before  { content: '‹'; line-height: 1; }
+  .scroll-chev-right::before { content: '›'; line-height: 1; }
+  .chart-scroll-outer.can-right .scroll-fade-right, .chart-scroll-outer.can-right .scroll-chev-right { display: flex; }
+  .chart-scroll-outer.can-left  .scroll-fade-left,  .chart-scroll-outer.can-left  .scroll-chev-left  { display: flex; }
   @keyframes scroll-bounce {
     0%, 100% { transform: translate(0, -50%); opacity: 0.85; }
     50% { transform: translate(-8px, -50%); opacity: 1; }
+  }
+  .scroll-chev-left { animation-name: scroll-bounce-left; }
+  @keyframes scroll-bounce-left {
+    0%, 100% { transform: translate(0, -50%); opacity: 0.85; }
+    50% { transform: translate(8px, -50%); opacity: 1; }
   }
   [id^="col-lbl-"] { transition: font-size 0.08s linear, fill 0.1s ease; }
   .chart-dot { transition: r 0.14s ease, opacity 0.14s ease; }
@@ -505,6 +520,10 @@
       <div class="chart-body">
         <div class="chart-scroll-outer" id="chart-scroll-outer">
           <div id="chart-scroll-wrap"><div id="chart-main"></div></div>
+          <div class="scroll-fade-left"></div>
+          <div class="scroll-fade-right"></div>
+          <button class="scroll-chev scroll-chev-left" aria-label="Scroll left" onclick="scrollChart(-1)"></button>
+          <button class="scroll-chev scroll-chev-right" aria-label="Scroll right" onclick="scrollChart(1)"></button>
         </div>
         <div class="chart-axis-note">Sorted by submissions · click a college name for details</div>
       </div>
@@ -1026,7 +1045,7 @@ function buildChart(data, animate) {
   const plotW = W - PAD.left - PAD.right, plotH = H - PAD.top - PAD.bottom;
 
   const gridC = '#f0f0ee', axisC = '#e4e4e2', tickC = '#555', lblC = '#333';
-  let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" data-pad-left="${PAD.left}" data-col-w="${colW}" data-plot-bottom="${PAD.top + plotH}" data-dot-r="${dotR}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;" onmousemove="chartMousemove(event)" onmouseleave="chartMouseleave(event)">`;
+  let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" data-pad-left="${PAD.left}" data-col-w="${colW}" data-plot-bottom="${PAD.top + plotH}" data-dot-r="${dotR}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;" onmouseleave="chartMouseleave(event)">`;
 
   ySteps.forEach(v => {
     const y = PAD.top + plotH - (v-yMin)/(yMax-yMin)*plotH;
@@ -1039,7 +1058,7 @@ function buildChart(data, animate) {
   cols.forEach((col, i) => {
     const x = PAD.left + i*colW + colW/2, y = PAD.top + plotH + 22;
     const short = shortenForChart(col);
-    svg += `<text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title>${short}</text>`;
+    svg += `<text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onmouseover="setWaveCol(${i})" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title>${short}</text>`;
   });
 
   filtered.forEach((r, ri) => {
@@ -1051,7 +1070,7 @@ function buildChart(data, animate) {
     const y = by.toFixed(2);
     const col = DOT_COLORS[r.decision] || '#888';
     const dimmed = (activeFilter && r.decision !== activeFilter) || (slmFilter && !slmMatches(r));
-    svg += `<circle class="chart-dot" data-cidx="${i}" cx="${x}" cy="${y}" r="${dotR}" fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${dimmed?0.1:1}" style="cursor:pointer;" onmouseover="dotHover(${i})" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
+    svg += `<circle class="chart-dot" data-cidx="${i}" cx="${x}" cy="${y}" r="${dotR}" fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${dimmed?0.1:1}" style="cursor:pointer;" onmouseover="setSpotCol(${i})" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
   });
   svg += '</svg>';
   el.innerHTML = svg;
@@ -1072,12 +1091,19 @@ function updateScrollHint() {
   const outer = document.getElementById('chart-scroll-outer');
   if (!wrap || !outer) return;
   const check = () => {
-    const overflows = wrap.scrollWidth > wrap.clientWidth + 10;
-    const atEnd = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 10;
-    outer.classList.toggle('has-overflow', overflows && !atEnd);
+    const canRight = wrap.scrollLeft + wrap.clientWidth < wrap.scrollWidth - 10;
+    const canLeft  = wrap.scrollLeft > 10;
+    outer.classList.toggle('can-right', canRight);
+    outer.classList.toggle('can-left',  canLeft);
   };
   check();
   wrap.onscroll = check;
+}
+function scrollChart(dir) {
+  const wrap = document.getElementById('chart-scroll-wrap');
+  if (!wrap) return;
+  const step = Math.max(160, wrap.clientWidth * 0.65);
+  wrap.scrollBy({ left: dir * step, behavior: 'smooth' });
 }
 
 let _lastWaveIdx = -2, _waveRaf = 0, _lastWaveDotCol = -2;
@@ -1091,11 +1117,12 @@ function chartWave(fIdx) {
   }
   const base = parseFloat(labels[0].getAttribute('font-size') || 10);
   const peak = Math.max(base + 9, 19);
+  const nearestIdx = Math.round(fIdx);
   labels.forEach((el, i) => {
     const dist = Math.abs(i - fIdx);
     const factor = dist > 3 ? 0 : Math.exp(-(dist*dist) / 1.8);
     el.style.fontSize = (base + (peak - base) * factor) + 'px';
-    if (dist < 0.6) { el.style.fill = '#4f72c4'; el.style.fontWeight = '600'; }
+    if (i === nearestIdx) { el.style.fill = '#4f72c4'; el.style.fontWeight = '600'; }
     else if (dist < 1.6) { el.style.fill = '#1c1c1c'; el.style.fontWeight = '500'; }
     else if (dist < 2.5) { el.style.fill = '#444'; el.style.fontWeight = ''; }
     else { el.style.fill = ''; el.style.fontWeight = ''; }
@@ -1124,39 +1151,45 @@ function updateDotHighlight(colIdx) {
     }
   });
 }
-function chartMousemove(e) {
-  const svg = e.currentTarget;
-  const pl = parseFloat(svg.dataset.padLeft);
-  const cw = parseFloat(svg.dataset.colW);
-  const n = parseInt(svg.dataset.cols);
-  const pb = parseFloat(svg.dataset.plotBottom);
-  const rect = svg.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  // Only react when mouse is in the label area (below the axis, small buffer)
-  if (y < pb - 4) {
-    if (_lastWaveIdx !== -1) { _lastWaveIdx = -1; chartWave(-1); }
-    return;
-  }
-  const rawIdx = (x - pl - cw/2) / cw;
-  // Generous bounds; clamp to valid index so edges don't flicker
-  if (rawIdx < -2 || rawIdx > n + 1) {
-    if (_lastWaveIdx !== -1) { _lastWaveIdx = -1; chartWave(-1); }
-    return;
-  }
-  const fIdx = Math.max(0, Math.min(n - 1, rawIdx));
-  if (Math.abs(fIdx - _lastWaveIdx) < 0.05) return;
-  _lastWaveIdx = fIdx;
-  if (_waveRaf) cancelAnimationFrame(_waveRaf);
-  _waveRaf = requestAnimationFrame(() => chartWave(fIdx));
-}
-function chartMouseleave() { _lastWaveIdx = -2; chartWave(-1); }
-function dotHover(idx) {
-  if (Math.abs(idx - _lastWaveIdx) < 0.05) return;
+let _waveMode = 'none';
+function setWaveCol(idx) {
+  if (idx === _lastWaveIdx && _waveMode === 'wave') return;
   _lastWaveIdx = idx;
+  _waveMode = 'wave';
   if (_waveRaf) cancelAnimationFrame(_waveRaf);
   _waveRaf = requestAnimationFrame(() => chartWave(idx));
 }
+function setSpotCol(idx) {
+  if (idx === _lastWaveIdx && _waveMode === 'spot') return;
+  _lastWaveIdx = idx;
+  _waveMode = 'spot';
+  if (_waveRaf) cancelAnimationFrame(_waveRaf);
+  _waveRaf = requestAnimationFrame(() => chartSpot(idx));
+}
+function chartSpot(idx) {
+  const labels = document.querySelectorAll('[id^="col-lbl-"]');
+  if (!labels.length) return;
+  if (idx < 0) {
+    labels.forEach(el => { el.style.fontSize = ''; el.style.fill = ''; el.style.fontWeight = ''; });
+    updateDotHighlight(-1);
+    return;
+  }
+  const base = parseFloat(labels[0].getAttribute('font-size') || 10);
+  const peak = Math.max(base + 9, 19);
+  labels.forEach((el, i) => {
+    if (i === idx) {
+      el.style.fontSize = peak + 'px';
+      el.style.fill = '#4f72c4';
+      el.style.fontWeight = '600';
+    } else {
+      el.style.fontSize = '';
+      el.style.fill = '';
+      el.style.fontWeight = '';
+    }
+  });
+  updateDotHighlight(idx);
+}
+function chartMouseleave() { _lastWaveIdx = -2; _waveMode = 'none'; chartWave(-1); }
 
 // ── Dot tooltip ────────────────────────────────────────────────────────────
 function handleDotClick(evt, idx) { evt.stopPropagation(); showTooltip(evt, scatterData[idx]); }
@@ -1190,7 +1223,11 @@ function showTooltip(evt, r) {
     if (s.scholarship === 'yes') extras.push('💰 Scholarship');
     if (s.sport === 'yes') extras.push('🏅 Recruited');
     const extrasStr = extras.length ? ` <span style="opacity:0.7;font-size:10.5px;">(${extras.join(' · ')})</span>` : '';
-    return `<div style="color:${DOT_COLORS[s.decision]||'#aaa'};">${s.college_name} — ${s.decision}${extrasStr}</div>`;
+    const isClicked = s.college_name === r.college_name && s.decision === r.decision && s.decision_type === r.decision_type;
+    const style = isClicked
+      ? `color:${DOT_COLORS[s.decision]||'#aaa'};font-weight:600;background:rgba(255,255,255,0.08);padding:3px 6px;border-radius:4px;margin:1px 0;`
+      : `color:${DOT_COLORS[s.decision]||'#aaa'};padding:0 6px;`;
+    return `<div style="${style}">${s.college_name} — ${s.decision}${extrasStr}</div>`;
   }).join('');
 
   let html = stats.map(s => `<div>${s}</div>`).join('');
@@ -1408,22 +1445,38 @@ function renderEntries(data) {
   displayData.forEach(r => {
     const k = r.session_id || `${r.gpa}|${r.sat}|${r.act}|${r.major}|${r.extracurriculars}`;
     if (!seen.has(k)) { seen.set(k, groups.length); groups.push({...r, colleges:[]}); }
-    groups[seen.get(k)].colleges.push({name: r.college_name, decision: r.decision, decision_type: r.decision_type});
+    groups[seen.get(k)].colleges.push({
+      name: r.college_name, decision: r.decision, decision_type: r.decision_type,
+      school_type: r.school_type, enrolling: r.enrolling, scholarship: r.scholarship, sport: r.sport,
+    });
   });
-  el.innerHTML = groups.map(g => `
-    <div class="entry-card">
-      <div class="entry-top">
-        <span class="epill epill-gray">UW ${g.gpa}</span>
-        ${g.gpa_weighted?`<span class="epill epill-gray">W ${g.gpa_weighted}</span>`:''}
-        ${g.sat?`<span class="epill epill-gray">SAT ${g.sat}</span>`:''}
-        ${g.act?`<span class="epill epill-gray">ACT ${g.act}</span>`:''}
-        ${g.class_rank?`<span class="epill epill-gray">Rank #${g.class_rank}</span>`:''}
-        ${g.major?`<span class="epill epill-gray" style="font-family:inherit">${g.major}</span>`:''}
-        ${g.sport==='yes'?`<span class="epill epill-gray" style="font-family:inherit">🏅 Recruited</span>`:''}
-      </div>
+  el.innerHTML = groups.map(g => {
+    const stPills = [
+      `<span class="epill epill-gray">UW ${g.gpa}</span>`,
+      g.gpa_weighted?`<span class="epill epill-gray">W ${g.gpa_weighted}</span>`:'',
+      g.sat?`<span class="epill epill-gray">SAT ${g.sat}</span>`:'',
+      g.act?`<span class="epill epill-gray">ACT ${g.act}</span>`:'',
+      g.class_rank?`<span class="epill epill-gray">Rank #${g.class_rank}</span>`:'',
+      g.essay_rating?`<span class="epill epill-gray">Essay ${g.essay_rating}/5</span>`:'',
+      g.major?`<span class="epill epill-gray" style="font-family:inherit">${g.major}</span>`:'',
+      g.first_gen==='yes'?`<span class="epill epill-gray" style="font-family:inherit">First-gen</span>`:'',
+    ].filter(Boolean).join('');
+    const dPills = g.colleges.map(c => {
+      const extras = [];
+      if (c.decision_type) extras.push(c.decision_type);
+      if (c.school_type && c.school_type !== 'University') extras.push(c.school_type);
+      if (c.enrolling === 'yes') extras.push('🎓');
+      if (c.scholarship === 'yes') extras.push('💰');
+      if (c.sport === 'yes') extras.push('🏅');
+      const extrasStr = extras.length ? ` <span style="opacity:0.6;font-weight:400">${extras.join(' · ')}</span>` : '';
+      return `<span class="dpill-entry ${PILL_CLASS[c.decision]||'epill-gray'}" style="font-family:inherit">${c.name} — ${c.decision}${extrasStr}</span>`;
+    }).join('');
+    return `<div class="entry-card">
+      <div class="entry-top">${stPills}</div>
       ${g.extracurriculars?`<div class="entry-ecs"><span>Extracurriculars</span><br>${g.extracurriculars}</div>`:''}
-      <div class="entry-decisions">${g.colleges.map(c=>`<span class="dpill-entry ${PILL_CLASS[c.decision]||'epill-gray'}" style="font-family:inherit">${c.name} — ${c.decision}${c.decision_type?` <span style="opacity:0.55;font-weight:400">${c.decision_type}</span>`:''}</span>`).join('')}</div>
-    </div>`).join('');
+      <div class="entry-decisions">${dPills}</div>
+    </div>`;
+  }).join('');
 }
 
 // ── Inline Stats ───────────────────────────────────────────────────────────
