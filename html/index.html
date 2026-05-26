@@ -1058,7 +1058,7 @@ function buildChart(data, animate) {
   cols.forEach((col, i) => {
     const x = PAD.left + i*colW + colW/2, y = PAD.top + plotH + 22;
     const short = shortenForChart(col);
-    svg += `<text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onmouseover="setWaveCol(${i})" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title>${short}</text>`;
+    svg += `<text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onmouseover="setWaveCol(${i})" onmouseout="clearWave()" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title>${short}</text>`;
   });
 
   filtered.forEach((r, ri) => {
@@ -1151,9 +1151,9 @@ function updateDotHighlight(colIdx) {
     }
   });
 }
-let _waveMode = 'none', _spotClearTimer = 0;
+let _waveMode = 'none', _clearWaveTimer = 0;
 function setWaveCol(idx) {
-  if (_spotClearTimer) { clearTimeout(_spotClearTimer); _spotClearTimer = 0; }
+  if (_clearWaveTimer) { clearTimeout(_clearWaveTimer); _clearWaveTimer = 0; }
   if (idx === _lastWaveIdx && _waveMode === 'wave') return;
   _lastWaveIdx = idx;
   _waveMode = 'wave';
@@ -1161,22 +1161,24 @@ function setWaveCol(idx) {
   _waveRaf = requestAnimationFrame(() => chartWave(idx));
 }
 function setSpotCol(idx) {
-  if (_spotClearTimer) { clearTimeout(_spotClearTimer); _spotClearTimer = 0; }
+  if (_clearWaveTimer) { clearTimeout(_clearWaveTimer); _clearWaveTimer = 0; }
   if (idx === _lastWaveIdx && _waveMode === 'spot') return;
   _lastWaveIdx = idx;
   _waveMode = 'spot';
   if (_waveRaf) cancelAnimationFrame(_waveRaf);
   _waveRaf = requestAnimationFrame(() => chartSpot(idx));
 }
-function clearSpot() {
-  if (_waveMode !== 'spot') return;
-  if (_spotClearTimer) clearTimeout(_spotClearTimer);
-  _spotClearTimer = setTimeout(() => {
-    _spotClearTimer = 0;
+function clearWave() {
+  if (_waveMode === 'none') return;
+  if (_clearWaveTimer) clearTimeout(_clearWaveTimer);
+  _clearWaveTimer = setTimeout(() => {
+    _clearWaveTimer = 0;
     _lastWaveIdx = -2; _waveMode = 'none';
     chartWave(-1);
   }, 60);
 }
+// kept for backward compat
+function clearSpot() { clearWave(); }
 function chartSpot(idx) {
   const labels = document.querySelectorAll('[id^="col-lbl-"]');
   if (!labels.length) return;
