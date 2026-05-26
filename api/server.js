@@ -75,6 +75,8 @@ function createApp(dbPath) {
       "ALTER TABLE submissions ADD COLUMN decision_type TEXT",
       "ALTER TABLE submissions ADD COLUMN essay_rating INTEGER",
       "ALTER TABLE submissions ADD COLUMN school_type TEXT",
+      "ALTER TABLE submissions ADD COLUMN enrolling TEXT",
+      "ALTER TABLE submissions ADD COLUMN scholarship TEXT",
     ].forEach(sql => db.run(sql, err => {
       if (err && !err.message.includes('duplicate column')) console.error(sql, err.message);
     }));
@@ -147,8 +149,8 @@ function createApp(dbPath) {
               INSERT OR REPLACE INTO submissions
                 (session_id, college_name, grad_year, gpa, gpa_weighted, sat, act,
                  class_rank, major, extracurriculars, sport, first_gen, decision,
-                 decision_type, essay_rating, school_type, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                 decision_type, essay_rating, school_type, enrolling, scholarship, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             `);
             stmt.run([
               session_id, college.college_name,
@@ -159,6 +161,8 @@ function createApp(dbPath) {
               college.decision || null, college.decision_type || null,
               college.essay_rating ? parseInt(college.essay_rating) : null,
               college.school_type || 'University',
+              college.enrolling || null,
+              college.scholarship || null,
             ], err => {
               if (err) { console.error('Insert error:', err); db.run('ROLLBACK'); return res.status(500).json({ error: err.message }); }
               if (++done === colleges.length) {

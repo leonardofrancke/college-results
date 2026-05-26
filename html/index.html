@@ -1057,16 +1057,15 @@ function chartWave(fIdx) {
     return;
   }
   const base = parseFloat(labels[0].getAttribute('font-size') || 10);
-  const peak = Math.max(base + 10, 19);
-  const RAD = 4; // wave radius in column-widths
+  const peak = Math.max(base + 16, 26);
   labels.forEach((el, i) => {
     const dist = Math.abs(i - fIdx);
-    let factor;
-    if (dist >= RAD) factor = 0;
-    else factor = 0.5 * (1 + Math.cos(Math.PI * dist / RAD)); // 1 at d=0, 0.5 at d=RAD/2, 0 at d=RAD
+    // Sharp gaussian: dramatic falloff. d=0:1, d=1:0.58, d=2:0.11, d=3:~0
+    const factor = dist > 3 ? 0 : Math.exp(-(dist*dist) / 1.8);
     el.style.fontSize = (base + (peak - base) * factor) + 'px';
-    if (dist < 0.6) { el.style.fill = '#1c1c1c'; el.style.fontWeight = '500'; }
-    else if (dist < 2) { el.style.fill = '#333'; el.style.fontWeight = ''; }
+    if (dist < 0.6) { el.style.fill = '#1c1c1c'; el.style.fontWeight = '600'; }
+    else if (dist < 1.6) { el.style.fill = '#222'; el.style.fontWeight = '500'; }
+    else if (dist < 2.5) { el.style.fill = '#444'; el.style.fontWeight = ''; }
     else { el.style.fill = ''; el.style.fontWeight = ''; }
   });
 }
@@ -1374,6 +1373,29 @@ function renderStatsInline(data) {
     </div>`;
   }).join('');
 
+  // Enrollment yield
+  const enrollMap = new Map();
+  data.forEach(r => {
+    if (r.enrolling === 'yes' && r.college_name) {
+      enrollMap.set(r.college_name, (enrollMap.get(r.college_name)||0) + 1);
+    }
+  });
+  const enrollList = [...enrollMap.entries()].sort((a,b)=>b[1]-a[1]);
+  const enrollTotal = [...enrollMap.values()].reduce((s,n)=>s+n,0);
+  const enrollHTML = enrollList.length ? enrollList.map(([name,n]) => {
+    const pct = enrollTotal ? Math.round(n/enrollTotal*100) : 0;
+    return `<div class="sp-bar-row">
+      <div class="sp-bar-label" title="${name}">${name}</div>
+      <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${pct}%;background:#2e9b66;opacity:0.7"></div></div>
+      <div class="sp-bar-val">${n}</div>
+    </div>`;
+  }).join('') : '';
+
+  // Scholarship rate
+  const scholarshipCount = data.filter(r => r.scholarship === 'yes').length;
+  const acceptedCount = data.filter(r => r.decision === 'Accepted').length;
+  const scholarshipPct = acceptedCount ? Math.round(scholarshipCount/acceptedCount*100) : 0;
+
   // App type acceptance
   const appTypes = ['EA','ED','RD','Rolling'];
   const appStat = {};
@@ -1416,6 +1438,17 @@ function renderStatsInline(data) {
         <h3>Acceptance Rate by GPA</h3>
         ${bracketHTML}
       </div>
+      ${enrollList.length ? `<div class="sp-card sp-card-wide">
+        <h3>Where We're Enrolling</h3>
+        ${enrollHTML}
+      </div>` : ''}
+      ${acceptedCount ? `<div class="sp-card">
+        <h3>Scholarship Rate</h3>
+        <div style="display:flex;align-items:baseline;gap:14px;margin-top:4px;">
+          <div class="sp-big-num" style="color:#2e9b66;">${scholarshipPct}%</div>
+          <div class="sp-big-label">${scholarshipCount} of ${acceptedCount} acceptances<br>came with a scholarship</div>
+        </div>
+      </div>` : ''}
       <div class="sp-card">
         <h3>Decisions</h3>
         ${decHTML}
@@ -1432,7 +1465,7 @@ function getKnownColleges() {
   const submitted = allData.map(r=>r.college_name).filter(Boolean);
   return [...new Set([...ALL_COLLEGES, ...submitted])].sort();
 }
-function addCollege(name='', decision='Accepted', decisionType='RD', schoolType='University') {
+function addCollege(name='', decision='Accepted', decisionType='RD', schoolType='University', enrolling='', scholarship='') {
   const id = collegeCount++;
   const div = document.createElement('div');
   div.id = `cr-${id}`;
@@ -1466,7 +1499,7 @@ function addCollege(name='', decision='Accepted', decisionType='RD', schoolType=
       </select>
     </div>
     <button class="college-row-remove" onclick="removeCollege('cr-${id}')">×</button>
-    <div style="flex-basis:100%;display:flex;gap:8px;align-items:center;margin-top:-2px;margin-left:2px;">
+    <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-top:-2px;margin-left:2px;">
       <label style="font-size:11px;color:#777;text-transform:uppercase;letter-spacing:0.05em;">School type</label>
       <select id="st-${id}" style="${inputStyle}padding:5px 10px;font-size:13px;"
         onfocus="this.style.borderColor='#a8b8d8';this.style.boxShadow='0 0 0 3px rgba(79,114,196,0.08)'"
@@ -1475,6 +1508,12 @@ function addCollege(name='', decision='Accepted', decisionType='RD', schoolType=
         <option value="Community"${schoolType==='Community'?' selected':''}>Community college</option>
         <option value="Trade"${schoolType==='Trade'?' selected':''}>Trade / vocational school</option>
       </select>
+      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="en-${id}" ${enrolling==='yes'?'checked':''} style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;"> Enrolling here
+      </label>
+      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;"> Got scholarship
+      </label>
     </div>`;
   document.getElementById('college-inputs').appendChild(div);
 }
@@ -1534,7 +1573,7 @@ async function loadExistingSubmission() {
       document.getElementById('f-first-gen').checked = r.first_gen==='yes';
       document.getElementById('f-year').value = '2026';
       if (r.essay_rating) document.getElementById('f-essay').value = r.essay_rating;
-      data.forEach(row => addCollege(row.college_name||'', row.decision||'Accepted', row.decision_type||'RD', row.school_type||'University'));
+      data.forEach(row => addCollege(row.college_name||'', row.decision||'Accepted', row.decision_type||'RD', row.school_type||'University', row.enrolling||'', row.scholarship||''));
       document.getElementById('submit-btn').textContent = 'Update Submission';
       document.getElementById('form-title').textContent = 'Edit your Submission';
       document.getElementById('form-subtitle').textContent = 'Update your results below.';
@@ -1580,6 +1619,8 @@ async function submitForm() {
       essay_rating: document.getElementById('f-essay').value||null,
       decision_type: document.getElementById(`cat-${i}`)?.value||null,
       school_type: document.getElementById(`st-${i}`)?.value||'University',
+      enrolling: document.getElementById(`en-${i}`)?.checked ? 'yes' : null,
+      scholarship: document.getElementById(`sc-${i}`)?.checked ? 'yes' : null,
       college_name: cn.value.trim(), decision: cd.value, session_id: SESSION_ID
     });
   }
