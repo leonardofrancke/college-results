@@ -993,8 +993,8 @@ function buildChart(data, animate) {
 
   const isMobile = window.innerWidth <= 600;
   const isWide = window.innerWidth >= 1180;
-  const H = isMobile ? 340 : isWide ? 620 : 520;
-  const PAD = {top:20, right:20, bottom: isMobile?150:180, left:58};
+  const H = isMobile ? 380 : isWide ? 680 : 580;
+  const PAD = {top:20, right:20, bottom: isMobile?190:230, left:58};
   const containerW = el.closest('.chart-area').clientWidth - 40;
   const minColW = cols.length > 28 ? 26 : cols.length > 18 ? 34 : cols.length > 12 ? 44 : 56;
   const colW = Math.max(containerW / cols.length, minColW);
@@ -1517,10 +1517,8 @@ function renderStatsInline(data) {
       </div>` : ''}
       ${acceptedCount ? `<div class="sp-card">
         <h3>Scholarship Rate</h3>
-        <div style="display:flex;align-items:baseline;gap:14px;margin-top:4px;">
-          <div class="sp-big-num" style="color:#2e9b66;">${scholarshipPct}%</div>
-          <div class="sp-big-label">${scholarshipCount} of ${acceptedCount} acceptances<br>came with a scholarship</div>
-        </div>
+        <div class="sp-big-num" style="color:#2e9b66;">${scholarshipPct}%</div>
+        <div class="sp-big-label" style="margin-top:8px;">${scholarshipCount} of ${acceptedCount} acceptance${acceptedCount!==1?'s':''} came with a scholarship</div>
       </div>` : ''}
       <div class="sp-card">
         <h3>Decisions</h3>
@@ -1581,14 +1579,14 @@ function addCollege(name='', decision='Accepted', decisionType='RD', schoolType=
         <option value="Community"${schoolType==='Community'?' selected':''}>Community college</option>
         <option value="Trade"${schoolType==='Trade'?' selected':''}>Trade / vocational school</option>
       </select>
-      <label style="font-size:14px;color:#444;display:flex;align-items:center;gap:7px;cursor:pointer;">
-        <input type="checkbox" id="en-${id}" ${enrolling==='yes'?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"> Enrolling here
+      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="en-${id}" ${enrolling==='yes'?'checked':''} style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer;"> Enrolling here
       </label>
-      <label style="font-size:14px;color:#444;display:flex;align-items:center;gap:7px;cursor:pointer;">
-        <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"> Got scholarship
+      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer;"> Got scholarship
       </label>
-      <label style="font-size:14px;color:#444;display:flex;align-items:center;gap:7px;cursor:pointer;">
-        <input type="checkbox" id="sp-${id}" ${sport==='yes'?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"> Sports recruitment
+      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="sp-${id}" ${sport==='yes'?'checked':''} style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer;"> Sports recruitment
       </label>
     </div>`;
   document.getElementById('college-inputs').appendChild(div);
