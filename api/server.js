@@ -13,19 +13,10 @@ function makeToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
-// In-memory token store: token → { username, expires }
-const tokens = new Map();
-const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 h
-
-function requireAdmin(req, res, next) {
-  const tok = req.headers['x-admin-token'];
-  if (!tok) return res.status(401).json({ error: 'No token' });
-  const session = tokens.get(tok);
-  if (!session) return res.status(401).json({ error: 'Invalid token' });
-  if (Date.now() > session.expires) { tokens.delete(tok); return res.status(401).json({ error: 'Token expired' }); }
-  req.adminUser = session.username;
-  next();
-}
+// Admin tokens are persisted in the DB (see admin_tokens table) so they
+// survive server restarts; TTL bumped to 90 days so admins don't have
+// to log in daily.
+const TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 d
 
 // ── App factory ────────────────────────────────────────────────────────────
 function createApp(dbPath) {
@@ -111,7 +102,35 @@ function createApp(dbPath) {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Admin auth tokens (persisted so they survive restarts)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS admin_tokens (
+        token TEXT PRIMARY KEY,
+        username TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    // Best-effort cleanup of expired tokens on startup
+    db.run('DELETE FROM admin_tokens WHERE expires_at < ?', [Date.now()]);
   });
+
+  // ── Auth middleware ────────────────────────────────────────────────────
+  function requireAdmin(req, res, next) {
+    const tok = req.headers['x-admin-token'];
+    if (!tok) return res.status(401).json({ error: 'No token' });
+    db.get('SELECT username, expires_at FROM admin_tokens WHERE token = ?', [tok], (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!row) return res.status(401).json({ error: 'Invalid token' });
+      if (Date.now() > row.expires_at) {
+        db.run('DELETE FROM admin_tokens WHERE token = ?', [tok]);
+        return res.status(401).json({ error: 'Token expired' });
+      }
+      req.adminUser = row.username;
+      next();
+    });
+  }
 
   // ── Public: submissions ────────────────────────────────────────────────
   app.get('/api/submissions', (req, res) => {
@@ -234,8 +253,12 @@ function createApp(dbPath) {
       const hash = hashPassword(password, user.salt);
       if (hash !== user.password_hash) return res.status(401).json({ error: 'Invalid credentials' });
       const tok = makeToken();
-      tokens.set(tok, { username, expires: Date.now() + TOKEN_TTL_MS });
-      res.json({ token: tok, username });
+      const expiresAt = Date.now() + TOKEN_TTL_MS;
+      db.run('INSERT INTO admin_tokens (token, username, expires_at) VALUES (?, ?, ?)',
+        [tok, username, expiresAt], err2 => {
+          if (err2) return res.status(500).json({ error: err2.message });
+          res.json({ token: tok, username });
+        });
     });
   });
 
@@ -283,12 +306,18 @@ function createApp(dbPath) {
     const secret = req.headers['x-admin-secret'];
     const tok    = req.headers['x-admin-token'];
     const validSecret = secret && secret === process.env.ADMIN_SECRET;
-    const validToken  = tok && tokens.has(tok) && Date.now() < tokens.get(tok).expires;
-    if (!validSecret && !validToken) return res.status(403).json({ error: 'Forbidden' });
-    db.run('DELETE FROM submissions WHERE id = ?', [req.params.id], function(err) {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!this.changes) return res.status(404).json({ error: 'Not found' });
-      res.json({ success: true });
+    const doDelete = () => {
+      db.run('DELETE FROM submissions WHERE id = ?', [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!this.changes) return res.status(404).json({ error: 'Not found' });
+        res.json({ success: true });
+      });
+    };
+    if (validSecret) return doDelete();
+    if (!tok) return res.status(403).json({ error: 'Forbidden' });
+    db.get('SELECT expires_at FROM admin_tokens WHERE token = ?', [tok], (err, row) => {
+      if (!row || Date.now() >= row.expires_at) return res.status(403).json({ error: 'Forbidden' });
+      doDelete();
     });
   });
 
