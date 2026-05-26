@@ -958,6 +958,19 @@ function onMinSubsChange(v) {
   buildChart(scatterData, false);
 }
 
+function shortenForChart(name) {
+  if (!name) return '';
+  let s = name
+    .replace(/^California State University,?\s*/i, 'CSU ')
+    .replace(/^Cal\s+State\s+/i, 'CS ')
+    .replace(/^California State\s+/i, 'CS ')
+    .replace(/^University of California[, ]\s*/i, 'UC ')
+    .replace(/^Saint Mary's College.*/i, "Saint Mary's")
+    .replace(/^University of\s+/i, 'U. ');
+  if (s.length > 16) s = s.slice(0, 15).trimEnd() + '…';
+  return s;
+}
+
 function seededJitter(seed, range) {
   let h = 0;
   for (let i=0; i<seed.length; i++) h = Math.imul(h^seed.charCodeAt(i), 0x9e3779b9)|0;
@@ -996,7 +1009,7 @@ function buildChart(data, animate) {
   const baseLblSize = cols.length > 40 ? 8 : cols.length > 28 ? 9 : cols.length > 18 ? 10 : cols.length > 12 ? 11 : 13;
   // Estimate the vertical extent of the longest rotated college name so PAD.bottom
   // fits without leaving big empty space. sin(38°) ~= 0.616; char width ~= 0.55em.
-  const maxNameLen = Math.max(12, ...cols.map(c => c.length));
+  const maxNameLen = Math.max(10, ...cols.map(c => shortenForChart(c).length));
   const lblPxPerChar = (baseLblSize + 6) * 0.55; // include some hover headroom
   const labelExtent = Math.ceil(maxNameLen * lblPxPerChar * 0.616);
   const padBottom = Math.max(100, 22 + labelExtent + 10);
@@ -1022,7 +1035,8 @@ function buildChart(data, animate) {
 
   cols.forEach((col, i) => {
     const x = PAD.left + i*colW + colW/2, y = PAD.top + plotH + 22;
-    svg += `<text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title>${col}</text>`;
+    const short = shortenForChart(col);
+    svg += `<text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title>${short}</text>`;
   });
 
   filtered.forEach((r, ri) => {
