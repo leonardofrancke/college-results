@@ -1006,7 +1006,9 @@ function buildChart(data, animate) {
 
   const isMobile = window.innerWidth <= 600;
   const isWide = window.innerWidth >= 1180;
-  const baseLblSize = cols.length > 40 ? 8 : cols.length > 28 ? 9 : cols.length > 18 ? 10 : cols.length > 12 ? 11 : 13;
+  const n = cols.length;
+  const baseLblSize = n > 55 ? 7 : n > 40 ? 8 : n > 28 ? 9 : n > 18 ? 10 : n > 12 ? 11 : n > 8 ? 12 : 13;
+  const dotR = n > 40 ? 4 : n > 25 ? 5 : 6;
   // Estimate the vertical extent of the longest rotated college name so PAD.bottom
   // fits without leaving big empty space. sin(38°) ~= 0.616; char width ~= 0.55em.
   const maxNameLen = Math.max(10, ...cols.map(c => shortenForChart(c).length));
@@ -1017,7 +1019,7 @@ function buildChart(data, animate) {
   const H = 20 + plotHTarget + padBottom;
   const PAD = {top:20, right:20, bottom: padBottom, left:58};
   const containerW = el.closest('.chart-area').clientWidth - 40;
-  const minColW = cols.length > 28 ? 26 : cols.length > 18 ? 34 : cols.length > 12 ? 44 : 56;
+  const minColW = n > 50 ? 14 : n > 35 ? 18 : n > 25 ? 22 : n > 18 ? 30 : n > 12 ? 40 : 56;
   const colW = Math.max(containerW / cols.length, minColW);
   const W = Math.max(PAD.left + PAD.right + colW * cols.length, containerW, 400);
   const plotW = W - PAD.left - PAD.right, plotH = H - PAD.top - PAD.bottom;
@@ -1048,7 +1050,7 @@ function buildChart(data, animate) {
     const y = by.toFixed(2);
     const col = DOT_COLORS[r.decision] || '#888';
     const dimmed = (activeFilter && r.decision !== activeFilter) || (slmFilter && !slmMatches(r));
-    svg += `<circle cx="${x}" cy="${y}" r="6" fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${dimmed?0.1:1}" style="cursor:pointer;transition:opacity 0.2s;" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
+    svg += `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${dimmed?0.1:1}" style="cursor:pointer;transition:opacity 0.2s;" onclick="handleDotClick(event,${data.indexOf(r)})"/>`;
   });
   svg += '</svg>';
   el.innerHTML = svg;
