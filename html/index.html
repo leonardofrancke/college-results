@@ -993,8 +993,16 @@ function buildChart(data, animate) {
 
   const isMobile = window.innerWidth <= 600;
   const isWide = window.innerWidth >= 1180;
-  const H = isMobile ? 380 : isWide ? 680 : 580;
-  const PAD = {top:20, right:20, bottom: isMobile?190:230, left:58};
+  const baseLblSize = cols.length > 40 ? 8 : cols.length > 28 ? 9 : cols.length > 18 ? 10 : cols.length > 12 ? 11 : 13;
+  // Estimate the vertical extent of the longest rotated college name so PAD.bottom
+  // fits without leaving big empty space. sin(38°) ~= 0.616; char width ~= 0.55em.
+  const maxNameLen = Math.max(12, ...cols.map(c => c.length));
+  const lblPxPerChar = (baseLblSize + 6) * 0.55; // include some hover headroom
+  const labelExtent = Math.ceil(maxNameLen * lblPxPerChar * 0.616);
+  const padBottom = Math.max(100, 22 + labelExtent + 10);
+  const plotHTarget = isMobile ? 220 : isWide ? 420 : 320;
+  const H = 20 + plotHTarget + padBottom;
+  const PAD = {top:20, right:20, bottom: padBottom, left:58};
   const containerW = el.closest('.chart-area').clientWidth - 40;
   const minColW = cols.length > 28 ? 26 : cols.length > 18 ? 34 : cols.length > 12 ? 44 : 56;
   const colW = Math.max(containerW / cols.length, minColW);
@@ -1012,9 +1020,8 @@ function buildChart(data, animate) {
   svg += `<text x="13" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="13" fill="${tickC}" font-family="Inter,sans-serif" transform="rotate(-90,13,${PAD.top+plotH/2})">${yLabel}</text>`;
   svg += `<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="${axisC}" stroke-width="1"/>`;
 
-  const baseLblSize = cols.length > 40 ? 8 : cols.length > 28 ? 9 : cols.length > 18 ? 10 : cols.length > 12 ? 11 : 13;
   cols.forEach((col, i) => {
-    const x = PAD.left + i*colW + colW/2, y = PAD.top + plotH + 28;
+    const x = PAD.left + i*colW + colW/2, y = PAD.top + plotH + 22;
     svg += `<text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title>${col}</text>`;
   });
 
