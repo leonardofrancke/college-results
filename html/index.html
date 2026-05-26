@@ -136,7 +136,15 @@
   .chart-body { padding: 16px 20px 12px; }
   #chart-scroll-wrap { width: 100%; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; border-radius: 4px; }
   #chart-scroll-wrap::-webkit-scrollbar { display: none; }
-  .chart-scroll-hint { display: none; align-items: center; justify-content: center; gap: 6px; padding: 6px 0 2px; font-size: 13px; color: #888; }
+  .chart-scroll-outer { position: relative; }
+  .chart-scroll-outer.has-overflow::after {
+    content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 56px;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.96));
+    pointer-events: none; border-radius: 0 4px 4px 0;
+    animation: scroll-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes scroll-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.1; } }
+  [id^="col-lbl-"] { transition: font-size 0.12s ease; }
   .chart-axis-note { font-size: 13px; color: #666; margin-top: 6px; font-family: var(--mono); }
 
   /* ── DOT TOOLTIP ── */
@@ -445,11 +453,8 @@
       </div>
       <div id="legend"></div>
       <div class="chart-body">
-        <div id="chart-scroll-wrap"><div id="chart-main"></div></div>
-        <div class="chart-scroll-hint" id="chart-scroll-hint">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8L10 12" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span>Scroll to see all colleges</span>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="chart-scroll-outer" id="chart-scroll-outer">
+          <div id="chart-scroll-wrap"><div id="chart-main"></div></div>
         </div>
         <div class="chart-axis-note">Sorted by submissions · click a college name for details</div>
       </div>
@@ -622,6 +627,18 @@ const PILL_CLASS = {Accepted:'dp-acc',Rejected:'dp-den',Waitlisted:'dp-wl',Defer
 
 // ── College categorization ─────────────────────────────────────────────────
 const IVY_SET = new Set(['Harvard','Princeton','Yale','Columbia','Brown','Dartmouth','Cornell','Penn','University of Pennsylvania','UPenn']);
+const T20_SET = new Set([
+  'Harvard','Princeton','MIT','Stanford','Yale','Caltech','UChicago','Johns Hopkins',
+  'Penn','UPenn','University of Pennsylvania','Duke','Northwestern','Columbia','Cornell',
+  'Brown','Dartmouth','Vanderbilt','Rice','Notre Dame','WashU','UCLA','UC Berkeley',
+]);
+const LAC_SET = new Set([
+  'Swarthmore','Amherst','Williams','Bowdoin','Middlebury','Colby','Bates','Hamilton',
+  'Colgate','Vassar','Wesleyan','Haverford','Bryn Mawr','Wellesley','Barnard','Smith',
+  'Mount Holyoke','Davidson','Oberlin','Kenyon','Grinnell','Carleton','Macalester','Reed',
+  'Whitman','Bucknell','Lafayette','Dickinson','Skidmore','Trinity','Connecticut College',
+  'Pomona','Claremont McKenna','Scripps','Pitzer','Harvey Mudd','Occidental',
+]);
 const UC_RE = /^UC |^University of California/i;
 const CSU_RE = /Cal State|California State|San Jose State|San Francisco State|Fresno State|Sacramento State|Chico State|Humboldt State|Sonoma State|Cal Maritime|Cal Poly/i;
 const PUBLIC_SET = new Set([
@@ -644,16 +661,22 @@ function isPublic(name) {
   if (CSU_RE.test(name)) return true;
   return PUBLIC_SET.has(name);
 }
-function matchesCollegeFilter(name, filter) {
+function matchesCollegeFilter(row, filter) {
+  const name = row.college_name;
+  const st = (row.school_type || 'University');
   if (filter === 'All') return true;
+  if (filter === 'T20') return T20_SET.has(name);
   if (filter === 'Ivies') return IVY_SET.has(name);
+  if (filter === 'LACs') return LAC_SET.has(name);
   if (filter === 'UCs') return UC_RE.test(name);
   if (filter === 'CSUs') return CSU_RE.test(name);
-  if (filter === 'Public') return isPublic(name);
-  if (filter === 'Private') return !isPublic(name);
+  if (filter === 'Public') return st === 'University' && isPublic(name);
+  if (filter === 'Private') return st === 'University' && !isPublic(name);
+  if (filter === 'Community') return st === 'Community';
+  if (filter === 'Trade') return st === 'Trade';
   return true;
 }
-const COLLEGE_FILTER_TABS = ['All','Ivies','UCs','CSUs','Public','Private'];
+const COLLEGE_FILTER_TABS = ['All','T20','Ivies','LACs','UCs','CSUs','Public','Private','Community','Trade'];
 
 const COLLEGE_ACCEPT_RATES = {
   'Harvard':3,'Princeton':4,'MIT':4,'Yale':5,'Columbia':4,'Stanford':4,'Caltech':4,
@@ -803,7 +826,7 @@ function renderResults() {
   const allYear = allData.filter(r => r.grad_year == 2026);
   const d = activeCollegeFilter === 'All'
     ? allYear
-    : allYear.filter(r => matchesCollegeFilter(r.college_name, activeCollegeFilter));
+    : allYear.filter(r => matchesCollegeFilter(r, activeCollegeFilter));
   renderStats(d);
   scatterData = d;
   buildChart(d, false);
@@ -926,9 +949,10 @@ function buildChart(data, animate) {
   svg += `<text x="13" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="13" fill="${tickC}" font-family="Inter,sans-serif" transform="rotate(-90,13,${PAD.top+plotH/2})">${yLabel}</text>`;
   svg += `<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="${axisC}" stroke-width="1"/>`;
 
+  const baseLblSize = cols.length > 30 ? 9 : cols.length > 18 ? 10 : 13;
   cols.forEach((col, i) => {
     const x = PAD.left + i*colW + colW/2, y = PAD.top + plotH + 10;
-    svg += `<text x="${x}" y="${y}" text-anchor="end" font-size="13" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>Click for ${col} details</title>${col}</text>`;
+    svg += `<text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onmouseover="colHover(${i},true)" onmouseout="colHover(${i},false)" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title>${col}</text>`;
   });
 
   filtered.forEach((r, ri) => {
@@ -958,9 +982,30 @@ function buildChart(data, animate) {
 
 function updateScrollHint() {
   const wrap = document.getElementById('chart-scroll-wrap');
-  const hint = document.getElementById('chart-scroll-hint');
-  if (!wrap || !hint) return;
-  hint.style.display = wrap.scrollWidth > wrap.clientWidth + 10 ? 'flex' : 'none';
+  const outer = document.getElementById('chart-scroll-outer');
+  if (!wrap || !outer) return;
+  const check = () => {
+    const overflows = wrap.scrollWidth > wrap.clientWidth + 10;
+    const atEnd = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 10;
+    outer.classList.toggle('has-overflow', overflows && !atEnd);
+  };
+  check();
+  wrap.onscroll = check;
+}
+
+function colHover(idx, entering) {
+  const labels = document.querySelectorAll('[id^="col-lbl-"]');
+  if (!labels.length) return;
+  labels.forEach((el, i) => {
+    const dist = Math.abs(i - idx);
+    if (entering) {
+      el.style.fontSize = dist === 0 ? '14px' : dist === 1 ? '12px' : dist === 2 ? '11px' : '';
+      el.style.fill = dist === 0 ? '#1c1c1c' : dist <= 2 ? '#444' : '#aaa';
+    } else {
+      el.style.fontSize = '';
+      el.style.fill = '';
+    }
+  });
 }
 
 // ── Dot tooltip ────────────────────────────────────────────────────────────
@@ -1218,18 +1263,35 @@ function renderStatsInline(data) {
       <div class="sp-bar-val">${n}</div>
     </div>`).join('') : '<span style="font-size:13px;color:#888;">No major data yet</span>';
 
-  // Averages
-  const studentGPAs = new Map(), studentGPAW = new Map();
-  let satSum=0, actSum=0, satN=0, actN=0;
+  // Acceptance rate by GPA bracket
+  const gpaBrackets = [
+    {label:'< 2.5',  lo:0,    hi:2.5},
+    {label:'2.5–3.0',lo:2.5,  hi:3.0},
+    {label:'3.0–3.5',lo:3.0,  hi:3.5},
+    {label:'3.5–4.0',lo:3.5,  hi:4.0},
+    {label:'4.0+',   lo:4.0,  hi:99},
+  ];
+  const bracketStats = gpaBrackets.map(b => ({...b, apps:0, acc:0}));
   data.forEach(r => {
-    const k = r.session_id||`${r.gpa}|${r.sat}`;
-    if (!studentGPAs.has(k) && r.gpa) studentGPAs.set(k, parseFloat(r.gpa));
-    if (!studentGPAW.has(k) && r.gpa_weighted) studentGPAW.set(k, parseFloat(r.gpa_weighted));
-    if (r.sat) { satSum+=r.sat; satN++; }
-    if (r.act) { actSum+=r.act; actN++; }
+    const g = parseFloat(r.gpa);
+    if (isNaN(g)) return;
+    const b = bracketStats.find(x => g >= x.lo && g < x.hi);
+    if (!b) return;
+    b.apps++;
+    if (r.decision === 'Accepted') b.acc++;
   });
-  const gpaN = studentGPAs.size, gpaSum = [...studentGPAs.values()].reduce((s,v)=>s+v,0);
-  const gpaWN = studentGPAW.size, gpaWSum = [...studentGPAW.values()].reduce((s,v)=>s+v,0);
+  const maxBracketApps = Math.max(1, ...bracketStats.map(b => b.apps));
+  const bracketHTML = bracketStats.map(b => {
+    const pct = b.apps ? Math.round(b.acc/b.apps*100) : null;
+    const widthPct = Math.round(b.apps/maxBracketApps*100);
+    const pctColor = pct === null ? '#aaa' : pct >= 50 ? '#2e9b66' : pct >= 30 ? '#a07030' : '#c84040';
+    return `<div class="sp-bar-row">
+      <div class="sp-bar-label" style="min-width:78px;">${b.label}</div>
+      <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${widthPct}%;background:${pctColor};opacity:0.7"></div></div>
+      <div class="sp-bar-val" style="min-width:46px;">${b.apps} apps</div>
+      <div style="font-size:13px;color:${pctColor};font-family:var(--mono);min-width:46px;text-align:right;">${pct!==null?pct+'%':'—'}</div>
+    </div>`;
+  }).join('');
 
   // App type acceptance
   const appTypes = ['EA','ED','RD','Rolling'];
@@ -1269,6 +1331,10 @@ function renderStatsInline(data) {
           ${majorsHTML}
         </div>
       </div>
+      <div class="sp-card sp-card-wide">
+        <h3>Acceptance Rate by GPA</h3>
+        ${bracketHTML}
+      </div>
       <div class="sp-card">
         <h3>Decisions</h3>
         ${decHTML}
@@ -1276,15 +1342,6 @@ function renderStatsInline(data) {
       <div class="sp-card">
         <h3>Acceptance by Application Type</h3>
         <div class="sp-type-row">${appHTML}</div>
-      </div>
-      <div class="sp-card">
-        <h3>Averages</h3>
-        <div class="sp-2col">
-          <div><div class="sp-big-num">${gpaN?(gpaSum/gpaN).toFixed(2):'—'}</div><div class="sp-big-label">Avg UW GPA</div></div>
-          <div><div class="sp-big-num">${gpaWN?(gpaWSum/gpaWN).toFixed(2):'—'}</div><div class="sp-big-label">Avg W GPA</div></div>
-          <div><div class="sp-big-num">${satN?Math.round(satSum/satN):'—'}</div><div class="sp-big-label">Avg SAT</div></div>
-          <div><div class="sp-big-num">${actN?Math.round(actSum/actN):'—'}</div><div class="sp-big-label">Avg ACT</div></div>
-        </div>
       </div>
     </div>`;
 }
@@ -1294,31 +1351,31 @@ function getKnownColleges() {
   const submitted = allData.map(r=>r.college_name).filter(Boolean);
   return [...new Set([...ALL_COLLEGES, ...submitted])].sort();
 }
-function addCollege(name='', decision='Accepted', decisionType='RD') {
+function addCollege(name='', decision='Accepted', decisionType='RD', schoolType='University') {
   const id = collegeCount++;
   const div = document.createElement('div');
   div.id = `cr-${id}`;
   div.className = 'college-row';
-  div.style.cssText = 'animation:none;opacity:1;';
-  setTimeout(() => { div.style.cssText = ''; }, 50);
+  div.style.cssText = 'animation:none;opacity:1;flex-wrap:wrap;';
+  setTimeout(() => { div.style.cssText = 'flex-wrap:wrap;'; }, 50);
+  const inputStyle = "padding:9px 12px;border:1px solid #e4e4e2;border-radius:6px;font-size:14px;font-family:inherit;color:#1c1c1c;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;";
   div.innerHTML = `
     <div class="college-row-name">
       <input type="text" id="cn-${id}" placeholder="College name" value="${name.replace(/"/g,'&quot;')}" autocomplete="off"
-        style="width:100%;padding:9px 12px;border:1px solid #e4e4e2;border-radius:6px;font-size:14px;font-family:inherit;color:#1c1c1c;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;"
+        style="width:100%;${inputStyle}"
         oninput="showSuggestions('cn-${id}')" onblur="setTimeout(()=>hideSuggestions('cn-${id}'),350)"
-        onfocus="this.style.borderColor='#a8b8d8';this.style.boxShadow='0 0 0 3px rgba(79,114,196,0.08)'"
-        onblur2="this.style.borderColor='#e4e4e2';this.style.boxShadow='none'">
+        onfocus="this.style.borderColor='#a8b8d8';this.style.boxShadow='0 0 0 3px rgba(79,114,196,0.08)'">
       <div class="sug-drop" id="sug-${id}"></div>
     </div>
     <div class="college-row-decision">
-      <select id="cd-${id}" style="width:100%;padding:9px 12px;border:1px solid #e4e4e2;border-radius:6px;font-size:14px;font-family:inherit;color:#1c1c1c;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;"
+      <select id="cd-${id}" style="width:100%;${inputStyle}"
         onfocus="this.style.borderColor='#a8b8d8';this.style.boxShadow='0 0 0 3px rgba(79,114,196,0.08)'"
         onblur="this.style.borderColor='#e4e4e2';this.style.boxShadow='none'">
         ${DECISIONS.map(d=>`<option${d===decision?' selected':''}>${d}</option>`).join('')}
       </select>
     </div>
     <div class="college-row-decision">
-      <select id="cat-${id}" style="width:100%;padding:9px 12px;border:1px solid #e4e4e2;border-radius:6px;font-size:14px;font-family:inherit;color:#1c1c1c;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;"
+      <select id="cat-${id}" style="width:100%;${inputStyle}"
         onfocus="this.style.borderColor='#a8b8d8';this.style.boxShadow='0 0 0 3px rgba(79,114,196,0.08)'"
         onblur="this.style.borderColor='#e4e4e2';this.style.boxShadow='none'">
         <option value="RD"${decisionType==='RD'?' selected':''}>Regular Decision</option>
@@ -1327,7 +1384,17 @@ function addCollege(name='', decision='Accepted', decisionType='RD') {
         <option value="Rolling"${decisionType==='Rolling'?' selected':''}>Rolling</option>
       </select>
     </div>
-    <button class="college-row-remove" onclick="removeCollege('cr-${id}')">×</button>`;
+    <button class="college-row-remove" onclick="removeCollege('cr-${id}')">×</button>
+    <div style="flex-basis:100%;display:flex;gap:8px;align-items:center;margin-top:-2px;margin-left:2px;">
+      <label style="font-size:11px;color:#777;text-transform:uppercase;letter-spacing:0.05em;">School type</label>
+      <select id="st-${id}" style="${inputStyle}padding:5px 10px;font-size:13px;"
+        onfocus="this.style.borderColor='#a8b8d8';this.style.boxShadow='0 0 0 3px rgba(79,114,196,0.08)'"
+        onblur="this.style.borderColor='#e4e4e2';this.style.boxShadow='none'">
+        <option value="University"${schoolType==='University'?' selected':''}>4-year university</option>
+        <option value="Community"${schoolType==='Community'?' selected':''}>Community college</option>
+        <option value="Trade"${schoolType==='Trade'?' selected':''}>Trade / vocational school</option>
+      </select>
+    </div>`;
   document.getElementById('college-inputs').appendChild(div);
 }
 function removeCollege(id) {
@@ -1386,7 +1453,7 @@ async function loadExistingSubmission() {
       document.getElementById('f-first-gen').checked = r.first_gen==='yes';
       document.getElementById('f-year').value = r.grad_year||'';
       if (r.essay_rating) document.getElementById('f-essay').value = r.essay_rating;
-      data.forEach(row => addCollege(row.college_name||'', row.decision||'Accepted', row.decision_type||'RD'));
+      data.forEach(row => addCollege(row.college_name||'', row.decision||'Accepted', row.decision_type||'RD', row.school_type||'University'));
       document.getElementById('submit-btn').textContent = 'Update Submission';
       document.getElementById('form-title').textContent = 'Edit your Submission';
       document.getElementById('form-subtitle').textContent = 'Update your results below.';
@@ -1430,6 +1497,7 @@ async function submitForm() {
       first_gen: document.getElementById('f-first-gen').checked?'yes':null,
       essay_rating: document.getElementById('f-essay').value||null,
       decision_type: document.getElementById(`cat-${i}`)?.value||null,
+      school_type: document.getElementById(`st-${i}`)?.value||'University',
       college_name: cn.value.trim(), decision: cd.value, session_id: SESSION_ID
     });
   }
