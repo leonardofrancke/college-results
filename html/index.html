@@ -38,6 +38,11 @@
   /* ── LAYOUT ── */
   .main-wrap { flex: 1; }
   .content { max-width: 900px; margin: 0 auto; padding: 40px 40px; }
+  /* Widen on larger displays */
+  @media (min-width: 1180px) { .content { max-width: 1060px; } }
+  @media (min-width: 1380px) { .content { max-width: 1200px; } }
+  @media (min-width: 1620px) { .content { max-width: 1340px; } }
+  @media (min-width: 1900px) { .content { max-width: 1480px; } }
 
   /* ── PAGE TRANSITIONS ── */
   .page { display: none; }
@@ -217,7 +222,7 @@
   .dp-wl  { background: #fefce8; color: #a07030; }
   .dp-def { background: #eff6ff; color: var(--accent); }
   .dp-wdr { background: #f8fafc; color: #94a3b8; }
-  .dp-pnd { background: #fdf4ff; color: #9333ea; }
+  .dp-pnd { background: #ccfbf1; color: #0d9488; }
   .empty-state { text-align: center; padding: 3rem 1rem; }
   .empty-icon { font-size: 2rem; margin-bottom: 12px; }
   .empty-state h3 { font-size: 14px; font-weight: 600; color: #1c1c1c; margin-bottom: 6px; }
@@ -338,6 +343,10 @@
   /* ── FOOTER ── */
   footer { border-top: 1px solid #e8e8e6; padding: 24px 40px; background: #1c1c1c; margin-top: auto; }
   .footer-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  @media (min-width: 1180px) { .footer-inner { max-width: 1060px; } }
+  @media (min-width: 1380px) { .footer-inner { max-width: 1200px; } }
+  @media (min-width: 1620px) { .footer-inner { max-width: 1340px; } }
+  @media (min-width: 1900px) { .footer-inner { max-width: 1480px; } }
   .footer-left { font-size: 13px; color: #666; line-height: 1.6; }
   .footer-left strong { color: #aaa; }
   .footer-anon { font-size: 13px; color: #4ade80; display: flex; align-items: center; gap: 6px; }
@@ -622,7 +631,7 @@
 // ── Constants ──────────────────────────────────────────────────────────────
 const DECISIONS = ['Accepted','Rejected','Waitlisted','Deferred','Withdrawn','Pending'];
 const DECISION_ORDER = ['Accepted','Waitlisted','Deferred','Rejected','Withdrawn','Pending'];
-const DOT_COLORS = {Accepted:'#2e9b66',Rejected:'#c84040',Waitlisted:'#a07030',Deferred:'#4f72c4',Withdrawn:'#94a3b8',Pending:'#9333ea'};
+const DOT_COLORS = {Accepted:'#2e9b66',Rejected:'#c84040',Waitlisted:'#a07030',Deferred:'#4f72c4',Withdrawn:'#94a3b8',Pending:'#0d9488'};
 const PILL_CLASS = {Accepted:'dp-acc',Rejected:'dp-den',Waitlisted:'dp-wl',Deferred:'dp-def',Withdrawn:'dp-wdr',Pending:'dp-pnd'};
 
 // ── College categorization ─────────────────────────────────────────────────
@@ -1259,7 +1268,7 @@ function renderStatsInline(data) {
   const majorsHTML = topMajors.length ? topMajors.map(([m,n]) =>
     `<div class="sp-bar-row">
       <div class="sp-bar-label" title="${m}">${m}</div>
-      <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(n/maxMaj*100)}%;background:#9333ea;opacity:0.6"></div></div>
+      <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(n/maxMaj*100)}%;background:#0d9488;opacity:0.7"></div></div>
       <div class="sp-bar-val">${n}</div>
     </div>`).join('') : '<span style="font-size:13px;color:#888;">No major data yet</span>';
 
