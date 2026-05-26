@@ -172,13 +172,25 @@
   #chart-scroll-wrap { width: 100%; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; border-radius: 4px; }
   #chart-scroll-wrap::-webkit-scrollbar { display: none; }
   .chart-scroll-outer { position: relative; }
-  .chart-scroll-outer.has-overflow::after {
-    content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 56px;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.96));
-    pointer-events: none; border-radius: 0 4px 4px 0;
-    animation: scroll-pulse 1.8s ease-in-out infinite;
+  .chart-scroll-outer.has-overflow::before {
+    content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 70px;
+    background: linear-gradient(to right, transparent, #fafaf9 80%);
+    pointer-events: none; z-index: 2;
   }
-  @keyframes scroll-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.1; } }
+  .chart-scroll-outer.has-overflow::after {
+    content: '›'; position: absolute; right: 10px; top: 50%;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 600; color: var(--accent);
+    background: #fff; border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    pointer-events: none; z-index: 3;
+    animation: scroll-bounce 1.2s ease-in-out infinite;
+  }
+  @keyframes scroll-bounce {
+    0%, 100% { transform: translate(0, -50%); opacity: 0.85; }
+    50% { transform: translate(-8px, -50%); opacity: 1; }
+  }
   [id^="col-lbl-"] { transition: font-size 0.08s linear, fill 0.1s ease; }
   .chart-axis-note { font-size: 13px; color: #666; margin-top: 6px; font-family: var(--mono); }
 
@@ -611,10 +623,6 @@
       </div>
 
       <label class="form-check">
-        <input type="checkbox" id="f-sport"> Sports recruitment
-      </label>
-
-      <label class="form-check">
         <input type="checkbox" id="f-first-gen"> First-generation college student
       </label>
 
@@ -994,7 +1002,7 @@ function buildChart(data, animate) {
   const plotW = W - PAD.left - PAD.right, plotH = H - PAD.top - PAD.bottom;
 
   const gridC = '#f0f0ee', axisC = '#e4e4e2', tickC = '#555', lblC = '#333';
-  let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" data-pad-left="${PAD.left}" data-col-w="${colW}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;" onmousemove="chartMousemove(event)" onmouseleave="chartMouseleave(event)">`;
+  let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" data-pad-left="${PAD.left}" data-col-w="${colW}" data-plot-bottom="${PAD.top + plotH}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;" onmousemove="chartMousemove(event)" onmouseleave="chartMouseleave(event)">`;
 
   ySteps.forEach(v => {
     const y = PAD.top + plotH - (v-yMin)/(yMax-yMin)*plotH;
@@ -1074,8 +1082,15 @@ function chartMousemove(e) {
   const pl = parseFloat(svg.dataset.padLeft);
   const cw = parseFloat(svg.dataset.colW);
   const n = parseInt(svg.dataset.cols);
+  const pb = parseFloat(svg.dataset.plotBottom);
   const rect = svg.getBoundingClientRect();
   const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  // Only react when mouse is below the axis line (i.e. over the college labels)
+  if (y < pb) {
+    if (_lastWaveIdx !== -1) { _lastWaveIdx = -1; chartWave(-1); }
+    return;
+  }
   const fIdx = (x - pl - cw/2) / cw;
   if (fIdx < -0.5 || fIdx > n - 0.5) {
     if (_lastWaveIdx !== -1) { _lastWaveIdx = -1; chartWave(-1); }
@@ -1343,17 +1358,18 @@ function renderStatsInline(data) {
       <div class="sp-bar-val">${n}</div>
     </div>`).join('') : '<span style="font-size:13px;color:#888;">No major data yet</span>';
 
-  // Acceptance rate by GPA bracket
+  // Acceptance rate by weighted GPA bracket
   const gpaBrackets = [
     {label:'< 2.5',  lo:0,    hi:2.5},
     {label:'2.5–3.0',lo:2.5,  hi:3.0},
     {label:'3.0–3.5',lo:3.0,  hi:3.5},
     {label:'3.5–4.0',lo:3.5,  hi:4.0},
-    {label:'4.0+',   lo:4.0,  hi:99},
+    {label:'4.0–4.5',lo:4.0,  hi:4.5},
+    {label:'4.5+',   lo:4.5,  hi:99},
   ];
   const bracketStats = gpaBrackets.map(b => ({...b, apps:0, acc:0}));
   data.forEach(r => {
-    const g = parseFloat(r.gpa);
+    const g = parseFloat(r.gpa_weighted);
     if (isNaN(g)) return;
     const b = bracketStats.find(x => g >= x.lo && g < x.hi);
     if (!b) return;
@@ -1435,7 +1451,7 @@ function renderStatsInline(data) {
         </div>
       </div>
       <div class="sp-card sp-card-wide">
-        <h3>Acceptance Rate by GPA</h3>
+        <h3>Acceptance Rate by Weighted GPA</h3>
         ${bracketHTML}
       </div>
       ${enrollList.length ? `<div class="sp-card sp-card-wide">
@@ -1465,7 +1481,7 @@ function getKnownColleges() {
   const submitted = allData.map(r=>r.college_name).filter(Boolean);
   return [...new Set([...ALL_COLLEGES, ...submitted])].sort();
 }
-function addCollege(name='', decision='Accepted', decisionType='RD', schoolType='University', enrolling='', scholarship='') {
+function addCollege(name='', decision='Accepted', decisionType='RD', schoolType='University', enrolling='', scholarship='', sport='') {
   const id = collegeCount++;
   const div = document.createElement('div');
   div.id = `cr-${id}`;
@@ -1513,6 +1529,9 @@ function addCollege(name='', decision='Accepted', decisionType='RD', schoolType=
       </label>
       <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
         <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;"> Got scholarship
+      </label>
+      <label style="font-size:13px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="sp-${id}" ${sport==='yes'?'checked':''} style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;"> Sports recruitment
       </label>
     </div>`;
   document.getElementById('college-inputs').appendChild(div);
@@ -1569,11 +1588,10 @@ async function loadExistingSubmission() {
       document.getElementById('f-rank').value = r.class_rank||'';
       document.getElementById('f-major').value = r.major||'';
       document.getElementById('f-ecs').value = r.extracurriculars||'';
-      document.getElementById('f-sport').checked = r.sport==='yes';
       document.getElementById('f-first-gen').checked = r.first_gen==='yes';
       document.getElementById('f-year').value = '2026';
       if (r.essay_rating) document.getElementById('f-essay').value = r.essay_rating;
-      data.forEach(row => addCollege(row.college_name||'', row.decision||'Accepted', row.decision_type||'RD', row.school_type||'University', row.enrolling||'', row.scholarship||''));
+      data.forEach(row => addCollege(row.college_name||'', row.decision||'Accepted', row.decision_type||'RD', row.school_type||'University', row.enrolling||'', row.scholarship||'', row.sport||''));
       document.getElementById('submit-btn').textContent = 'Update Submission';
       document.getElementById('form-title').textContent = 'Edit your Submission';
       document.getElementById('form-subtitle').textContent = 'Update your results below.';
@@ -1583,7 +1601,6 @@ async function loadExistingSubmission() {
       ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs']
         .forEach(id => document.getElementById(id).value='');
       document.getElementById('f-year').value = '2026';
-      document.getElementById('f-sport').checked = false;
       document.getElementById('f-first-gen').checked = false;
       document.getElementById('f-essay').value = '';
       addCollege();
@@ -1614,7 +1631,7 @@ async function submitForm() {
       class_rank: parseInt(document.getElementById('f-rank').value)||null,
       major: document.getElementById('f-major').value.trim()||null,
       extracurriculars: document.getElementById('f-ecs').value.trim()||null,
-      sport: document.getElementById('f-sport').checked?'yes':null,
+      sport: document.getElementById(`sp-${i}`)?.checked ? 'yes' : null,
       first_gen: document.getElementById('f-first-gen').checked?'yes':null,
       essay_rating: document.getElementById('f-essay').value||null,
       decision_type: document.getElementById(`cat-${i}`)?.value||null,
