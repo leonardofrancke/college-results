@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdmissionStats — v5 Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --border: #1f1f1f;
+    --green: #39d353;
+    --green-dim: #1a6b28;
+    --green-muted: #22863a;
+    --amber: #e3b341;
+    --red: #f85149;
+    --blue: #58a6ff;
+    --text: #cdd9e5;
+    --muted: #545d68;
+    --dimmer: #2d333b;
+  }
+  body { font-family: 'JetBrains Mono', 'Courier New', monospace; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* TOPBAR */
+  .topbar { height: 44px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px; gap: 0; }
+  .tb-prompt { color: var(--green); font-size: 12px; font-weight: 700; margin-right: 8px; }
+  .tb-title { color: var(--text); font-size: 12px; font-weight: 400; }
+  .tb-spacer { flex: 1; }
+  .tb-nav { display: flex; }
+  .tb-link { padding: 0 16px; height: 44px; display: flex; align-items: center; font-size: 12px; color: var(--muted); cursor: pointer; border-bottom: 1.5px solid transparent; margin-bottom: -1px; transition: color 0.1s; }
+  .tb-link:hover { color: var(--green); }
+  .tb-link.active { color: var(--green); border-bottom-color: var(--green); }
+  .tb-btn { margin-left: 12px; padding: 5px 14px; background: transparent; border: 1px solid var(--green-dim); border-radius: 4px; color: var(--green); font-size: 11.5px; font-family: inherit; cursor: pointer; transition: background 0.1s; }
+  .tb-btn:hover { background: rgba(57,211,83,.08); }
+
+  /* LAYOUT */
+  .layout { display: grid; grid-template-columns: 200px 1fr; min-height: calc(100vh - 44px); }
+
+  /* SIDEBAR */
+  .sidebar { border-right: 1px solid var(--border); padding: 20px 0; display: flex; flex-direction: column; }
+  .sb-section { padding: 8px 16px 4px; font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .sb-item { display: flex; align-items: center; gap: 8px; padding: 7px 18px; font-size: 12px; color: var(--muted); cursor: pointer; transition: color 0.1s; border-left: 2px solid transparent; }
+  .sb-item::before { content: '>'; color: var(--border); font-size: 11px; transition: color 0.1s; }
+  .sb-item:hover { color: var(--text); }
+  .sb-item:hover::before { color: var(--muted); }
+  .sb-item.active { color: var(--green); border-left-color: var(--green); }
+  .sb-item.active::before { color: var(--green); }
+  .sb-stat { display: flex; align-items: center; justify-content: space-between; padding: 7px 18px; font-size: 11px; }
+  .sb-stat-label { color: var(--muted); }
+  .sb-stat-val { color: var(--green); font-weight: 700; }
+  .sb-divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  /* CONTENT */
+  .content { padding: 28px 32px; overflow: hidden; }
+
+  /* TERMINAL HEADER */
+  .term-header { margin-bottom: 24px; }
+  .term-line { font-size: 12px; line-height: 1.8; }
+  .term-line .prompt { color: var(--green); }
+  .term-line .cmd { color: var(--text); }
+  .term-line .comment { color: var(--muted); }
+  .term-line .output { color: var(--green-dim); }
+  .cursor { display: inline-block; width: 7px; height: 13px; background: var(--green); vertical-align: middle; animation: blink 1.1s step-end infinite; margin-left: 2px; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* STATS GRID */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; position: relative; overflow: hidden; }
+  .stat-box::before { content: '//'; position: absolute; top: 10px; right: 12px; font-size: 10px; color: var(--border); }
+  .stat-key { font-size: 10px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat-val { font-size: 24px; font-weight: 700; line-height: 1; }
+  .stat-val.green { color: var(--green); }
+  .stat-val.amber { color: var(--amber); }
+  .stat-val.blue { color: var(--blue); }
+  .stat-val.red { color: var(--red); }
+  .stat-sub { font-size: 10px; color: var(--muted); margin-top: 5px; }
+
+  /* CHART AREA */
+  .chart-box { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 24px; overflow: hidden; }
+  .chart-box-header { padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .box-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .box-title span { color: var(--text); }
+  .chart-tab { background: none; border: none; font-family: inherit; font-size: 11px; color: var(--muted); cursor: pointer; padding: 3px 0; transition: color 0.1s; }
+  .chart-tab + .chart-tab { margin-left: 14px; }
+  .chart-tab.active { color: var(--green); }
+  .chart-tab.active::after { content: ''; display: block; height: 1px; background: var(--green); }
+  .box-spacer { flex: 1; }
+  .box-search { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px; font-size: 11.5px; font-family: inherit; color: var(--text); outline: none; width: 180px; }
+  .box-search::placeholder { color: var(--muted); }
+  .box-search:focus { border-color: var(--green-dim); }
+  .chart-body { padding: 20px 18px; }
+  .chart-mock { height: 200px; background: var(--bg); border: 1px dashed var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+  .chart-mock span { font-size: 11px; color: var(--muted); }
+
+  /* TWO-COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+  /* DECISION TABLE */
+  .box { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 18px; }
+  .box-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+  .d-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 11.5px; }
+  .d-key { color: var(--muted); width: 80px; flex-shrink: 0; }
+  .d-bar-track { flex: 1; height: 2px; background: var(--dimmer); border-radius: 1px; overflow: hidden; }
+  .d-bar-fill { height: 100%; border-radius: 1px; }
+  .d-num { font-size: 11px; color: var(--muted); width: 24px; text-align: right; }
+
+  /* SCHOOL TABLE */
+  .school-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .school-table thead th { text-align: left; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 0 10px; font-weight: 500; }
+  .school-table thead th:last-child { text-align: right; }
+  .school-table tbody tr { border-top: 1px solid var(--border); }
+  .school-table tbody td { padding: 8px 0; color: var(--text); }
+  .school-table tbody td:first-child { color: var(--border); font-size: 10px; padding-right: 10px; width: 20px; }
+  .school-table tbody td:last-child { text-align: right; }
+  .school-table .school-n { color: var(--muted); }
+  .spill { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }
+  .sp-acc { background: rgba(57,211,83,.1); color: var(--green); }
+  .sp-den { background: rgba(248,81,73,.1); color: var(--red); }
+  .sp-wl  { background: rgba(227,179,65,.1); color: var(--amber); }
+
+  /* HISTOGRAM */
+  .hist { display: flex; align-items: flex-end; gap: 4px; height: 72px; }
+  .hist-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .hist-bar { width: 100%; border-radius: 2px 2px 0 0; background: var(--green-dim); transition: background 0.1s; cursor: pointer; }
+  .hist-bar:hover { background: var(--green); }
+  .hist-lbl { font-size: 8px; color: var(--muted); }
+
+  /* FORM */
+  .form-term { max-width: 560px; }
+  .form-prompt { font-size: 12px; color: var(--muted); margin-bottom: 20px; line-height: 1.7; }
+  .form-prompt .g { color: var(--green); }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; font-size: 13px; font-family: inherit; color: var(--text); outline: none;
+    transition: border-color 0.1s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--green-dim); }
+  .form-group input[type=number] { color: var(--green); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-check { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 16px; cursor: pointer; }
+  .form-check input { width: auto; }
+  .form-check:hover { color: var(--text); }
+  .form-submit { width: 100%; padding: 10px; background: rgba(57,211,83,.08); border: 1px solid var(--green-dim); border-radius: 4px; color: var(--green); font-size: 13px; font-family: inherit; cursor: pointer; font-weight: 500; transition: background 0.1s; margin-top: 8px; }
+  .form-submit:hover { background: rgba(57,211,83,.15); }
+
+  .page { display: none; }
+  .page.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="tb-prompt">~/admissions</span>
+  <span class="tb-title">$ live-oak-stats --class 2025</span>
+  <div class="tb-spacer"></div>
+  <div class="tb-nav">
+    <div class="tb-link active" onclick="showPage('results')">results</div>
+    <div class="tb-link" onclick="showPage('submit')">submit</div>
+  </div>
+  <button class="tb-btn" onclick="showPage('submit')">+ add record</button>
+</div>
+
+<div class="layout">
+
+  <div class="sidebar">
+    <div class="sb-section">Filters</div>
+    <div class="sb-item active">All years</div>
+    <div class="sb-item">Class of 2025</div>
+    <div class="sb-item">Class of 2024</div>
+    <div class="sb-item">Class of 2023</div>
+    <div class="sb-divider"></div>
+    <div class="sb-section">Stats</div>
+    <div class="sb-stat"><span class="sb-stat-label">submissions</span><span class="sb-stat-val">124</span></div>
+    <div class="sb-stat"><span class="sb-stat-label">colleges</span><span class="sb-stat-val">375</span></div>
+    <div class="sb-stat"><span class="sb-stat-label">avg GPA</span><span class="sb-stat-val">3.91</span></div>
+    <div class="sb-stat"><span class="sb-stat-label">avg SAT</span><span class="sb-stat-val">1430</span></div>
+    <div class="sb-divider"></div>
+    <div class="sb-section">Compare</div>
+    <div class="sb-item">Compare colleges</div>
+    <div class="sb-item">Students like me</div>
+  </div>
+
+  <div class="content">
+
+    <!-- RESULTS -->
+    <div class="page active" id="page-results">
+
+      <div class="term-header">
+        <div class="term-line"><span class="prompt">→ </span><span class="cmd">query results</span> <span class="comment">// 124 records found</span></div>
+        <div class="term-line"><span class="output">loaded 375 colleges · class of 2025 · 54% acceptance rate</span><span class="cursor"></span></div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-key">submissions</div>
+          <div class="stat-val green">124</div>
+          <div class="stat-sub">+18 from last yr</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-key">accepted</div>
+          <div class="stat-val green">67</div>
+          <div class="stat-sub">54.0% rate</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-key">avg gpa</div>
+          <div class="stat-val amber">3.91</div>
+          <div class="stat-sub">weighted</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-key">avg sat</div>
+          <div class="stat-val blue">1430</div>
+          <div class="stat-sub">composite</div>
+        </div>
+      </div>
+
+      <div class="chart-box">
+        <div class="chart-box-header">
+          <span class="box-title"><span>chart</span>.scatter</span>
+          <button class="chart-tab active">gpa</button>
+          <button class="chart-tab">sat</button>
+          <div class="box-spacer"></div>
+          <input class="box-search" type="text" placeholder="filter college…">
+        </div>
+        <div class="chart-body">
+          <div class="chart-mock"><span>// scatter: gpa × college × decision outcome</span></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="box">
+          <div class="box-label">decisions</div>
+          <div class="d-row">
+            <span class="d-key">accepted</span>
+            <div class="d-bar-track"><div class="d-bar-fill" style="width:54%;background:#39d353"></div></div>
+            <span class="d-num">67</span>
+          </div>
+          <div class="d-row">
+            <span class="d-key">rejected</span>
+            <div class="d-bar-track"><div class="d-bar-fill" style="width:33%;background:#f85149"></div></div>
+            <span class="d-num">41</span>
+          </div>
+          <div class="d-row">
+            <span class="d-key">waitlisted</span>
+            <div class="d-bar-track"><div class="d-bar-fill" style="width:10%;background:#e3b341"></div></div>
+            <span class="d-num">13</span>
+          </div>
+          <div class="d-row">
+            <span class="d-key">deferred</span>
+            <div class="d-bar-track"><div class="d-bar-fill" style="width:6%;background:#58a6ff"></div></div>
+            <span class="d-num">8</span>
+          </div>
+        </div>
+        <div class="box">
+          <div class="box-label">gpa distribution</div>
+          <div class="hist">
+            <div class="hist-col"><div class="hist-bar" style="height:15%"></div><div class="hist-lbl">3.0</div></div>
+            <div class="hist-col"><div class="hist-bar" style="height:25%"></div><div class="hist-lbl">3.2</div></div>
+            <div class="hist-col"><div class="hist-bar" style="height:42%"></div><div class="hist-lbl">3.4</div></div>
+            <div class="hist-col"><div class="hist-bar" style="height:66%"></div><div class="hist-lbl">3.6</div></div>
+            <div class="hist-col"><div class="hist-bar" style="height:88%"></div><div class="hist-lbl">3.8</div></div>
+            <div class="hist-col"><div class="hist-bar" style="height:100%"></div><div class="hist-lbl">4.0</div></div>
+            <div class="hist-col"><div class="hist-bar" style="height:62%"></div><div class="hist-lbl">4.2</div></div>
+            <div class="hist-col"><div class="hist-bar" style="height:30%"></div><div class="hist-lbl">4.4</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-label">top colleges // by submission count</div>
+        <table class="school-table">
+          <thead><tr><th>#</th><th>college</th><th>submissions</th><th>outcome</th></tr></thead>
+          <tbody>
+            <tr><td>01</td><td>UC Berkeley</td><td class="school-n">18</td><td><span class="spill sp-acc">54% acc</span></td></tr>
+            <tr><td>02</td><td>UCLA</td><td class="school-n">16</td><td><span class="spill sp-den">38% acc</span></td></tr>
+            <tr><td>03</td><td>Stanford University</td><td class="school-n">14</td><td><span class="spill sp-den">7% acc</span></td></tr>
+            <tr><td>04</td><td>University of Michigan</td><td class="school-n">11</td><td><span class="spill sp-acc">61% acc</span></td></tr>
+            <tr><td>05</td><td>University of Washington</td><td class="school-n">10</td><td><span class="spill sp-wl">52% acc</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- SUBMIT -->
+    <div class="page" id="page-submit">
+      <div class="form-term">
+        <div class="term-header">
+          <div class="term-line"><span class="prompt">→ </span><span class="cmd">new-record --anonymous</span></div>
+          <div class="term-line"><span class="output">no account needed · data stripped of identifiers</span></div>
+        </div>
+        <form>
+          <div class="form-row">
+            <div class="form-group">
+              <label>weighted_gpa</label>
+              <input type="number" step="0.01" min="0" max="5" placeholder="3.95">
+            </div>
+            <div class="form-group">
+              <label>sat_score</label>
+              <input type="number" step="10" min="400" max="1600" placeholder="1480">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>essay_rating [1–5]</label>
+              <select>
+                <option value="">select…</option>
+                <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>app_type</label>
+              <select>
+                <option>RD</option>
+                <option>EA</option>
+                <option>ED</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>sport_or_activity</label>
+            <input type="text" placeholder="e.g. varsity_soccer, robotics_captain">
+          </div>
+          <label class="form-check">
+            <input type="checkbox"> first_gen = true
+          </label>
+          <div class="form-group">
+            <label>college_name</label>
+            <input type="text" placeholder="start typing…">
+          </div>
+          <div class="form-group">
+            <label>decision</label>
+            <select>
+              <option>accepted</option>
+              <option>rejected</option>
+              <option>waitlisted</option>
+              <option>deferred</option>
+              <option>withdrawn</option>
+            </select>
+          </div>
+          <button type="submit" class="form-submit">$ submit --push</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.tb-link').forEach((l, i) => {
+    l.classList.toggle('active', (id === 'results' && i === 0) || (id === 'submit' && i === 1));
+  });
+}
+</script>
+</body>
+</html>

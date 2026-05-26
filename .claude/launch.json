@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "palette-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8080", "--directory", "/tmp"],
+      "port": 8080
+    },
+    {
+      "name": "fastapi-local",
+      "runtimeExecutable": "uvicorn",
+      "runtimeArgs": ["server:app", "--reload", "--port", "8000"],
+      "port": 8000
+    }
+  ]
+}

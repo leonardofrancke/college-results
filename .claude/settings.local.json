@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s https://raw.githubusercontent.com/leonardofrancke/college-results/main/index.html)",
+      "Bash(curl -s https://api.github.com/repos/leonardofrancke/college-results/contents/)",
+      "Bash(python3 -c \"import sys,json; [print\\(f[''''name''''], f[''''type'''']\\) for f in json.load\\(sys.stdin\\)]\")",
+      "Bash(ssh leo@apps.jacksol.francke.com \"find ~/projects/admission-stats -not -path ''*/\\\\.*'' | sort && echo ''==='' && ls -la ~/projects/admission-stats/\")",
+      "Bash(ssh leo@apps.jacksol.francke.com \"cat ~/projects/admission-stats/Dockerfile && echo ''==='' && cat ~/projects/admission-stats/nginx.conf && echo ''==='' && cat ~/projects/admission-stats/supervisord.conf && echo ''==='' && ls ~/projects/admission-stats/api/ && echo ''==='' && ls ~/projects/admission-stats/html/\")",
+      "Bash(ssh leo@apps.jacksol.francke.com \"cat ~/projects/admission-stats/api/server.js && echo ''==='' && cat ~/projects/admission-stats/html/index.html\")",
+      "Bash(ssh leo@apps.jacksol.francke.com:*)",
+      "Bash(gh auth:*)",
+      "Bash(cat:*)",
+      "Bash(scp leo@apps.jacksol.francke.com:/var/local/docker/leo-app/html/index.html /Users/leo/Projects/admission-stats/index.html)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(python3)",
+      "Bash(python3 -c \"open\\('/tmp/admin.html','w'\\).close\\(\\)\")",
+      "Bash(ssh leo@francke.me \"cat -n /home/leo/projects/admission-stats/html/admin.html\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(ssh leo@leo.francke.com \"sudo docker ps | grep leo-app && sudo docker logs leo-app-dev --tail=30 2>&1\")",
+      "Bash(ping -c 3 apps.jacksol.francke.com)",
+      "Read(//Users/leo/Library/Preferences/**)",
+      "Read(//etc/**)",
+      "Read(//Users/leo/Library/**)",
+      "Bash(ssh -o ConnectTimeout=8 leo@10.1.4.4 \"echo ok && sudo docker ps -a | grep leo-app\")",
+      "Bash(nslookup apps.jacksol.francke.com)",
+      "Bash(dig apps.jacksol.francke.com +short)",
+      "Bash(dig apps.jacksol.francke.com @8.8.8.8 +short)",
+      "Bash(sudo route:*)",
+      "WebFetch(domain:apps.jacksol.francke.com)",
+      "Bash(node --check /Users/leo/Projects/admission-stats/v4.html)",
+      "Bash(python3 -c ':*)",
+      "Bash(node --check /tmp/v4_script.js)"
+    ]
+  }
+}

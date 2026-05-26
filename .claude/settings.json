@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ssh *apps.jacksol.francke.com*)",
+      "Bash(scp *apps.jacksol.francke.com*)",
+      "Bash(ssh-keyscan*)",
+      "Bash(curl*)",
+      "Bash(git*)",
+      "Bash(make*)",
+      "Bash(sqlite3*)"
+    ]
+  }
+}

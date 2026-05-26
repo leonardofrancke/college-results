@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdmissionStats — v6 Aurora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #06060f;
+    --surface: rgba(255,255,255,0.04);
+    --surface-hover: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-bright: rgba(255,255,255,0.14);
+    --text: #e8eaf6;
+    --muted: #6b7ba0;
+    --dim: #3a4060;
+    --accent: #a78bfa;
+    --accent2: #38bdf8;
+    --accent3: #34d399;
+    --gold: #fbbf24;
+    --red: #f87171;
+    --mono: 'DM Mono', monospace;
+  }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* AURORA BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 20% -10%, rgba(139,92,246,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 5%,  rgba(56,189,248,0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(52,211,153,0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  * { position: relative; z-index: 1; }
+
+  /* NAV */
+  .nav {
+    height: 58px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(6,6,15,0.7);
+    display: flex;
+    align-items: center;
+    padding: 0 36px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-right: auto;
+  }
+  .nav-logo .accent { color: var(--accent); }
+  .nav-logo .muted  { color: var(--muted); font-weight: 400; }
+  .nav-tabs { display: flex; gap: 2px; }
+  .nav-tab {
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 6px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .nav-tab:hover { color: var(--text); background: var(--surface); }
+  .nav-tab.active { color: var(--text); background: var(--surface); }
+  .nav-cta {
+    margin-left: 16px;
+    padding: 7px 18px;
+    background: linear-gradient(135deg, rgba(167,139,250,0.25), rgba(56,189,248,0.15));
+    border: 1px solid rgba(167,139,250,0.35);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .nav-cta:hover { background: linear-gradient(135deg, rgba(167,139,250,0.35), rgba(56,189,248,0.25)); }
+
+  /* YEAR SELECTOR */
+  .year-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 36px;
+    border-bottom: 1px solid var(--border);
+  }
+  .year-chip {
+    padding: 5px 16px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .year-chip:hover { color: var(--text); border-color: var(--border-bright); }
+  .year-chip.active {
+    color: var(--text);
+    background: rgba(167,139,250,0.12);
+    border-color: rgba(167,139,250,0.4);
+  }
+
+  /* CONTENT */
+  .content { max-width: 1000px; margin: 0 auto; padding: 32px 36px; }
+
+  /* GLASS CARD */
+  .glass {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card { padding: 22px 20px; }
+  .stat-icon { font-size: 18px; margin-bottom: 10px; opacity: 0.7; }
+  .stat-num { font-size: 28px; font-weight: 700; line-height: 1; font-family: var(--mono); letter-spacing: -0.02em; margin-bottom: 5px; }
+  .stat-num.purple { color: var(--accent); }
+  .stat-num.blue   { color: var(--accent2); }
+  .stat-num.green  { color: var(--accent3); }
+  .stat-num.gold   { color: var(--gold); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+
+  /* CHART CARD */
+  .chart-card { margin-bottom: 24px; overflow: hidden; }
+  .chart-head { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .chart-tabs-inner { display: flex; gap: 2px; }
+  .chart-tab-btn { padding: 5px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 500; color: var(--muted); background: none; border: none; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .chart-tab-btn:hover { color: var(--text); }
+  .chart-tab-btn.active { color: var(--text); background: rgba(255,255,255,0.07); }
+  .chart-spacer { flex: 1; }
+  .chart-search {
+    padding: 6px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 12.5px; font-family: inherit; color: var(--text); outline: none; width: 190px;
+    transition: border-color 0.15s;
+  }
+  .chart-search::placeholder { color: var(--dim); }
+  .chart-search:focus { border-color: rgba(167,139,250,0.4); }
+  .chart-body { padding: 22px; }
+  .chart-mock { height: 220px; background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.06); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .chart-mock span { font-size: 12px; color: var(--dim); font-family: var(--mono); }
+
+  /* MIN SUBS */
+  .minsub-row { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .minsub-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+  .minsub-btn { padding: 3px 10px; border-radius: 5px; border: 1px solid var(--border); background: none; color: var(--muted); font-size: 11.5px; font-family: inherit; cursor: pointer; transition: all 0.15s; }
+  .minsub-btn:hover { color: var(--text); border-color: var(--border-bright); }
+  .minsub-btn.active { background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.35); color: var(--accent); }
+
+  /* TWO-COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .sub-card { padding: 20px 22px; }
+  .sub-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+
+  /* DECISION BARS */
+  .d-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .d-label { font-size: 12.5px; color: var(--muted); width: 80px; flex-shrink: 0; }
+  .d-track { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .d-fill { height: 100%; border-radius: 3px; }
+  .d-count { font-size: 11px; font-family: var(--mono); color: var(--dim); width: 24px; text-align: right; }
+
+  /* HISTOGRAM */
+  .hist { display: flex; align-items: flex-end; gap: 5px; height: 78px; }
+  .hist-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .hist-bar { width: 100%; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, rgba(167,139,250,0.7) 0%, rgba(167,139,250,0.3) 100%); cursor: pointer; transition: opacity 0.15s; }
+  .hist-bar:hover { opacity: 0.6; }
+  .hist-lbl { font-size: 9px; color: var(--dim); }
+
+  /* SCHOOLS */
+  .school-list { display: flex; flex-direction: column; gap: 0; }
+  .school-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .school-row:last-child { border-bottom: none; }
+  .school-rank { font-size: 11px; color: var(--dim); font-family: var(--mono); width: 18px; flex-shrink: 0; }
+  .school-name { font-size: 13px; color: var(--text); flex: 1; font-weight: 500; }
+  .school-n { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .dpill { font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+  .dp-acc { background: rgba(52,211,153,0.12); color: var(--accent3); border: 1px solid rgba(52,211,153,0.2); }
+  .dp-den { background: rgba(248,113,113,0.1);  color: var(--red);     border: 1px solid rgba(248,113,113,0.2); }
+  .dp-wl  { background: rgba(251,191,36,0.1);   color: var(--gold);    border: 1px solid rgba(251,191,36,0.2); }
+
+  /* FORM */
+  .form-wrap { max-width: 560px; }
+  .form-header { margin-bottom: 24px; }
+  .form-header h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .form-header p { font-size: 13px; color: var(--muted); }
+  .anon-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+    color: var(--accent3); background: rgba(52,211,153,0.08);
+    border: 1px solid rgba(52,211,153,0.2); border-radius: 20px;
+    padding: 4px 12px; margin-bottom: 22px; font-weight: 500;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 11.5px; font-weight: 500; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 9px 13px;
+    background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px; font-family: inherit; color: var(--text); outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: rgba(167,139,250,0.4);
+  }
+  .form-group input[type=number] { font-family: var(--mono); color: var(--accent); }
+  .form-group select option { background: #1a1a2e; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-check { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted); margin-bottom: 16px; cursor: pointer; }
+  .form-check input { width: auto; accent-color: var(--accent); }
+  .form-check:hover { color: var(--text); }
+  .form-submit {
+    width: 100%; padding: 11px;
+    background: linear-gradient(135deg, rgba(167,139,250,0.25), rgba(56,189,248,0.15));
+    border: 1px solid rgba(167,139,250,0.35);
+    border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--accent);
+    cursor: pointer; font-family: inherit; margin-top: 8px;
+    transition: all 0.15s;
+  }
+  .form-submit:hover {
+    background: linear-gradient(135deg, rgba(167,139,250,0.35), rgba(56,189,248,0.25));
+    border-color: rgba(167,139,250,0.5);
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <span class="accent">Live Oak</span><span class="muted"> / admissions</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('results')">Results</button>
+    <button class="nav-tab" onclick="showPage('submit')">Submit</button>
+  </div>
+  <button class="nav-cta" onclick="showPage('submit')">+ Add yours</button>
+</nav>
+
+<div class="year-bar">
+  <button class="year-chip active">2025</button>
+  <button class="year-chip">2024</button>
+  <button class="year-chip">2023</button>
+  <button class="year-chip">All years</button>
+</div>
+
+<!-- RESULTS -->
+<div class="page active" id="page-results">
+  <div class="content">
+
+    <div class="stats-row">
+      <div class="glass stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-num purple">124</div>
+        <div class="stat-label">Submissions</div>
+      </div>
+      <div class="glass stat-card">
+        <div class="stat-icon">✓</div>
+        <div class="stat-num green">67</div>
+        <div class="stat-label">Accepted</div>
+      </div>
+      <div class="glass stat-card">
+        <div class="stat-icon">◈</div>
+        <div class="stat-num gold">3.91</div>
+        <div class="stat-label">Avg GPA</div>
+      </div>
+      <div class="glass stat-card">
+        <div class="stat-icon">◎</div>
+        <div class="stat-num blue">1430</div>
+        <div class="stat-label">Avg SAT</div>
+      </div>
+    </div>
+
+    <div class="glass chart-card">
+      <div class="chart-head">
+        <div class="chart-tabs-inner">
+          <button class="chart-tab-btn active">Weighted GPA</button>
+          <button class="chart-tab-btn">SAT</button>
+        </div>
+        <div class="minsub-row" style="margin:0 0 0 12px;">
+          <span class="minsub-label">Min</span>
+          <button class="minsub-btn active">Any</button>
+          <button class="minsub-btn">2+</button>
+          <button class="minsub-btn">3+</button>
+          <button class="minsub-btn">5+</button>
+        </div>
+        <div class="chart-spacer"></div>
+        <input class="chart-search" type="text" placeholder="Search college…">
+      </div>
+      <div class="chart-body">
+        <div class="chart-mock">
+          <span>scatter plot · GPA × college × decision</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="glass sub-card">
+        <div class="sub-title">Decisions</div>
+        <div class="d-row">
+          <span class="d-label">Accepted</span>
+          <div class="d-track"><div class="d-fill" style="width:54%;background:var(--accent3)"></div></div>
+          <span class="d-count">67</span>
+        </div>
+        <div class="d-row">
+          <span class="d-label">Rejected</span>
+          <div class="d-track"><div class="d-fill" style="width:33%;background:var(--red)"></div></div>
+          <span class="d-count">41</span>
+        </div>
+        <div class="d-row">
+          <span class="d-label">Waitlisted</span>
+          <div class="d-track"><div class="d-fill" style="width:10%;background:var(--gold)"></div></div>
+          <span class="d-count">13</span>
+        </div>
+        <div class="d-row">
+          <span class="d-label">Deferred</span>
+          <div class="d-track"><div class="d-fill" style="width:6%;background:var(--accent2)"></div></div>
+          <span class="d-count">8</span>
+        </div>
+      </div>
+      <div class="glass sub-card">
+        <div class="sub-title">GPA distribution</div>
+        <div class="hist">
+          <div class="hist-col"><div class="hist-bar" style="height:15%"></div><div class="hist-lbl">3.0</div></div>
+          <div class="hist-col"><div class="hist-bar" style="height:25%"></div><div class="hist-lbl">3.2</div></div>
+          <div class="hist-col"><div class="hist-bar" style="height:42%"></div><div class="hist-lbl">3.4</div></div>
+          <div class="hist-col"><div class="hist-bar" style="height:66%"></div><div class="hist-lbl">3.6</div></div>
+          <div class="hist-col"><div class="hist-bar" style="height:88%"></div><div class="hist-lbl">3.8</div></div>
+          <div class="hist-col"><div class="hist-bar" style="height:100%"></div><div class="hist-lbl">4.0</div></div>
+          <div class="hist-col"><div class="hist-bar" style="height:62%"></div><div class="hist-lbl">4.2</div></div>
+          <div class="hist-col"><div class="hist-bar" style="height:30%"></div><div class="hist-lbl">4.4</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass sub-card" style="margin-bottom:0">
+      <div class="sub-title">Top colleges by submissions</div>
+      <div class="school-list">
+        <div class="school-row">
+          <div class="school-rank">1</div>
+          <div class="school-name">UC Berkeley</div>
+          <div class="school-n">18</div>
+          <div class="dpill dp-acc">54% acc</div>
+        </div>
+        <div class="school-row">
+          <div class="school-rank">2</div>
+          <div class="school-name">UCLA</div>
+          <div class="school-n">16</div>
+          <div class="dpill dp-den">38% acc</div>
+        </div>
+        <div class="school-row">
+          <div class="school-rank">3</div>
+          <div class="school-name">Stanford University</div>
+          <div class="school-n">14</div>
+          <div class="dpill dp-den">7% acc</div>
+        </div>
+        <div class="school-row">
+          <div class="school-rank">4</div>
+          <div class="school-name">University of Michigan</div>
+          <div class="school-n">11</div>
+          <div class="dpill dp-acc">61% acc</div>
+        </div>
+        <div class="school-row">
+          <div class="school-rank">5</div>
+          <div class="school-name">University of Washington</div>
+          <div class="school-n">10</div>
+          <div class="dpill dp-acc">52% acc</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SUBMIT -->
+<div class="page" id="page-submit">
+  <div class="content">
+    <div class="form-wrap">
+      <div class="form-header">
+        <h2>Add your results</h2>
+        <p>Help future students see what outcomes look like for students like them.</p>
+      </div>
+      <div class="anon-badge">● Fully anonymous · no account needed</div>
+      <form>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Weighted GPA</label>
+            <input type="number" step="0.01" min="0" max="5" placeholder="3.95">
+          </div>
+          <div class="form-group">
+            <label>SAT Score</label>
+            <input type="number" step="10" min="400" max="1600" placeholder="1480">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Essay rating</label>
+            <select>
+              <option value="">Select…</option>
+              <option>1 – Below avg</option>
+              <option>2 – Average</option>
+              <option>3 – Good</option>
+              <option>4 – Strong</option>
+              <option>5 – Exceptional</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>App type</label>
+            <select>
+              <option>Regular Decision</option>
+              <option>Early Action</option>
+              <option>Early Decision</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Sport / activity</label>
+          <input type="text" placeholder="e.g. Varsity soccer, robotics captain…">
+        </div>
+        <label class="form-check">
+          <input type="checkbox"> First-generation college student
+        </label>
+        <div class="form-group">
+          <label>College</label>
+          <input type="text" placeholder="Start typing a college name…">
+        </div>
+        <div class="form-group">
+          <label>Decision</label>
+          <select>
+            <option>Accepted</option>
+            <option>Rejected</option>
+            <option>Waitlisted</option>
+            <option>Deferred</option>
+            <option>Withdrawn</option>
+          </select>
+        </div>
+        <button type="submit" class="form-submit">Submit results</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', (id === 'results' && i === 0) || (id === 'submit' && i === 1));
+  });
+}
+</script>
+</body>
+</html>
