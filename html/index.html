@@ -1045,7 +1045,7 @@ function buildChart(data, animate) {
   const plotW = W - PAD.left - PAD.right, plotH = H - PAD.top - PAD.bottom;
 
   const gridC = '#f0f0ee', axisC = '#e4e4e2', tickC = '#555', lblC = '#333';
-  let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" data-pad-left="${PAD.left}" data-col-w="${colW}" data-plot-bottom="${PAD.top + plotH}" data-dot-r="${dotR}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;" onmouseleave="chartMouseleave(event)">`;
+  let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" data-pad-left="${PAD.left}" data-col-w="${colW}" data-plot-bottom="${PAD.top + plotH}" data-dot-r="${dotR}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;" onmousemove="chartLabelAreaMove(event)" onmouseleave="chartMouseleave(event)">`;
 
   ySteps.forEach(v => {
     const y = PAD.top + plotH - (v-yMin)/(yMax-yMin)*plotH;
@@ -1175,7 +1175,18 @@ function clearWave() {
     _clearWaveTimer = 0;
     _lastWaveIdx = -2; _waveMode = 'none';
     chartWave(-1);
-  }, 60);
+  }, 180);
+}
+// Keep the wave alive while cursor is still in the label-area strip
+function chartLabelAreaMove(e) {
+  if (_waveMode === 'none') return;
+  const svg = e.currentTarget;
+  const pb = parseFloat(svg.dataset.plotBottom);
+  const rect = svg.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  if (y > pb - 4 && _clearWaveTimer) {
+    clearTimeout(_clearWaveTimer); _clearWaveTimer = 0;
+  }
 }
 // kept for backward compat
 function clearSpot() { clearWave(); }
