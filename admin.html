@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - College Results</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#f8f7f4;--surface:#fff;--border:#e8e5e0;--border2:#e0ddd8;--text:#1a1a1a;--text2:#666;--text3:#999;--mono:'DM Mono',monospace; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    header { background:#1a1a1a; padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:56px; }
+    header h1 { font-size:0.95rem; font-weight:600; color:#fff; }
+    .hdr-right { display:flex; align-items:center; gap:1rem; }
+    .hdr-user { font-size:0.8rem; color:#aaa; }
+    .hdr-btn { font-size:0.8rem; color:#aaa; background:none; border:1px solid #444; border-radius:6px; padding:4px 12px; cursor:pointer; font-family:inherit; }
+    .hdr-btn:hover { color:#fff; border-color:#888; }
+    .container { max-width:1200px; margin:2rem auto; padding:0 1.5rem; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.5rem; margin-bottom:1.5rem; }
+    .card h2 { font-size:0.9rem; font-weight:600; margin-bottom:1rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.05em; }
+    input[type=text], input[type=password] { padding:9px 12px; border:1px solid var(--border2); border-radius:7px; font-size:0.875rem; font-family:inherit; background:var(--bg); color:var(--text); min-width:180px; }
+    .btn { padding:9px 18px; border:none; border-radius:7px; font-size:0.875rem; font-family:inherit; cursor:pointer; font-weight:500; }
+    .btn-dark { background:#1a1a1a; color:#fff; }
+    .btn-dark:hover { background:#333; }
+    .btn-danger { background:none; border:1px solid #e8c4c0; color:#c0392b; border-radius:6px; padding:5px 12px; font-size:0.8rem; font-family:inherit; cursor:pointer; }
+    .btn-danger:hover { background:#fdf0ee; }
+    .err { color:#c0392b; font-size:0.82rem; margin-top:6px; display:none; }
+    .toggle-link { font-size:0.82rem; color:var(--text3); margin-top:1rem; cursor:pointer; text-decoration:underline; }
+    .toggle-link:hover { color:var(--text2); }
+    table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+    th { text-align:left; padding:10px 14px; font-weight:600; font-size:0.78rem; color:var(--text2); border-bottom:1px solid var(--border); background:#f0ede8; }
+    td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:#faf9f7; }
+    .mono { font-family:var(--mono); font-size:0.78rem; color:var(--text2); }
+    .pill { display:inline-block; padding:2px 7px; border-radius:4px; font-size:0.72rem; font-weight:500; }
+    .pill-green { background:#e8f5e9; color:#2e7d32; }
+    .pill-red { background:#fdecea; color:#c62828; }
+    .pill-gray { background:#f0ede8; color:#555; }
+    .college-list { display:flex; flex-direction:column; gap:4px; }
+    .field-col { display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
+    .field-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; margin-bottom:1.25rem; }
+    .stat-box { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:1rem 1.25rem; }
+    .stat-box .stat-val { font-size:1.6rem; font-weight:600; line-height:1; margin-bottom:4px; }
+    .stat-box .stat-label { font-size:0.75rem; color:var(--text2); }
+    .daily-table { width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:0.5rem; }
+    .daily-table th { text-align:left; padding:6px 10px; font-weight:600; font-size:0.75rem; color:var(--text2); border-bottom:1px solid var(--border); background:#f0ede8; }
+    .daily-table td { padding:6px 10px; border-bottom:1px solid var(--border); }
+    .daily-table tr:last-child td { border-bottom:none; }
+    .stats-section-label { font-size:0.75rem; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.6rem; margin-top:1rem; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Admin &mdash; College Results</h1>
+  <div class="hdr-right">
+    <span class="hdr-user" id="hdr-user" style="display:none"></span>
+    <button class="hdr-btn" id="hdr-logout" style="display:none" onclick="logout()">Log out</button>
+  </div>
+</header>
+
+<div class="container" id="section-login">
+  <div class="card" style="max-width:380px;">
+    <h2>Log in</h2>
+    <div class="field-col">
+      <input type="text" id="login-user" placeholder="Username" autocomplete="username" />
+      <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password" />
+      <button class="btn btn-dark" onclick="doLogin()">Log in</button>
+      <div class="err" id="login-err"></div>
+    </div>
+    <div class="toggle-link" onclick="showSection('setup')">First-time setup &rarr;</div>
+  </div>
+</div>
+
+<div class="container" id="section-setup" style="display:none">
+  <div class="card" style="max-width:380px;">
+    <h2>First-time setup</h2>
+    <p style="font-size:0.82rem;color:var(--text2);margin-bottom:1rem;">Enter the server admin secret to create the first account.</p>
+    <div class="field-col">
+      <input type="password" id="setup-secret" placeholder="Admin secret" />
+      <input type="text" id="setup-user" placeholder="New username" autocomplete="username" />
+      <input type="password" id="setup-pass" placeholder="New password" autocomplete="new-password" />
+      <button class="btn btn-dark" onclick="doSetup()">Create account</button>
+      <div class="err" id="setup-err"></div>
+    </div>
+    <div class="toggle-link" onclick="showSection('login')">&larr; Back to login</div>
+  </div>
+</div>
+
+<div class="container" id="section-main" style="display:none">
+  <div class="card">
+    <h2>Site analytics</h2>
+    <div id="stats-wrap"><p style="color:var(--text3);font-size:0.85rem;">Loading...</p></div>
+  </div>
+  <div class="card">
+    <h2>Submissions <span id="sub-count" style="font-weight:400;color:var(--text3);font-size:0.78rem;text-transform:none;letter-spacing:0;"></span></h2>
+    <div id="submissions-wrap"></div>
+  </div>
+  <div class="card">
+    <h2>Visitor questions <span id="q-count" style="font-weight:400;color:var(--text3);font-size:0.78rem;text-transform:none;letter-spacing:0;"></span></h2>
+    <div id="questions-wrap"><p style="color:var(--text3);font-size:0.85rem;">Loading...</p></div>
+  </div>
+  <div class="card">
+    <h2>Admin accounts</h2>
+    <div id="users-wrap" style="margin-bottom:1rem;"></div>
+    <div class="field-row">
+      <input type="text" id="new-user" placeholder="Username" style="min-width:140px;" />
+      <input type="password" id="new-pass" placeholder="Password" style="min-width:140px;" />
+      <button class="btn btn-dark" onclick="addUser()">Add account</button>
+    </div>
+    <div class="err" id="user-err" style="margin-top:6px;"></div>
+  </div>
+</div>
+
+<script>
+let token = localStorage.getItem('admin_token') || '';
+let currentUser = localStorage.getItem('admin_user') || '';
+
+const decisionColor = d => {
+  if (!d) return 'pill-gray';
+  const l = d.toLowerCase();
+  if (l === 'accepted') return 'pill-green';
+  if (l === 'denied' || l === 'rejected') return 'pill-red';
+  return 'pill-gray';
+};
+const fmt = dt => dt ? new Date(dt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '&mdash;';
+
+function showSection(name) {
+  ['login','setup','main'].forEach(s =>
+    document.getElementById('section-'+s).style.display = s===name ? '' : 'none'
+  );
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = msg ? '' : 'none';
+}
+
+function setLoggedIn(tok, user) {
+  token = tok; currentUser = user;
+  localStorage.setItem('admin_token', tok);
+  localStorage.setItem('admin_user', user);
+  document.getElementById('hdr-user').textContent = user;
+  document.getElementById('hdr-user').style.display = '';
+  document.getElementById('hdr-logout').style.display = '';
+  showSection('main');
+  loadAll();
+}
+
+function logout() {
+  token = ''; currentUser = '';
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+  document.getElementById('hdr-user').style.display = 'none';
+  document.getElementById('hdr-logout').style.display = 'none';
+  showSection('login');
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  showErr('login-err','');
+  if (!username || !password) { showErr('login-err','Enter username and password.'); return; }
+  const res = await fetch('/api/admin/login', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username, password})
+  });
+  const data = await res.json();
+  if (!res.ok) { showErr('login-err', data.error || 'Login failed.'); return; }
+  setLoggedIn(data.token, data.username);
+}
+
+async function doSetup() {
+  const secret = document.getElementById('setup-secret').value.trim();
+  const username = document.getElementById('setup-user').value.trim();
+  const password = document.getElementById('setup-pass').value;
+  showErr('setup-err','');
+  if (!secret||!username||!password) { showErr('setup-err','All fields required.'); return; }
+  const res = await fetch('/api/admin/setup', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-admin-secret':secret},
+    body: JSON.stringify({username, password})
+  });
+  const data = await res.json();
+  if (!res.ok) { showErr('setup-err', data.error || 'Setup failed.'); return; }
+  document.getElementById('login-user').value = username;
+  document.getElementById('login-pass').value = password;
+  showSection('login');
+  await doLogin();
+}
+
+async function loadAll() {
+  await Promise.all([loadStats(), loadSubmissions(), loadUsers(), loadQuestions()]);
+}
+
+async function loadStats() {
+  const wrap = document.getElementById('stats-wrap');
+  const res = await fetch('/api/admin/stats', {headers:{'x-admin-token':token}});
+  if (res.status===401) { logout(); return; }
+  if (!res.ok) { wrap.innerHTML = '<p style="color:var(--text3);font-size:0.85rem;">Could not load stats.</p>'; return; }
+  const d = await res.json();
+  const pv = d.page_views || {};
+  const uv = d.unique_visitors || {};
+  const daily = d.daily || [];
+  const subs = d.submissions || {};
+
+  let html = '<div class="stats-grid">';
+  html += `<div class="stat-box"><div class="stat-val">${pv.total??'—'}</div><div class="stat-label">Total page views</div></div>`;
+  html += `<div class="stat-box"><div class="stat-val">${pv.today??'—'}</div><div class="stat-label">Views today</div></div>`;
+  html += `<div class="stat-box"><div class="stat-val">${pv.week??'—'}</div><div class="stat-label">Views this week</div></div>`;
+  html += `<div class="stat-box"><div class="stat-val">${uv.total??'—'}</div><div class="stat-label">Unique visitors</div></div>`;
+  html += `<div class="stat-box"><div class="stat-val">${uv.today??'—'}</div><div class="stat-label">Unique today</div></div>`;
+  html += `<div class="stat-box"><div class="stat-val">${subs.total_students??'—'}</div><div class="stat-label">Students submitted</div></div>`;
+  html += '</div>';
+
+  if (daily.length) {
+    html += '<div class="stats-section-label">Daily breakdown (last 14 days)</div>';
+    html += '<table class="daily-table"><thead><tr><th>Date</th><th>Page views</th><th>Unique visitors</th></tr></thead><tbody>';
+    daily.slice().reverse().forEach(row => {
+      const date = new Date(row.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      html += `<tr><td>${date}</td><td>${row.page_views??0}</td><td>${row.unique_visitors??0}</td></tr>`;
+    });
+    html += '</tbody></table>';
+  }
+
+  wrap.innerHTML = html;
+}
+
+async function loadSubmissions() {
+  const res = await fetch('/api/submissions');
+  const rows = await res.json();
+  const groups = new Map();
+  rows.forEach(r => {
+    if (!groups.has(r.session_id)) groups.set(r.session_id, {meta:r, colleges:[]});
+    groups.get(r.session_id).colleges.push(r);
+  });
+  const students = [...groups.values()];
+  document.getElementById('sub-count').textContent =
+    '&mdash; ' + students.length + ' student' + (students.length!==1?'s':'') +
+    ', ' + rows.length + ' row' + (rows.length!==1?'s':'');
+
+  if (!students.length) {
+    document.getElementById('submissions-wrap').innerHTML = '<p style="color:var(--text3);font-size:0.85rem;">No submissions yet.</p>';
+    return;
+  }
+
+  let html = '<table><thead><tr><th>Session</th><th>GPA</th><th>SAT / ACT</th><th>Year</th><th>Flags</th><th>Colleges</th><th>Submitted</th><th></th></tr></thead><tbody>';
+  students.forEach(({meta:m, colleges}) => {
+    const sid = m.session_id || '';
+    const flags = [
+      m.sport==='yes' ? '<span class="pill pill-gray">Recruited</span>' : '',
+      m.first_gen==='yes' ? '<span class="pill pill-gray">1st Gen</span>' : ''
+    ].filter(Boolean).join(' ') || '&mdash;';
+    const tests = [m.sat, m.act].filter(Boolean).join(' / ') || '&mdash;';
+    const colleges_html = colleges.map(c =>
+      '<div>' + c.college_name +
+      (c.decision ? ' <span class="pill '+decisionColor(c.decision)+'">'+c.decision+'</span>' : '') +
+      (c.decision_type ? '<span style="color:var(--text3);font-size:0.75rem;"> &middot; '+c.decision_type+'</span>' : '') +
+      '</div>'
+    ).join('');
+    html += '<tr id="sess-'+sid+'">' +
+      '<td class="mono">'+(sid?sid.slice(0,8)+'&hellip;':'&mdash;')+'</td>' +
+      '<td>'+(m.gpa??'&mdash;')+(m.gpa_weighted?' / '+m.gpa_weighted:'')+'</td>' +
+      '<td>'+tests+'</td>' +
+      '<td>'+(m.grad_year||'&mdash;')+'</td>' +
+      '<td>'+flags+'</td>' +
+      '<td><div class="college-list">'+colleges_html+'</div></td>' +
+      '<td>'+fmt(m.created_at)+'</td>' +
+      `<td><button class="btn-danger" onclick="deleteSession('${sid}')">Delete</button></td>` +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('submissions-wrap').innerHTML = html;
+}
+
+async function deleteSession(session_id) {
+  if (!confirm('Delete all submissions for this student?')) return;
+  const res = await fetch('/api/admin/sessions/'+encodeURIComponent(session_id), {
+    method:'DELETE', headers:{'x-admin-token':token}
+  });
+  if (res.status===401) { alert('Session expired. Please log in again.'); logout(); return; }
+  if (res.ok) { loadSubmissions(); }
+  else { const d=await res.json().catch(()=>({})); alert('Failed: '+(d.error||res.status)); }
+}
+
+async function loadUsers() {
+  const res = await fetch('/api/admin/users', {headers:{'x-admin-token':token}});
+  if (res.status===401) { logout(); return; }
+  const users = await res.json();
+  let html = '<table style="margin-bottom:0;"><thead><tr><th>Username</th><th>Created</th><th></th></tr></thead><tbody>';
+  users.forEach(u => {
+    html += '<tr><td>'+u.username+(u.username===currentUser?' <span style="color:var(--text3);font-size:0.75rem;">(you)</span>':'')+'</td>' +
+      '<td>'+fmt(u.created_at)+'</td>' +
+      `<td>${u.username!==currentUser?`<button class="btn-danger" onclick="deleteUser(${u.id},'${u.username}')">Remove</button>`:''}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('users-wrap').innerHTML = html;
+}
+
+async function addUser() {
+  const username = document.getElementById('new-user').value.trim();
+  const password = document.getElementById('new-pass').value;
+  showErr('user-err','');
+  if (!username||!password) { showErr('user-err','Username and password required.'); return; }
+  const res = await fetch('/api/admin/users', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-admin-token':token},
+    body: JSON.stringify({username, password})
+  });
+  const data = await res.json();
+  if (!res.ok) { showErr('user-err', data.error||'Failed.'); return; }
+  document.getElementById('new-user').value='';
+  document.getElementById('new-pass').value='';
+  loadUsers();
+}
+
+async function deleteUser(id, username) {
+  if (!confirm('Remove admin account "'+username+'"?')) return;
+  const res = await fetch('/api/admin/users/'+id, {method:'DELETE',headers:{'x-admin-token':token}});
+  const data = await res.json().catch(()=>({}));
+  if (!res.ok) { alert(data.error||'Failed.'); return; }
+  loadUsers();
+}
+
+async function loadQuestions() {
+  const res = await fetch('/api/admin/questions', {headers:{'x-admin-token':token}});
+  if (res.status===401) { logout(); return; }
+  const rows = await res.json();
+  const wrap = document.getElementById('questions-wrap');
+  const countEl = document.getElementById('q-count');
+  if (countEl) countEl.textContent = rows.length ? `— ${rows.length} pending` : '';
+  if (!rows.length) {
+    wrap.innerHTML = '<p style="color:var(--text3);font-size:0.85rem;">No questions yet.</p>';
+    return;
+  }
+  wrap.innerHTML = '<table><thead><tr><th>Question</th><th>Received</th><th></th></tr></thead><tbody>' +
+    rows.map(q =>
+      `<tr id="q-${q.id}">` +
+      `<td style="max-width:500px;word-break:break-word;">${q.question}</td>` +
+      `<td style="white-space:nowrap;">${fmt(q.created_at)}</td>` +
+      `<td><button class="btn-danger" onclick="dismissQuestion(${q.id})">Dismiss</button></td>` +
+      `</tr>`
+    ).join('') +
+    '</tbody></table>';
+}
+
+async function dismissQuestion(id) {
+  const res = await fetch('/api/admin/questions/' + id, {method:'DELETE', headers:{'x-admin-token':token}});
+  if (res.ok) loadQuestions();
+}
+
+document.getElementById('login-user').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+if (token) {
+  fetch('/api/admin/users', {headers:{'x-admin-token':token}}).then(res => {
+    if (res.ok) { setLoggedIn(token, currentUser); }
+    else logout();
+  });
+} else {
+  showSection('login');
+}
+</script>
+</body>
+</html>
