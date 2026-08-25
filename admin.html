@@ -10,32 +10,32 @@
   <style>
     :root { --bg:#f8f7f4;--surface:#fff;--border:#e8e5e0;--border2:#e0ddd8;--text:#1a1a1a;--text2:#666;--text3:#6f6f6f;--mono:'DM Mono',monospace; }
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    body { font-family:'Inter',-apple-system,sans-serif; font-size:0.875rem; background:var(--bg); color:var(--text); min-height:100vh; }
     header { background:#1a1a1a; padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:56px; }
-    header h1 { font-size:0.95rem; font-weight:600; color:#fff; }
+    header h1 { font-size:1.0625rem; font-weight:600; color:#fff; }
     .hdr-right { display:flex; align-items:center; gap:1rem; }
-    .hdr-user { font-size:0.8rem; color:#aaa; }
-    .hdr-btn { font-size:0.8rem; color:#aaa; background:none; border:1px solid #444; border-radius:6px; padding:4px 12px; cursor:pointer; font-family:inherit; }
+    .hdr-user { font-size:0.8125rem; color:#aaa; }
+    .hdr-btn { font-size:0.8125rem; color:#aaa; background:none; border:1px solid #444; border-radius:6px; padding:4px 12px; cursor:pointer; font-family:inherit; }
     .hdr-btn:hover { color:#fff; border-color:#888; }
     .container { max-width:1200px; margin:2rem auto; padding:0 1.5rem; }
     .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.5rem; margin-bottom:1.5rem; }
-    .card h2 { font-size:0.9rem; font-weight:600; margin-bottom:1rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.05em; }
+    .card h2 { font-size:0.9375rem; font-weight:600; margin-bottom:1rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.05em; }
     input[type=text], input[type=password] { padding:9px 12px; border:1px solid var(--border2); border-radius:7px; font-size:0.875rem; font-family:inherit; background:var(--bg); color:var(--text); min-width:180px; }
     .btn { padding:9px 18px; border:none; border-radius:7px; font-size:0.875rem; font-family:inherit; cursor:pointer; font-weight:500; }
     .btn-dark { background:#1a1a1a; color:#fff; }
     .btn-dark:hover { background:#333; }
-    .btn-danger { background:none; border:1px solid #e8c4c0; color:#c0392b; border-radius:6px; padding:5px 12px; font-size:0.8rem; font-family:inherit; cursor:pointer; }
+    .btn-danger { background:none; border:1px solid #e8c4c0; color:#c0392b; border-radius:6px; padding:5px 12px; font-size:0.8125rem; font-family:inherit; cursor:pointer; }
     .btn-danger:hover { background:#fdf0ee; }
-    .err { color:#c0392b; font-size:0.82rem; margin-top:6px; display:none; }
-    .toggle-link { font-size:0.82rem; color:var(--text3); margin-top:1rem; cursor:pointer; text-decoration:underline; }
+    .err { color:#c0392b; font-size:0.8125rem; margin-top:6px; display:none; }
+    .toggle-link { font-size:0.8125rem; color:var(--text3); margin-top:1rem; cursor:pointer; text-decoration:underline; }
     .toggle-link:hover { color:var(--text2); }
-    table { width:100%; border-collapse:collapse; font-size:0.85rem; }
-    th { text-align:left; padding:10px 14px; font-weight:600; font-size:0.78rem; color:var(--text2); border-bottom:1px solid var(--border); background:#f0ede8; }
+    table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    th { text-align:left; padding:10px 14px; font-weight:600; font-size:0.75rem; color:var(--text2); border-bottom:1px solid var(--border); background:#f0ede8; }
     td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
     tr:last-child td { border-bottom:none; }
     tr:hover td { background:#faf9f7; }
-    .mono { font-family:var(--mono); font-size:0.78rem; color:var(--text2); }
-    .pill { display:inline-block; padding:2px 7px; border-radius:4px; font-size:0.72rem; font-weight:500; }
+    .mono { font-family:var(--mono); font-size:0.75rem; color:var(--text2); }
+    .pill { display:inline-block; padding:2px 7px; border-radius:4px; font-size:0.75rem; font-weight:500; }
     .pill-green { background:#e8f5e9; color:#2e7d32; }
     .pill-red { background:#fdecea; color:#c62828; }
     .pill-gray { background:#f0ede8; color:#555; }
@@ -46,7 +46,7 @@
     .stat-box { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:1rem 1.25rem; }
     .stat-box .stat-val { font-size:1.6rem; font-weight:600; line-height:1; margin-bottom:4px; }
     .stat-box .stat-label { font-size:0.75rem; color:var(--text2); }
-    .daily-table { width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:0.5rem; }
+    .daily-table { width:100%; border-collapse:collapse; font-size:0.875rem; margin-top:0.5rem; }
     .daily-table th { text-align:left; padding:6px 10px; font-weight:600; font-size:0.75rem; color:var(--text2); border-bottom:1px solid var(--border); background:#f0ede8; }
     .daily-table td { padding:6px 10px; border-bottom:1px solid var(--border); }
     .daily-table tr:last-child td { border-bottom:none; }
@@ -78,7 +78,7 @@
 <div class="container" id="section-setup" style="display:none">
   <div class="card" style="max-width:380px;">
     <h2>First-time setup</h2>
-    <p style="font-size:0.82rem;color:var(--text2);margin-bottom:1rem;">Enter the server admin secret to create the first account.</p>
+    <p style="font-size:0.8125rem;color:var(--text2);margin-bottom:1rem;">Enter the server admin secret to create the first account.</p>
     <div class="field-col">
       <input type="password" id="setup-secret" placeholder="Admin secret" />
       <input type="text" id="setup-user" placeholder="New username" autocomplete="username" />
@@ -93,15 +93,15 @@
 <div class="container" id="section-main" style="display:none">
   <div class="card">
     <h2>Site analytics</h2>
-    <div id="stats-wrap"><p style="color:var(--text3);font-size:0.85rem;">Loading...</p></div>
+    <div id="stats-wrap"><p style="color:var(--text3);font-size:0.875rem;">Loading...</p></div>
   </div>
   <div class="card">
-    <h2>Submissions <span id="sub-count" style="font-weight:400;color:var(--text3);font-size:0.78rem;text-transform:none;letter-spacing:0;"></span></h2>
+    <h2>Submissions <span id="sub-count" style="font-weight:400;color:var(--text3);font-size:0.75rem;text-transform:none;letter-spacing:0;"></span></h2>
     <div id="submissions-wrap"></div>
   </div>
   <div class="card">
-    <h2>Visitor questions <span id="q-count" style="font-weight:400;color:var(--text3);font-size:0.78rem;text-transform:none;letter-spacing:0;"></span></h2>
-    <div id="questions-wrap"><p style="color:var(--text3);font-size:0.85rem;">Loading...</p></div>
+    <h2>Visitor questions <span id="q-count" style="font-weight:400;color:var(--text3);font-size:0.75rem;text-transform:none;letter-spacing:0;"></span></h2>
+    <div id="questions-wrap"><p style="color:var(--text3);font-size:0.875rem;">Loading...</p></div>
   </div>
   <div class="card">
     <h2>Admin accounts</h2>
@@ -199,7 +199,7 @@ async function loadStats() {
   const wrap = document.getElementById('stats-wrap');
   const res = await fetch('/api/admin/stats', {headers:{'x-admin-token':token}});
   if (res.status===401) { logout(); return; }
-  if (!res.ok) { wrap.innerHTML = '<p style="color:var(--text3);font-size:0.85rem;">Could not load stats.</p>'; return; }
+  if (!res.ok) { wrap.innerHTML = '<p style="color:var(--text3);font-size:0.875rem;">Could not load stats.</p>'; return; }
   const d = await res.json();
   const pv = d.page_views || {};
   const uv = d.unique_visitors || {};
@@ -274,7 +274,7 @@ async function loadSubmissions() {
     ', ' + rows.length + ' row' + (rows.length!==1?'s':'');
 
   if (!students.length) {
-    document.getElementById('submissions-wrap').innerHTML = '<p style="color:var(--text3);font-size:0.85rem;">No submissions yet.</p>';
+    document.getElementById('submissions-wrap').innerHTML = '<p style="color:var(--text3);font-size:0.875rem;">No submissions yet.</p>';
     return;
   }
 
@@ -364,7 +364,7 @@ async function loadQuestions() {
   const countEl = document.getElementById('q-count');
   if (countEl) countEl.textContent = rows.length ? `— ${rows.length} pending` : '';
   if (!rows.length) {
-    wrap.innerHTML = '<p style="color:var(--text3);font-size:0.85rem;">No questions yet.</p>';
+    wrap.innerHTML = '<p style="color:var(--text3);font-size:0.875rem;">No questions yet.</p>';
     return;
   }
   wrap.innerHTML = '<table><thead><tr><th>Question</th><th>Received</th><th></th></tr></thead><tbody>' +

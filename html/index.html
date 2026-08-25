@@ -793,8 +793,8 @@
 
     <div class="chart-area">
       <div class="chart-toolbar">
-        <button class="chart-tab active" onclick="switchChart('gpa',this)">Weighted GPA</button>
-        <button class="chart-tab" onclick="switchChart('sat',this)">SAT</button>
+        <button class="chart-tab active" id="chart-tab-gpa" onclick="switchChart('gpa',this)">Weighted GPA</button>
+        <button class="chart-tab" id="chart-tab-sat" onclick="switchChart('sat',this)">SAT</button>
         <button class="compare-btn-sm" onclick="openCompare()">Compare colleges</button>
         <div class="chart-spacer"></div>
         <input class="chart-search" id="college-search" placeholder="Search a college…" type="text" oninput="filterChart(this.value)">
@@ -1107,6 +1107,24 @@ function canonKey(name) {
     .replace(/[^a-z]/g, '');
 }
 
+// Free-text college names collect spelling variants ("Gavilan college" vs
+// "Gavilan"); group rows by canonKey and pick each group's most common
+// actual spelling as the display name. Shared by the scatter chart and the
+// school-profile "top colleges" list so a school never fragments into
+// multiple, individually-undercounted entries in one view but not the other.
+function canonicalNames(data) {
+  const canonical = new Map();   // canonKey -> display name
+  const nameCount = new Map();   // raw name -> occurrences
+  data.forEach(r => {
+    if (!r.college_name || r.college_name.toLowerCase() === 'none') return;
+    const k = canonKey(r.college_name);
+    nameCount.set(r.college_name, (nameCount.get(r.college_name)||0)+1);
+    if (!canonical.has(k) || (nameCount.get(r.college_name)||0) > (nameCount.get(canonical.get(k))||0))
+      canonical.set(k, r.college_name);
+  });
+  return canonical;
+}
+
 function isOpenAdmission(row) {
   const name = row.college_name || '';
   if (JUCO_RE.test(name)) return true;
@@ -1253,6 +1271,59 @@ let activeChartType = 'gpa', searchFilter = '', activeFilter = null, slmFilter =
 const REDUCED_MOTION = window.matchMedia
   && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let currentPage = 'results';
+let _openCollegeName = null; // for URL sync only — which college's modal is open
+let _suppressUrlWrite = false; // true while popstate is restoring, so restoring doesn't itself push history
+
+// ── URL state sync ───────────────────────────────────────────────────────
+// Tabs, filters, search, the min-submissions slider, and the open college
+// modal used to live only in JS variables: no shareable link to a specific
+// view, and Back undid nothing. Mirror them into the query string.
+// Deliberately excluded: "students like me" (gpa/sat/ranges) and the
+// compare-colleges picker — lower-value to share and meaningfully more
+// state to carry for it.
+function readStateFromUrl() {
+  const p = new URLSearchParams(location.search);
+  const min = parseInt(p.get('min'));
+  return {
+    page: p.get('page') === 'submit' ? 'submit' : 'results',
+    chart: p.get('chart') === 'sat' ? 'sat' : 'gpa',
+    schools: COLLEGE_FILTER_TABS.includes(p.get('schools')) ? p.get('schools') : 'All',
+    q: p.get('q') || '',
+    min: (min >= 1 && min <= 5) ? min : 1,
+    decision: DECISION_ORDER.includes(p.get('decision')) ? p.get('decision') : null,
+    college: p.get('college') || null,
+  };
+}
+function writeUrlState(push) {
+  const p = new URLSearchParams();
+  if (currentPage !== 'results') p.set('page', currentPage);
+  if (activeChartType !== 'gpa') p.set('chart', activeChartType);
+  if (activeCollegeFilter !== 'All') p.set('schools', activeCollegeFilter);
+  if (searchFilter) p.set('q', searchFilter);
+  if (minSubs !== 1) p.set('min', String(minSubs));
+  if (activeFilter) p.set('decision', activeFilter);
+  if (_openCollegeName) p.set('college', _openCollegeName);
+  const qs = p.toString();
+  const url = location.pathname + (qs ? '?' + qs : '');
+  if (push) history.pushState({}, '', url);
+  else history.replaceState({}, '', url);
+}
+// Push state vars into the controls that don't already re-render themselves
+// from those vars (filter tabs and the chart legend do; a raw <input> and a
+// <select>-like slider thumb need to be told directly).
+function syncControlsToState() {
+  const search = document.getElementById('college-search');
+  if (search) search.value = searchFilter;
+  const slider = document.getElementById('minsub-slider');
+  const val = document.getElementById('minsub-val');
+  if (slider) { slider.value = minSubs; slider.style.setProperty('--fill', (((minSubs - 1) / 4) * 100) + '%'); }
+  if (val) val.textContent = minSubs + '+';
+  const gpaTab = document.getElementById('chart-tab-gpa'), satTab = document.getElementById('chart-tab-sat');
+  if (gpaTab && satTab) {
+    gpaTab.classList.toggle('active', activeChartType === 'gpa');
+    satTab.classList.toggle('active', activeChartType === 'sat');
+  }
+}
 
 // ── Navigation ────────────────────────────────────────────────────────────
 function updateNav() {
@@ -1270,7 +1341,8 @@ function dismissCta() {
 }
 
 // ── Page transitions ───────────────────────────────────────────────────────
-function showPage(name) {
+function showPage(name, opts) {
+  const fromPopstate = !!(opts && opts.fromPopstate);
   if (name === currentPage) return;
   const oldEl = document.getElementById('page-' + currentPage);
   const newEl = document.getElementById('page-' + name);
@@ -1283,6 +1355,7 @@ function showPage(name) {
     oldEl.classList.remove('active');
     newEl.classList.add('active');
     currentPage = name;
+    if (!fromPopstate) writeUrlState(true);
     if (name === 'results') loadData();
     if (name === 'submit') loadExistingSubmission();
     return;
@@ -1303,6 +1376,7 @@ function showPage(name) {
       newEl.style.cssText = '';
       newEl.classList.add('active');
       currentPage = name;
+      if (!fromPopstate) writeUrlState(true);
       if (name === 'results') loadData();
       if (name === 'submit') loadExistingSubmission();
     }, 220);
@@ -1351,6 +1425,7 @@ function setCollegeFilter(f) {
   document.getElementById('slm-sat').value = '';
   document.getElementById('slm-clear-btn').style.display = 'none';
   document.getElementById('slm-status').style.display = 'none';
+  writeUrlState(true);
   renderResults();
 }
 
@@ -1502,15 +1577,16 @@ function flipDots(el, prev) {
 }
 
 // ── Chart ──────────────────────────────────────────────────────────────────
-function filterChart(val) { searchFilter = val.toLowerCase().trim(); buildChart(scatterData, false); }
+function filterChart(val) { searchFilter = val.toLowerCase().trim(); writeUrlState(false); buildChart(scatterData, false); }
 function switchChart(type, btn) {
   activeChartType = type;
   trackEvent('chart_switch', type);
   document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  writeUrlState(true);
   buildChart(scatterData, true);
 }
-function toggleFilter(d) { activeFilter = activeFilter===d ? null : d; buildChart(scatterData, false); }
+function toggleFilter(d) { activeFilter = activeFilter===d ? null : d; writeUrlState(true); buildChart(scatterData, false); }
 function onMinSubsInput(v) {
   const f = parseFloat(v) || 1;
   const slider = document.getElementById('minsub-slider');
@@ -1532,6 +1608,7 @@ function onMinSubsChange(v) {
   const val = document.getElementById('minsub-val');
   if (val) val.textContent = snapped + '+';
   minSubs = snapped;
+  writeUrlState(false);
   buildChart(scatterData, true);
 }
 
@@ -1563,14 +1640,24 @@ function buildChart(data, animate) {
     ? captureDots(document.getElementById('chart-main'))
     : null;
 
-  const allCols = [...new Set(data.map(r=>r.college_name).filter(Boolean))];
+  // Spelling variants ("Gavilan college" / "Gavilan") used to count as
+  // separate columns, each undercounted — the true top school never looked
+  // like the top school, which is most of why "sorted by submissions" read
+  // as arbitrary. Group by canonical identity before counting or sorting.
+  const nameMap = canonicalNames(data);
+  const displayName = n => nameMap.get(canonKey(n)) || n;
+  const allCols = [...new Set(data.map(r=>r.college_name).filter(Boolean).map(displayName))];
   allCols.sort((a,b) => {
-    const at = data.filter(r=>r.college_name===a).length;
-    const bt = data.filter(r=>r.college_name===b).length;
+    const at = data.filter(r=>displayName(r.college_name)===a).length;
+    const bt = data.filter(r=>displayName(r.college_name)===b).length;
     if (bt !== at) return bt - at;
-    return (getAcceptRate(a)||100) - (getAcceptRate(b)||100);
+    // Ties (the common case — most colleges get exactly 1 submission) used to
+    // break on a hardcoded national acceptance rate that appears nowhere on
+    // this chart, so the order looked arbitrary. Alphabetical is at least
+    // predictable and lets you find a school by scanning.
+    return a.localeCompare(b);
   });
-  const filtered_cols = allCols.filter(c => data.filter(r=>r.college_name===c).length >= minSubs);
+  const filtered_cols = allCols.filter(c => data.filter(r=>displayName(r.college_name)===c).length >= minSubs);
   const cols = searchFilter ? filtered_cols.filter(c=>c.toLowerCase().includes(searchFilter)) : filtered_cols;
 
   const cnt = document.getElementById('chart-col-count');
@@ -1584,7 +1671,7 @@ function buildChart(data, animate) {
   const yKey = isGpa ? 'gpa_weighted' : 'sat';
   const yLabel = isGpa ? 'Weighted GPA' : 'SAT Score';
   const yMin = isGpa ? 1 : 400, yMax = isGpa ? 5 : 1600;
-  const filtered = data.filter(r => r[yKey] != null && cols.includes(r.college_name));
+  const filtered = data.filter(r => r[yKey] != null && cols.includes(displayName(r.college_name)));
   const ySteps = isGpa ? [1,1.5,2,2.5,3,3.5,4,4.5,5] : [400,600,800,1000,1200,1400,1600];
 
   const isMobile = window.innerWidth <= 600;
@@ -1602,7 +1689,7 @@ function buildChart(data, animate) {
   const H = 20 + plotHTarget + padBottom;
   const PAD = {top:20, right:20, bottom: padBottom, left:58};
   const containerW = el.closest('.chart-area').clientWidth - 40;
-  const minColW = n > 50 ? 14 : n > 35 ? 18 : n > 25 ? 22 : n > 18 ? 30 : n > 12 ? 40 : 56;
+  const minColW = n > 50 ? 20 : n > 35 ? 26 : n > 25 ? 30 : n > 18 ? 36 : n > 12 ? 46 : 56;
   const colW = Math.max(containerW / cols.length, minColW);
   const W = Math.max(PAD.left + PAD.right + colW * cols.length, containerW, 400);
   const plotW = W - PAD.left - PAD.right, plotH = H - PAD.top - PAD.bottom;
@@ -1629,7 +1716,7 @@ function buildChart(data, animate) {
   });
 
   filtered.forEach((r, ri) => {
-    const i = cols.indexOf(r.college_name);
+    const i = cols.indexOf(displayName(r.college_name));
     const bx = PAD.left + i*colW + colW/2;
     const by = PAD.top + plotH - (parseFloat(r[yKey])-yMin)/(yMax-yMin)*plotH;
     const seed = (r.session_id||String(ri)) + (r.college_name||'') + (r.decision||'');
@@ -1668,9 +1755,10 @@ function updateScrollHint() {
   const wrap = document.getElementById('chart-scroll-wrap');
   const outer = document.getElementById('chart-scroll-outer');
   if (!wrap || !outer) return;
+  const MEANINGFUL_SCROLL = 40; // px — below this, scrolling wouldn't visibly move the chart
   const check = () => {
-    const canRight = wrap.scrollLeft + wrap.clientWidth < wrap.scrollWidth - 10;
-    const canLeft  = wrap.scrollLeft > 10;
+    const canRight = wrap.scrollLeft + wrap.clientWidth < wrap.scrollWidth - MEANINGFUL_SCROLL;
+    const canLeft  = wrap.scrollLeft > MEANINGFUL_SCROLL;
     outer.classList.toggle('can-right', canRight);
     outer.classList.toggle('can-left',  canLeft);
   };
@@ -1877,7 +1965,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── College modal ──────────────────────────────────────────────────────────
 function openCollegeDetail(name) {
-  const rows = scatterData.filter(r => r.college_name === name);
+  // name is the merged display name from the chart's canonical grouping —
+  // pull in every spelling variant, not just rows with this exact string.
+  const key = canonKey(name);
+  const rows = scatterData.filter(r => canonKey(r.college_name) === key);
   if (!rows.length) return;
   trackEvent('college_click', name);
   const total = rows.length, accepted = rows.filter(r=>r.decision==='Accepted').length;
@@ -1910,7 +2001,9 @@ function openCollegeDetail(name) {
         <span>Max <strong style="color:var(--text);font-family:var(--mono)">${gpaMax}</strong></span>
       </div>
     </div>`;
-  document.getElementById('college-modal').classList.add('open');
+  _openCollegeName = name;
+  if (!_suppressUrlWrite) writeUrlState(true);
+  openModal('college-modal');
 }
 
 function openCompare() {
@@ -1928,7 +2021,7 @@ function openCompare() {
       <select id="cmp-c" onchange="renderCompare()">${optsC}</select>
     </div>
     <div id="cmp-result"></div>`;
-  document.getElementById('compare-modal').classList.add('open');
+  openModal('compare-modal');
   renderCompare();
 }
 function renderCompare() {
@@ -2001,13 +2094,70 @@ function colStats(name) {
     </div>` : ''}
   </div>`;
 }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+// ── Modal accessibility: focus trap + focus restore ─────────────────────────
+// Tab used to escape straight into the page behind the overlay, and closing
+// a modal dropped focus back to <body> instead of wherever you opened it
+// from. Both are single-instance globals because this app never stacks
+// more than one modal at a time.
+let _modalReturnFocus = null;
+let _modalKeydownHandler = null;
+function _focusableIn(modal) {
+  return [...modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    .filter(el => el.offsetParent !== null);
+}
+function openModal(id) {
+  const overlay = document.getElementById(id);
+  const modal = overlay.querySelector('.modal');
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  overlay.classList.add('open');
+  _modalReturnFocus = document.activeElement;
+  const list = _focusableIn(modal);
+  if (list.length) list[0].focus();
+  else { modal.setAttribute('tabindex', '-1'); modal.focus(); }
+  _modalKeydownHandler = (e) => {
+    if (e.key !== 'Tab') return;
+    const focusables = _focusableIn(modal);
+    if (!focusables.length) { e.preventDefault(); return; }
+    const idx = focusables.indexOf(document.activeElement);
+    if (e.shiftKey && idx <= 0) { e.preventDefault(); focusables[focusables.length - 1].focus(); }
+    else if (!e.shiftKey && idx === focusables.length - 1) { e.preventDefault(); focusables[0].focus(); }
+  };
+  modal.addEventListener('keydown', _modalKeydownHandler);
+}
+function closeModal(id) {
+  const overlay = document.getElementById(id);
+  overlay.classList.remove('open');
+  const modal = overlay.querySelector('.modal');
+  if (_modalKeydownHandler) { modal.removeEventListener('keydown', _modalKeydownHandler); _modalKeydownHandler = null; }
+  if (_modalReturnFocus && document.contains(_modalReturnFocus)) _modalReturnFocus.focus();
+  _modalReturnFocus = null;
+  if (id === 'college-modal' && _openCollegeName) {
+    _openCollegeName = null;
+    if (!_suppressUrlWrite) writeUrlState(true);
+  }
+}
 document.addEventListener('keydown', e => { if (e.key==='Escape') { closeModal('college-modal'); closeModal('compare-modal'); } });
 
 // ── Students Like Me ───────────────────────────────────────────────────────
 function applySlm() {
-  const gpa = parseFloat(document.getElementById('slm-gpa').value);
+  const gpaInput = document.getElementById('slm-gpa');
+  const gpa = parseFloat(gpaInput.value);
   if (!gpa) { alert('Enter your GPA to find matches.'); return; }
+  // This is unweighted GPA, which every submission caps at 4.0 (see f-gpa's
+  // own max). A value outside [min,max] can never match anyone — say so
+  // instead of silently running a search that's guaranteed empty.
+  const gMin = parseFloat(gpaInput.min), gMax = parseFloat(gpaInput.max);
+  if (gpa < gMin || gpa > gMax) {
+    const status = document.getElementById('slm-status');
+    status.style.display = 'block';
+    status.innerHTML = `Unweighted GPA is ${gMin.toFixed(1)}–${gMax.toFixed(1)}. ${gpa > gMax ? 'Did you mean your <strong>weighted</strong> GPA?' : ''}`;
+    slmFilter = null;
+    document.getElementById('slm-clear-btn').style.display = 'inline-block';
+    buildChart(scatterData, false);
+    renderEntries(scatterData);
+    return;
+  }
   const gpaRange = parseFloat(document.getElementById('slm-gpa-range').value);
   const sat = parseInt(document.getElementById('slm-sat').value)||null;
   const satRange = parseInt(document.getElementById('slm-sat-range').value);
@@ -2015,8 +2165,10 @@ function applySlm() {
   document.getElementById('slm-clear-btn').style.display = 'inline-block';
   const status = document.getElementById('slm-status');
   status.style.display = 'block';
+  const matched = new Set(scatterData.filter(r=>slmMatches(r)).map(r=>r.session_id)).size;
   let desc = `Showing students with GPA <strong>${(gpa-gpaRange).toFixed(1)} – ${(gpa+gpaRange).toFixed(1)}</strong>`;
   if (sat) desc += ` · SAT <strong>${sat-satRange} – ${sat+satRange}</strong>`;
+  if (!matched) desc += ` — <strong>no matches</strong>. Try widening the range.`;
   status.innerHTML = desc;
   buildChart(scatterData, false);
   renderEntries(scatterData);
@@ -2175,15 +2327,7 @@ function renderStatsInline(data) {
   // "Gavillan" were three separate bars), and drop anything with a single
   // applicant: one person is not a trend, and a one-row bar is also the most
   // identifying thing on the page.
-  const canonical = new Map();   // normalised key -> display name (most common spelling)
-  const nameCount = new Map();
-  data.forEach(r => {
-    if (!r.college_name || r.college_name.toLowerCase() === 'none') return;
-    const k = canonKey(r.college_name);
-    nameCount.set(r.college_name, (nameCount.get(r.college_name)||0)+1);
-    if (!canonical.has(k) || (nameCount.get(r.college_name)||0) > (nameCount.get(canonical.get(k))||0))
-      canonical.set(k, r.college_name);
-  });
+  const canonical = canonicalNames(data);
 
   const colApps = new Map(), colAcc = new Map();
   data.forEach(r => {
@@ -2751,9 +2895,48 @@ function toggleTheme() {
 
 // ── Init ───────────────────────────────────────────────────────────────────
 window.addEventListener('resize', () => { if (scatterData.length) { buildChart(scatterData, false); } });
-document.addEventListener('DOMContentLoaded', () => {
-  updateNav(); loadData();
+document.addEventListener('DOMContentLoaded', async () => {
+  // Restore whatever view the URL describes before the first render, so a
+  // shared link or a refresh lands on the same tab/filter/search/college —
+  // not just the hardcoded defaults.
+  const initial = readStateFromUrl();
+  activeChartType = initial.chart;
+  activeCollegeFilter = initial.schools;
+  searchFilter = initial.q.toLowerCase().trim();
+  minSubs = initial.min;
+  activeFilter = initial.decision;
+  syncControlsToState();
+  if (initial.page === 'submit') {
+    document.getElementById('page-results').classList.remove('active');
+    document.getElementById('page-submit').classList.add('active');
+    document.getElementById('nav-results').classList.remove('active');
+    document.getElementById('nav-submit').classList.add('active');
+    currentPage = 'submit';
+    loadExistingSubmission();
+  }
+  updateNav();
+  await loadData();
+  if (initial.college) openCollegeDetail(initial.college);
   fetch('/api/track', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:SESSION_ID})}).catch(()=>{});
+});
+
+window.addEventListener('popstate', () => {
+  _suppressUrlWrite = true;
+  try {
+    const state = readStateFromUrl();
+    activeChartType = state.chart;
+    activeCollegeFilter = state.schools;
+    searchFilter = state.q.toLowerCase().trim();
+    minSubs = state.min;
+    activeFilter = state.decision;
+    syncControlsToState();
+    closeModal('college-modal');
+    if (state.page !== currentPage) showPage(state.page, {fromPopstate: true});
+    if (currentPage === 'results' && scatterData.length) renderResults();
+    if (state.college) openCollegeDetail(state.college);
+  } finally {
+    _suppressUrlWrite = false;
+  }
 });
 
 function trackEvent(type, value) {
@@ -2816,7 +2999,7 @@ function initStatsDisclaimerGate() {
   statsGateObserver = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (!e.isIntersecting) return;
-      document.getElementById('stats-disclaimer-modal').classList.add('open');
+      openModal('stats-disclaimer-modal');
       statsGateObserver.unobserve(e.target);
     });
   }, { threshold: 0, rootMargin: '0px 0px -60% 0px' });
