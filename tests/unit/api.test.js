@@ -213,7 +213,13 @@ describe('DELETE /api/submissions/:session_id', () => {
 
     const remaining = await request(app).get('/api/submissions');
     expect(remaining.body).toHaveLength(1);
-    expect(remaining.body[0].session_id).toBe('sess-b');
+    // GET /api/submissions deliberately never returns the raw session_id
+    // (it's the only credential needed to edit/delete, so exposing it in the
+    // public feed would let anyone delete anyone's rows) — it returns a
+    // salted one-way digest instead, generated fresh per app instance, so
+    // this can't assert an exact value. college_name distinguishes sess-b's
+    // row from the deleted sess-a row just as well.
+    expect(remaining.body[0].college_name).toBe('Harvard');
   });
 });
 
