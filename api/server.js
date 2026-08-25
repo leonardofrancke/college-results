@@ -103,6 +103,18 @@ function createApp(dbPath) {
       )
     `);
 
+    // Lightweight analytics events (clicks, filter usage, etc.)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT,
+        event_type TEXT NOT NULL,
+        event_value TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    db.run('CREATE INDEX IF NOT EXISTS idx_events_type ON events(event_type)');
+
     // Admin auth tokens (persisted so they survive restarts)
     db.run(`
       CREATE TABLE IF NOT EXISTS admin_tokens (
@@ -133,10 +145,39 @@ function createApp(dbPath) {
   }
 
   // ── Public: submissions ────────────────────────────────────────────────
+  // A submission's session_id is also the only thing needed to edit or delete
+  // it, so it must never appear in the public feed — otherwise anyone can list
+  // every id and delete every submission. The feed instead carries a stable
+  // one-way digest, which groups a student's colleges together exactly like the
+  // raw id did but cannot be replayed against the write routes.
+  //
+  // GROUP_SALT is per-process by default; set it in the environment so digests
+  // stay stable across restarts.
+  const GROUP_SALT = process.env.GROUP_SALT || crypto.randomBytes(16).toString('hex');
+  const groupId = sid => sid
+    ? crypto.createHmac('sha256', GROUP_SALT).update(String(sid)).digest('hex').slice(0, 16)
+    : null;
+
+  // Exact class rank identifies a student outright — everyone knows who is #1,
+  // and most reported ranks belong to a single person. The feed carries a
+  // fixed-width 7-rank range instead (e.g. "8-14"), never the raw number.
+  const RANK_BUCKET = 7;
+  const rankBand = rank => {
+    const n = parseInt(rank);
+    if (!n || n < 1) return null;
+    const band = Math.ceil(n / RANK_BUCKET);
+    const lo = (band - 1) * RANK_BUCKET + 1, hi = band * RANK_BUCKET;
+    return `${lo}-${hi}`;
+  };
+
   app.get('/api/submissions', (req, res) => {
     db.all('SELECT * FROM submissions ORDER BY created_at DESC', (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json(rows || []);
+      res.json((rows || []).map(r => ({
+        ...r,
+        session_id: groupId(r.session_id),
+        class_rank: rankBand(r.class_rank)
+      })));
     });
   });
 
@@ -212,6 +253,20 @@ function createApp(dbPath) {
     db.run('INSERT INTO page_views (session_id, ua_hash) VALUES (?, ?)',
       [session_id, ua_hash], err => {
         if (err) console.error('Track error:', err);
+        res.json({ ok: true });
+      });
+  });
+
+  // Generic analytics event tracking (clicks, filter usage, etc.)
+  app.post('/api/track/event', (req, res) => {
+    const { type, value, session_id } = req.body || {};
+    if (!type) return res.status(400).json({ error: 'type required' });
+    const safeType  = String(type).slice(0, 50);
+    const safeValue = value != null ? String(value).slice(0, 200) : null;
+    const safeSid   = session_id ? String(session_id).slice(0, 80) : null;
+    db.run('INSERT INTO events (session_id, event_type, event_value) VALUES (?, ?, ?)',
+      [safeSid, safeType, safeValue], err => {
+        if (err) console.error('Event track:', err);
         res.json({ ok: true });
       });
   });
@@ -351,19 +406,52 @@ function createApp(dbPath) {
       q(`SELECT COUNT(DISTINCT session_id) AS uniq_week FROM page_views WHERE session_id IS NOT NULL AND created_at >= datetime('now','-7 days')`),
       // Daily breakdown for last 14 days
       new Promise((resolve, reject) =>
-        db.all(`SELECT date(created_at) AS day, COUNT(*) AS views, COUNT(DISTINCT session_id) AS uniq
+        db.all(`SELECT date(created_at) AS date, COUNT(*) AS page_views, COUNT(DISTINCT session_id) AS unique_visitors
                 FROM page_views WHERE created_at >= datetime('now','-14 days')
-                GROUP BY day ORDER BY day`, [], (err, rows) => err ? reject(err) : resolve(rows))
+                GROUP BY date ORDER BY date`, [], (err, rows) => err ? reject(err) : resolve(rows))
       ),
       q('SELECT COUNT(*) AS total_subs FROM submissions'),
       q('SELECT COUNT(DISTINCT session_id) AS total_students FROM submissions'),
       q(`SELECT COUNT(DISTINCT session_id) AS subs_this_week FROM submissions WHERE created_at >= datetime('now','-7 days')`),
-    ]).then(([total, today, week, month, uniq, uniqToday, uniqWeek, daily, subs, students, subsWeek]) => {
+      // New analytics queries
+      q('SELECT COUNT(DISTINCT college_name) AS n FROM submissions WHERE college_name IS NOT NULL AND college_name != ""'),
+      q('SELECT COUNT(DISTINCT major) AS n FROM submissions WHERE major IS NOT NULL AND major != ""'),
+      // Avg session length in seconds (only for sessions with >1 page view)
+      q(`SELECT AVG(dur) AS avg_sec FROM (
+            SELECT (julianday(MAX(created_at)) - julianday(MIN(created_at))) * 86400 AS dur
+            FROM page_views WHERE session_id IS NOT NULL
+            GROUP BY session_id HAVING COUNT(*) > 1
+         )`),
+      // Top clicked colleges
+      new Promise((resolve, reject) =>
+        db.all(`SELECT event_value AS name, COUNT(*) AS clicks FROM events
+                WHERE event_type = 'college_click' AND event_value IS NOT NULL
+                GROUP BY event_value ORDER BY clicks DESC LIMIT 12`, [], (err, rows) => err ? reject(err) : resolve(rows))
+      ),
+      // Top used filters
+      new Promise((resolve, reject) =>
+        db.all(`SELECT event_value AS name, COUNT(*) AS clicks FROM events
+                WHERE event_type = 'filter_click' AND event_value IS NOT NULL
+                GROUP BY event_value ORDER BY clicks DESC LIMIT 12`, [], (err, rows) => err ? reject(err) : resolve(rows))
+      ),
+    ]).then(([total, today, week, month, uniq, uniqToday, uniqWeek, daily, subs, students, subsWeek,
+              collegesTracked, majorsTracked, avgSession, topColleges, topFilters]) => {
+      const visitors = uniq.unique_sessions || 0;
+      const submitters = students.total_students || 0;
       res.json({
         page_views: { total: total.total, today: today.today, week: week.week, month: month.month },
-        unique_visitors: { all_time: uniq.unique_sessions, today: uniqToday.uniq_today, week: uniqWeek.uniq_week },
+        unique_visitors: { total: visitors, today: uniqToday.uniq_today, week: uniqWeek.uniq_week },
         daily,
-        submissions: { total: subs.total_subs, students: students.total_students, this_week: subsWeek.subs_this_week },
+        submissions: { total: subs.total_subs, students: submitters, this_week: subsWeek.subs_this_week },
+        colleges_tracked: collegesTracked.n || 0,
+        majors_tracked: majorsTracked.n || 0,
+        avg_session_seconds: Math.round(avgSession.avg_sec || 0),
+        conversion: {
+          visitors, submitters,
+          rate: visitors ? +(submitters / visitors * 100).toFixed(1) : 0,
+        },
+        top_colleges: topColleges || [],
+        top_filters: topFilters || [],
       });
     }).catch(err => res.status(500).json({ error: err.message }));
   });

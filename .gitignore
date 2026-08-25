@@ -7,3 +7,10 @@ tests/node_modules/
 tests/coverage/
 .env
 deploy/**/.env
+
+# Local agent tooling (installed design/review skills) — not part of the app
+.DS_Store
+.claude/
+.agents/
+.codex/
+skills-lock.json

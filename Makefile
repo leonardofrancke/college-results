@@ -1,5 +1,6 @@
 PROD_DIR     = /var/local/docker/leo-app
-STAGING_DIR  = /var/local/docker/leo-app-staging
+STAGING_DIR  = /var/local/docker/leo-app/staging
+DEV_DIR      = /var/local/docker/leo-app/dev
 RSYNC_OPTS   = -av --exclude='db/' --exclude='node_modules/' --exclude='.git/' --exclude='deploy/'
 
 .PHONY: deploy-prod deploy-staging up-prod up-staging install
@@ -25,13 +26,15 @@ up-staging: ## Build image and launch staging (first run or after Dockerfile cha
 install: deploy-prod ## Alias for deploy-prod (backwards compat)
 
 # Dev environment
+# NOTE: these previously rsynced to /var/local/docker/leo-app/ (= PROD_DIR), which
+# wrote straight into prod's mounted html/ and api/. They target $(DEV_DIR) now.
 up-dev: ## Build image and launch dev (first run or after Dockerfile changes)
-	mkdir -p /var/local/docker/leo-app/dev/db
-	rsync $(RSYNC_OPTS) . /var/local/docker/leo-app/
+	mkdir -p $(DEV_DIR)/html $(DEV_DIR)/api $(DEV_DIR)/db
+	rsync $(RSYNC_OPTS) . $(DEV_DIR)/
 	cd deploy/dev && sudo docker compose up -d --build
 
 deploy-dev: ## Rsync source to dev and restart container
-	rsync $(RSYNC_OPTS) . /var/local/docker/leo-app/
+	rsync $(RSYNC_OPTS) . $(DEV_DIR)/
 	cd deploy/dev && sudo docker compose restart
 
 # Promote staging → prod (blue/green cutover)
