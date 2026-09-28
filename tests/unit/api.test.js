@@ -353,3 +353,23 @@ describe('existing data is preserved', () => {
     expect(row.decision).toBe('Accepted');
   });
 });
+
+describe('stable feed IDs', () => {
+  test('digest is the same after a restart on the same database', async () => {
+    const path = require('path'), os = require('os'), fs = require('fs');
+    const { createApp: real } = require('../../api/server');
+    const dbPath = path.join(os.tmpdir(), `leo-salt-${Date.now()}.db`);
+    const close = a => new Promise(r => a._db.close(r));
+
+    const a1 = real(dbPath);
+    await request(a1).post('/api/submissions').send({ session_id: 's', colleges: [{ college_name: 'A' }] });
+    const id1 = (await request(a1).get('/api/submissions')).body[0].session_id;
+    await close(a1);
+
+    const a2 = real(dbPath);
+    const id2 = (await request(a2).get('/api/submissions')).body[0].session_id;
+    await close(a2);
+    fs.unlinkSync(dbPath);
+    expect(id2).toBe(id1);
+  });
+});

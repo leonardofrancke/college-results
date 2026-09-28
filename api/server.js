@@ -47,6 +47,13 @@ function createApp(dbPath) {
     else console.log('Connected to SQLite at', dbPath);
   });
 
+  // Per-process fallback until the stored salts load (they load before any
+  // request's query runs, since sqlite3 runs queued statements in order).
+  const salts = {
+    GROUP_SALT: process.env.GROUP_SALT || crypto.randomBytes(16).toString('hex'),
+    ANALYTICS_SALT: process.env.ANALYTICS_SALT || crypto.randomBytes(16).toString('hex'),
+  };
+
   // ── Schema ─────────────────────────────────────────────────────────────
   db.serialize(() => {
     // Submissions
@@ -140,6 +147,22 @@ function createApp(dbPath) {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    // Salts for the one-way ID digests below. Generated once and kept here so
+    // digests stay the same across restarts; an env var still overrides.
+    db.run(`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    `);
+    ['GROUP_SALT', 'ANALYTICS_SALT'].forEach(key => {
+      db.run('INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?)',
+        [key, crypto.randomBytes(16).toString('hex')]);
+      db.get('SELECT value FROM app_settings WHERE key = ?', [key], (err, row) => {
+        if (!err && row && !process.env[key]) salts[key] = row.value;
+      });
+    });
+
     // Best-effort cleanup of expired tokens on startup
     db.run('DELETE FROM admin_tokens WHERE expires_at < ?', [Date.now()]);
   });
@@ -166,12 +189,8 @@ function createApp(dbPath) {
   // every id and delete every submission. The feed instead carries a stable
   // one-way digest, which groups a student's colleges together exactly like the
   // raw id did but cannot be replayed against the write routes.
-  //
-  // GROUP_SALT is per-process by default; set it in the environment so digests
-  // stay stable across restarts.
-  const GROUP_SALT = process.env.GROUP_SALT || crypto.randomBytes(16).toString('hex');
   const groupId = sid => sid
-    ? crypto.createHmac('sha256', GROUP_SALT).update(String(sid)).digest('hex').slice(0, 16)
+    ? crypto.createHmac('sha256', salts.GROUP_SALT).update(String(sid)).digest('hex').slice(0, 16)
     : null;
 
   // Exact class rank identifies a student outright — everyone knows who is #1,
@@ -294,9 +313,8 @@ function createApp(dbPath) {
   // ── Public: page view tracking ─────────────────────────────────────────
   // Analytics rows store a one-way digest of the browser ID rather than the ID
   // itself, so browsing history can't be joined back to a submission.
-  const ANALYTICS_SALT = process.env.ANALYTICS_SALT || crypto.randomBytes(16).toString('hex');
   const analyticsId = sid => sid
-    ? crypto.createHmac('sha256', ANALYTICS_SALT).update(String(sid)).digest('hex').slice(0, 16)
+    ? crypto.createHmac('sha256', salts.ANALYTICS_SALT).update(String(sid)).digest('hex').slice(0, 16)
     : null;
 
   app.post('/api/track', (req, res) => {
