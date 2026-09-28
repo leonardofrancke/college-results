@@ -769,7 +769,7 @@
       <div class="cta-banner">
         <div>
           <div class="cta-banner-text">🎓 Add your college results</div>
-          <div class="cta-banner-sub">Takes 2 minutes · fully anonymous · helps future students</div>
+          <div class="cta-banner-sub">Takes 2 minutes · no name collected · helps future students</div>
         </div>
         <button class="cta-banner-btn" onclick="showPage('submit');dismissCta()">Share mine →</button>
         <button class="cta-dismiss" aria-label="Dismiss" onclick="dismissCta()">×</button>
@@ -866,7 +866,7 @@
     <div class="form-wrap">
       <div class="form-title" id="form-title">Add your college results</div>
       <div class="form-subtitle" id="form-subtitle">Add every school you applied to. Acceptances, rejections, and waitlists all help future Live Oak students.</div>
-      <div class="anon-note" id="anon-badge">🔒 Fully anonymous — your name is never stored</div>
+      <div class="anon-note" id="anon-badge">🔒 No name, email, or login — never stored</div>
       <div class="success-msg" id="success-msg" role="status" aria-live="polite">Saved!</div>
 
       <div class="form-row" style="margin-bottom:15px;">
@@ -927,11 +927,6 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="f-ecs">Extracurriculars</label>
-        <textarea id="f-ecs" placeholder="e.g. Varsity soccer captain, robotics club, part-time job at local bakery"></textarea>
-      </div>
-
       <label class="form-check">
         <input type="checkbox" id="f-first-gen"> First-generation college student
       </label>
@@ -943,6 +938,10 @@
         <button type="button" class="add-college-btn" onclick="addCollege()">+ Add another college</button>
       </div>
 
+      <label class="form-check">
+        <input type="checkbox" id="f-consent"> I understand these results will be shown publicly on this site without my name, and I can delete them at any time.
+      </label>
+
       <button type="button" class="form-submit" id="submit-btn" onclick="submitForm()">Submit</button>
 
       <div class="delete-wrap" id="delete-wrap">
@@ -951,7 +950,7 @@
       </div>
 
       <div class="privacy-note">
-        <strong>Privacy</strong> — Your name is never collected or stored. Submissions are identified only by a random browser ID so you can edit or delete your own entry. No login required. Data is used solely to show aggregated Live Oak college results.
+        <strong>Privacy</strong> — We never collect your name, email, or student ID. Your stats and decisions are shown publicly on this site without your name, and are identified only by a random ID stored in this browser so you can edit or delete your entry. Skip any optional field you'd rather not share. <a href="/privacy.html">Full privacy policy</a>.
       </div>
     </div>
   </div>
@@ -963,9 +962,9 @@
   <div class="footer-inner">
     <div class="footer-left">
       <strong>College Results — Live Oak</strong><br>
-      Aggregated, anonymous college decision data from Live Oak students.
+      College decision data shared by Live Oak students — no names attached.
     </div>
-    <div class="footer-anon">🔒 Fully anonymous · no names stored · no login required</div>
+    <div class="footer-anon">🔒 No names stored · no login required · <a href="/privacy.html" style="color:inherit;">Privacy policy</a></div>
     <div class="footer-contact">
       Suggestions or concerns?<br>
       <a href="mailto:leonardo.francke@gmail.com">leonardo.francke@gmail.com</a>
@@ -1941,9 +1940,6 @@ function showTooltip(evt, r) {
 
   let html = stats.map(s => `<div>${s}</div>`).join('');
   if (profile.length) html += `<div style="border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;">${profile.join('')}</div>`;
-  if (r.extracurriculars) {
-    html += `<div style="border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;font-size:11px;color:#bbb;line-height:1.5;"><span class="tip-label" style="display:block;margin-bottom:3px;">Extracurriculars</span>${r.extracurriculars}</div>`;
-  }
   html += `<div style="border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;line-height:1.7;">${decisions}</div>`;
 
   tip.innerHTML = html;
@@ -2255,7 +2251,6 @@ function renderEntries(data) {
     }).join('');
     return `<div class="entry-card">
       <div class="entry-top">${stPills}</div>
-      ${g.extracurriculars?`<div class="entry-ecs"><span>Extracurriculars</span><br>${g.extracurriculars}</div>`:''}
       <div class="entry-decisions">${dPills}</div>
     </div>`;
   }).join('');
@@ -2768,7 +2763,6 @@ async function loadExistingSubmission() {
       document.getElementById('f-act').value = r.act||'';
       document.getElementById('f-rank').value = r.class_rank||'';
       document.getElementById('f-major').value = r.major||'';
-      document.getElementById('f-ecs').value = r.extracurriculars||'';
       document.getElementById('f-first-gen').checked = r.first_gen==='yes';
       document.getElementById('f-year').value = '2026';
       if (r.essay_rating) document.getElementById('f-essay').value = r.essay_rating;
@@ -2779,7 +2773,7 @@ async function loadExistingSubmission() {
       document.getElementById('anon-badge').style.display = 'none';
       document.getElementById('delete-wrap').style.display = 'block';
     } else {
-      ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major','f-ecs']
+      ['f-gpa','f-gpa-w','f-sat','f-act','f-rank','f-major']
         .forEach(id => document.getElementById(id).value='');
       document.getElementById('f-year').value = '2026';
       document.getElementById('f-first-gen').checked = false;
@@ -2800,6 +2794,7 @@ async function submitForm() {
   const gpaW = parseFloat(document.getElementById('f-gpa-w').value)||null;
   const year = parseInt(document.getElementById('f-year').value);
   if (!gpa||!gpaW||!year) { alert('Unweighted GPA, weighted GPA, and graduation year are required.'); return; }
+  if (!document.getElementById('f-consent').checked) { alert('Please check the box confirming your results will be shown publicly (without your name).'); return; }
   if (gpa>4) { alert('Unweighted GPA cannot exceed 4.0'); return; }
   if (gpaW>5) { alert('Weighted GPA cannot exceed 5.0'); return; }
   const rows = [];
@@ -2811,7 +2806,6 @@ async function submitForm() {
       act: parseInt(document.getElementById('f-act').value)||null,
       class_rank: parseInt(document.getElementById('f-rank').value)||null,
       major: document.getElementById('f-major').value.trim()||null,
-      extracurriculars: document.getElementById('f-ecs').value.trim()||null,
       sport: document.getElementById(`sp-${i}`)?.checked ? 'yes' : null,
       first_gen: document.getElementById('f-first-gen').checked?'yes':null,
       essay_rating: document.getElementById('f-essay').value||null,

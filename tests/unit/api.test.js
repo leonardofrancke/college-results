@@ -144,7 +144,7 @@ describe('POST /api/submissions', () => {
     expect(row.gpa_weighted).toBe(4.2);
     expect(row.class_rank).toBe('Top 10%');
     expect(row.major).toBe('Computer Science');
-    expect(row.extracurriculars).toBe('Robotics, Math Team');
+    expect(row.extracurriculars).toBeNull(); // no longer collected
     expect(row.sport).toBe('yes');
     expect(row.first_gen).toBe('no');
     expect(row.decision).toBe('Accepted');
@@ -290,5 +290,66 @@ describe('session isolation', () => {
 
     const all = await request(app).get('/api/submissions');
     expect(all.body).toHaveLength(6);
+  });
+});
+
+// ─── Admin auth + deletion requests ───
+
+describe('admin tokens and session deletion', () => {
+  async function login() {
+    await request(app).post('/api/admin/setup')
+      .set('x-admin-secret', 'test-secret')
+      .send({ username: 'admin', password: 'correct-horse-battery' });
+    const res = await request(app).post('/api/admin/login')
+      .send({ username: 'admin', password: 'correct-horse-battery' });
+    return res.body.token;
+  }
+
+  test('rejects short admin passwords', async () => {
+    const res = await request(app).post('/api/admin/setup')
+      .set('x-admin-secret', 'test-secret')
+      .send({ username: 'admin', password: 'short' });
+    expect(res.status).toBe(400);
+  });
+
+  test('stores only a hash of the token', async () => {
+    const token = await login();
+    expect(token).toBeTruthy();
+    const rows = await new Promise((resolve, reject) =>
+      app._db.all('SELECT token FROM admin_tokens', (err, r) => err ? reject(err) : resolve(r)));
+    expect(rows).toHaveLength(1);
+    expect(rows[0].token).not.toBe(token);
+    const ok = await request(app).get('/api/admin/users').set('x-admin-token', token);
+    expect(ok.status).toBe(200);
+  });
+
+  test('admin can delete a student by the digest shown in the feed', async () => {
+    const token = await login();
+    await request(app).post('/api/submissions').send({
+      session_id: 'student-1', colleges: [{ college_name: 'A' }, { college_name: 'B' }],
+    });
+    const feed = await request(app).get('/api/submissions');
+    const digest = feed.body[0].session_id;
+    expect(digest).not.toBe('student-1');
+
+    const del = await request(app).delete(`/api/admin/sessions/${digest}`).set('x-admin-token', token);
+    expect(del.body.deleted).toBe(2);
+    const after = await request(app).get('/api/submissions');
+    expect(after.body).toHaveLength(0);
+  });
+});
+
+describe('existing data is preserved', () => {
+  test('editing a submission keeps extracurriculars saved earlier', async () => {
+    await new Promise((resolve, reject) => app._db.run(
+      "INSERT INTO submissions (session_id, college_name, extracurriculars) VALUES ('old', 'A', 'Debate')",
+      err => err ? reject(err) : resolve()));
+    await request(app).post('/api/submissions').send({
+      session_id: 'old', colleges: [{ college_name: 'A', decision: 'Accepted' }],
+    });
+    const row = await new Promise((resolve, reject) => app._db.get(
+      "SELECT * FROM submissions WHERE session_id = 'old'", (err, r) => err ? reject(err) : resolve(r)));
+    expect(row.extracurriculars).toBe('Debate');
+    expect(row.decision).toBe('Accepted');
   });
 });

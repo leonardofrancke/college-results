@@ -207,16 +207,36 @@ describe('edge cases', () => {
     expect(check.body[0].college_name).toBe("St. Mary's University — O'Brien Campus");
   });
 
-  test('very long extracurriculars text', async () => {
-    const longText = 'Activity, '.repeat(200).trim();
+  test('extracurriculars are not stored', async () => {
     const res = await req('POST', '/api/submissions', {
       session_id: 'edge-long',
-      colleges: [{ college_name: 'Test U', extracurriculars: longText }],
+      colleges: [{ college_name: 'Test U', extracurriculars: 'Varsity soccer captain' }],
     });
     expect(res.status).toBe(200);
 
     const check = await req('GET', '/api/submissions/edge-long');
-    expect(check.body[0].extracurriculars).toBe(longText);
+    expect(check.body[0].extracurriculars).toBeNull();
+  });
+
+  test('markup is stripped from text fields', async () => {
+    await req('POST', '/api/submissions', {
+      session_id: 'edge-xss',
+      colleges: [{ college_name: 'X U<img src=x onerror=alert(1)>', major: '"><script>alert(1)</script>' }],
+    });
+    const feed = await req('GET', '/api/submissions');
+    const row = feed.body.find(r => r.college_name.startsWith('X U'));
+    expect(row.college_name).not.toMatch(/[<>"]/);
+    expect(row.major).not.toMatch(/[<>"]/);
+  });
+
+  test('public feed omits extracurriculars and timestamps', async () => {
+    const feed = await req('GET', '/api/submissions');
+    expect(feed.body.length).toBeGreaterThan(0);
+    feed.body.forEach(r => {
+      expect(r).not.toHaveProperty('extracurriculars');
+      expect(r).not.toHaveProperty('created_at');
+      expect(r).not.toHaveProperty('updated_at');
+    });
   });
 
   test('null/missing optional fields stored as null', async () => {

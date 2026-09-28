@@ -2,7 +2,6 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const path    = require('path');
-const cors    = require('cors');
 const crypto  = require('crypto');
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -13,18 +12,35 @@ function makeToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
-// Admin tokens are persisted in the DB (see admin_tokens table) so they
-// survive server restarts; TTL bumped to 90 days so admins don't have
-// to log in daily.
-const TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 d
+// Only a SHA-256 of each token is stored, so a copy of the DB can't be used to
+// act as an admin. Tokens are short-lived because admins can see every row.
+const hashToken = tok => crypto.createHash('sha256').update(String(tok)).digest('hex');
+const TOKEN_TTL_MS = 12 * 60 * 60 * 1000; // 12 h
+
+// Student-entered text is rendered into HTML (and a few inline handlers) on the
+// public page and the admin page. Strip every character that can open a tag,
+// break out of an attribute, or escape a JS string, plus control characters.
+// Apostrophes stay (St. Mary's); the client escapes those where it needs to.
+const cleanText = (v, max) => {
+  if (v == null) return null;
+  const t = String(v).replace(/[<>"`\\\u0000-\u001f\u007f]/g, '').trim().slice(0, max);
+  return t || null;
+};
+const cleanNum = (v, lo, hi, int) => {
+  const n = int ? parseInt(v) : parseFloat(v);
+  return Number.isFinite(n) && n >= lo && n <= hi ? n : null;
+};
+const cleanFlag = v => (v === 'yes' || v === 'no') ? v : null;
 
 // ── App factory ────────────────────────────────────────────────────────────
 function createApp(dbPath) {
   dbPath = dbPath || path.join(__dirname, '../db/leo.db');
 
   const app = express();
-  app.use(cors());
-  app.use(express.json());
+  // The page and API are served from the same origin, so no CORS headers:
+  // other sites can't read the feed or write submissions from a browser.
+  app.disable('x-powered-by');
+  app.use(express.json({ limit: '50kb' }));
 
   const db = new sqlite3.Database(dbPath, err => {
     if (err) console.error('DB error:', err);
@@ -132,11 +148,11 @@ function createApp(dbPath) {
   function requireAdmin(req, res, next) {
     const tok = req.headers['x-admin-token'];
     if (!tok) return res.status(401).json({ error: 'No token' });
-    db.get('SELECT username, expires_at FROM admin_tokens WHERE token = ?', [tok], (err, row) => {
+    db.get('SELECT username, expires_at FROM admin_tokens WHERE token = ?', [hashToken(tok)], (err, row) => {
       if (err) return res.status(500).json({ error: err.message });
       if (!row) return res.status(401).json({ error: 'Invalid token' });
       if (Date.now() > row.expires_at) {
-        db.run('DELETE FROM admin_tokens WHERE token = ?', [tok]);
+        db.run('DELETE FROM admin_tokens WHERE token = ?', [hashToken(tok)]);
         return res.status(401).json({ error: 'Token expired' });
       }
       req.adminUser = row.username;
@@ -170,14 +186,29 @@ function createApp(dbPath) {
     return `${lo}-${hi}`;
   };
 
+  // Text columns are re-cleaned on the way out so rows saved before input
+  // cleaning existed can't inject markup either.
+  const TEXT_COLS = ['college_name', 'major', 'decision', 'decision_type', 'school_type', 'class_rank'];
+  const cleanRow = r => {
+    const out = { ...r };
+    TEXT_COLS.forEach(c => { out[c] = cleanText(r[c], 120); });
+    return out;
+  };
+
+  // The public feed leaves out free-text extracurriculars (a line like "varsity
+  // soccer captain" names a student at a single school) and submission
+  // timestamps (which can be matched to when someone was seen submitting).
   app.get('/api/submissions', (req, res) => {
     db.all('SELECT * FROM submissions ORDER BY created_at DESC', (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json((rows || []).map(r => ({
-        ...r,
-        session_id: groupId(r.session_id),
-        class_rank: rankBand(r.class_rank)
-      })));
+      res.json((rows || []).map(r => {
+        const { extracurriculars, created_at, updated_at, ...rest } = cleanRow(r);
+        return {
+          ...rest,
+          session_id: groupId(r.session_id),
+          class_rank: rankBand(r.class_rank)
+        };
+      }));
     });
   });
 
@@ -185,13 +216,22 @@ function createApp(dbPath) {
     db.all('SELECT * FROM submissions WHERE session_id = ? ORDER BY created_at DESC',
       [req.params.session_id], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(rows || []);
+        res.json((rows || []).map(cleanRow));
       });
   });
 
   app.post('/api/submissions', (req, res) => {
-    const { session_id, colleges } = req.body;
-    if (!session_id || !Array.isArray(colleges) || !colleges.length)
+    const { session_id } = req.body;
+    if (!session_id || !Array.isArray(req.body.colleges) || !req.body.colleges.length)
+      return res.status(400).json({ error: 'Need session_id and colleges array' });
+    if (typeof session_id !== 'string' || session_id.length > 80)
+      return res.status(400).json({ error: 'Invalid session_id' });
+    if (req.body.colleges.length > 60)
+      return res.status(400).json({ error: 'Too many colleges' });
+    const colleges = req.body.colleges
+      .map(c => ({ ...c, college_name: cleanText(c && c.college_name, 120) }))
+      .filter(c => c.college_name);
+    if (!colleges.length)
       return res.status(400).json({ error: 'Need session_id and colleges array' });
 
     db.run('BEGIN TRANSACTION', err => {
@@ -210,19 +250,25 @@ function createApp(dbPath) {
                 (session_id, college_name, grad_year, gpa, gpa_weighted, sat, act,
                  class_rank, major, extracurriculars, sport, first_gen, decision,
                  decision_type, essay_rating, school_type, enrolling, scholarship, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,
+                (SELECT extracurriculars FROM submissions WHERE session_id = ? AND college_name = ?),
+                ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             `);
+            // extracurriculars is no longer collected (see the public feed note),
+            // but whatever an older submission saved is kept, not overwritten.
             stmt.run([
               session_id, college.college_name,
-              college.grad_year || null, college.gpa || null, college.gpa_weighted || null,
-              college.sat || null, college.act || null, college.class_rank || null,
-              college.major || null, college.extracurriculars || null,
-              college.sport || null, college.first_gen || null,
-              college.decision || null, college.decision_type || null,
-              college.essay_rating ? parseInt(college.essay_rating) : null,
-              college.school_type || 'University',
-              college.enrolling || null,
-              college.scholarship || null,
+              cleanNum(college.grad_year, 2000, 2100, true),
+              cleanNum(college.gpa, 0, 5), cleanNum(college.gpa_weighted, 0, 6),
+              cleanNum(college.sat, 400, 1600, true), cleanNum(college.act, 1, 36, true),
+              cleanText(college.class_rank, 20),
+              cleanText(college.major, 80), session_id, college.college_name,
+              cleanFlag(college.sport), cleanFlag(college.first_gen),
+              cleanText(college.decision, 20), cleanText(college.decision_type, 30),
+              cleanNum(college.essay_rating, 1, 5, true),
+              cleanText(college.school_type, 30) || 'University',
+              cleanFlag(college.enrolling),
+              cleanFlag(college.scholarship),
             ], err => {
               if (err) { console.error('Insert error:', err); db.run('ROLLBACK'); return res.status(500).json({ error: err.message }); }
               if (++done === colleges.length) {
@@ -246,8 +292,15 @@ function createApp(dbPath) {
   });
 
   // ── Public: page view tracking ─────────────────────────────────────────
+  // Analytics rows store a one-way digest of the browser ID rather than the ID
+  // itself, so browsing history can't be joined back to a submission.
+  const ANALYTICS_SALT = process.env.ANALYTICS_SALT || crypto.randomBytes(16).toString('hex');
+  const analyticsId = sid => sid
+    ? crypto.createHmac('sha256', ANALYTICS_SALT).update(String(sid)).digest('hex').slice(0, 16)
+    : null;
+
   app.post('/api/track', (req, res) => {
-    const session_id = req.body.session_id || null;
+    const session_id = analyticsId(req.body && req.body.session_id);
     const ua = req.headers['user-agent'] || '';
     const ua_hash = crypto.createHash('sha256').update(ua).digest('hex').slice(0, 16);
     db.run('INSERT INTO page_views (session_id, ua_hash) VALUES (?, ?)',
@@ -263,7 +316,7 @@ function createApp(dbPath) {
     if (!type) return res.status(400).json({ error: 'type required' });
     const safeType  = String(type).slice(0, 50);
     const safeValue = value != null ? String(value).slice(0, 200) : null;
-    const safeSid   = session_id ? String(session_id).slice(0, 80) : null;
+    const safeSid   = analyticsId(session_id);
     db.run('INSERT INTO events (session_id, event_type, event_value) VALUES (?, ?, ?)',
       [safeSid, safeType, safeValue], err => {
         if (err) console.error('Event track:', err);
@@ -273,21 +326,28 @@ function createApp(dbPath) {
 
   // ── Public: submit chatbot question ───────────────────────────────────
   app.post('/api/questions', (req, res) => {
-    const { question, session_id } = req.body;
-    if (!question || !question.trim()) return res.status(400).json({ error: 'No question' });
-    db.run('INSERT INTO questions (question, session_id) VALUES (?, ?)',
-      [question.trim().slice(0, 1000), session_id || null], function(err) {
+    const question = cleanText(req.body && req.body.question, 1000);
+    if (!question) return res.status(400).json({ error: 'No question' });
+    // Not linked to the browser ID: questions stay separate from submissions.
+    db.run('INSERT INTO questions (question) VALUES (?)', [question], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, id: this.lastID });
       });
   });
 
+  const safeEqual = (a, b) => {
+    const x = Buffer.from(String(a)), y = Buffer.from(String(b));
+    return x.length === y.length && crypto.timingSafeEqual(x, y);
+  };
+  const secretOk = s => !!(s && process.env.ADMIN_SECRET && safeEqual(s, process.env.ADMIN_SECRET));
+
   // ── Admin: setup (first account) ──────────────────────────────────────
   app.post('/api/admin/setup', (req, res) => {
-    const secret = req.headers['x-admin-secret'];
-    if (!secret || secret !== process.env.ADMIN_SECRET)
+    if (!secretOk(req.headers['x-admin-secret']))
       return res.status(403).json({ error: 'Forbidden' });
     const { username, password } = req.body;
+    if (String(password || '').length < 12)
+      return res.status(400).json({ error: 'Password must be at least 12 characters' });
     if (!username || !password) return res.status(400).json({ error: 'username and password required' });
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = hashPassword(password, salt);
@@ -306,11 +366,11 @@ function createApp(dbPath) {
       if (err) return res.status(500).json({ error: err.message });
       if (!user) return res.status(401).json({ error: 'Invalid credentials' });
       const hash = hashPassword(password, user.salt);
-      if (hash !== user.password_hash) return res.status(401).json({ error: 'Invalid credentials' });
+      if (!safeEqual(hash, user.password_hash)) return res.status(401).json({ error: 'Invalid credentials' });
       const tok = makeToken();
       const expiresAt = Date.now() + TOKEN_TTL_MS;
       db.run('INSERT INTO admin_tokens (token, username, expires_at) VALUES (?, ?, ?)',
-        [tok, username, expiresAt], err2 => {
+        [hashToken(tok), username, expiresAt], err2 => {
           if (err2) return res.status(500).json({ error: err2.message });
           res.json({ token: tok, username });
         });
@@ -328,6 +388,8 @@ function createApp(dbPath) {
   app.post('/api/admin/users', requireAdmin, (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'username and password required' });
+    if (String(password).length < 12)
+      return res.status(400).json({ error: 'Password must be at least 12 characters' });
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = hashPassword(password, salt);
     db.run('INSERT INTO admin_users (username, password_hash, salt) VALUES (?, ?, ?)',
@@ -349,10 +411,18 @@ function createApp(dbPath) {
   });
 
   // ── Admin: delete session ──────────────────────────────────────────────
+  // The admin page only ever sees the feed's digest, so accept either the raw
+  // browser ID or its digest (needed to honor a deletion request by email).
   app.delete('/api/admin/sessions/:session_id', requireAdmin, (req, res) => {
-    db.run('DELETE FROM submissions WHERE session_id = ?', [req.params.session_id], function(err) {
+    const key = req.params.session_id;
+    db.all('SELECT DISTINCT session_id FROM submissions', (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ success: true, deleted: this.changes });
+      const ids = (rows || []).map(r => r.session_id).filter(s => s === key || groupId(s) === key);
+      if (!ids.length) return res.json({ success: true, deleted: 0 });
+      db.run(`DELETE FROM submissions WHERE session_id IN (${ids.map(() => '?').join(',')})`, ids, function(err2) {
+        if (err2) return res.status(500).json({ error: err2.message });
+        res.json({ success: true, deleted: this.changes });
+      });
     });
   });
 
@@ -360,7 +430,7 @@ function createApp(dbPath) {
   app.delete('/api/admin/submissions/:id', (req, res) => {
     const secret = req.headers['x-admin-secret'];
     const tok    = req.headers['x-admin-token'];
-    const validSecret = secret && secret === process.env.ADMIN_SECRET;
+    const validSecret = secretOk(secret);
     const doDelete = () => {
       db.run('DELETE FROM submissions WHERE id = ?', [req.params.id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
@@ -370,7 +440,7 @@ function createApp(dbPath) {
     };
     if (validSecret) return doDelete();
     if (!tok) return res.status(403).json({ error: 'Forbidden' });
-    db.get('SELECT expires_at FROM admin_tokens WHERE token = ?', [tok], (err, row) => {
+    db.get('SELECT expires_at FROM admin_tokens WHERE token = ?', [hashToken(tok)], (err, row) => {
       if (!row || Date.now() >= row.expires_at) return res.status(403).json({ error: 'Forbidden' });
       doDelete();
     });
