@@ -21,14 +21,17 @@ describe('GET /api/submissions', () => {
   });
 
   test('returns submissions after insert', async () => {
-    await request(app).post('/api/submissions').send({
-      session_id: 'sess-1',
-      colleges: [{ college_name: 'MIT', gpa: 3.9, sat: 1520 }],
-    });
+    // Two students, since colleges with a single applicant are hidden.
+    for (const sid of ['sess-1', 'sess-2']) {
+      await request(app).post('/api/submissions').send({
+        session_id: sid,
+        colleges: [{ college_name: 'MIT', gpa: 3.9, sat: 1520 }],
+      });
+    }
 
     const res = await request(app).get('/api/submissions');
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(1);
+    expect(res.body).toHaveLength(2);
     expect(res.body[0].college_name).toBe('MIT');
     expect(res.body[0].gpa).toBe(3.9);
     expect(res.body[0].sat).toBe(1520);
@@ -204,15 +207,17 @@ describe('DELETE /api/submissions/:session_id', () => {
       session_id: 'sess-a',
       colleges: [{ college_name: 'MIT' }],
     });
-    await request(app).post('/api/submissions').send({
-      session_id: 'sess-b',
-      colleges: [{ college_name: 'Harvard' }],
-    });
+    for (const sid of ['sess-b', 'sess-c']) {
+      await request(app).post('/api/submissions').send({
+        session_id: sid,
+        colleges: [{ college_name: 'Harvard' }],
+      });
+    }
 
     await request(app).delete('/api/submissions/sess-a');
 
     const remaining = await request(app).get('/api/submissions');
-    expect(remaining.body).toHaveLength(1);
+    expect(remaining.body).toHaveLength(2);
     // GET /api/submissions deliberately never returns the raw session_id
     // (it's the only credential needed to edit/delete, so exposing it in the
     // public feed would let anyone delete anyone's rows) — it returns a
@@ -232,7 +237,7 @@ describe('DELETE /api/admin/submissions/:id', () => {
       colleges: [{ college_name: 'MIT' }, { college_name: 'Harvard' }],
     });
 
-    const all = await request(app).get('/api/submissions');
+    const all = await request(app).get('/api/submissions/sess-1');
     const mitId = all.body.find(r => r.college_name === 'MIT').id;
 
     const res = await request(app)
@@ -242,7 +247,7 @@ describe('DELETE /api/admin/submissions/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
 
-    const remaining = await request(app).get('/api/submissions');
+    const remaining = await request(app).get('/api/submissions/sess-1');
     expect(remaining.body).toHaveLength(1);
     expect(remaining.body[0].college_name).toBe('Harvard');
   });
@@ -276,8 +281,8 @@ describe('session isolation', () => {
       await request(app).post('/api/submissions').send({
         session_id: s,
         colleges: [
-          { college_name: `${s}-college-1` },
-          { college_name: `${s}-college-2` },
+          { college_name: 'Shared College One' },
+          { college_name: 'Shared College Two' },
         ],
       });
     }
@@ -325,9 +330,11 @@ describe('admin tokens and session deletion', () => {
 
   test('admin can delete a student by the digest shown in the feed', async () => {
     const token = await login();
-    await request(app).post('/api/submissions').send({
-      session_id: 'student-1', colleges: [{ college_name: 'A' }, { college_name: 'B' }],
-    });
+    for (const sid of ['student-1', 'student-2']) {
+      await request(app).post('/api/submissions').send({
+        session_id: sid, colleges: [{ college_name: 'A' }, { college_name: 'B' }],
+      });
+    }
     const feed = await request(app).get('/api/submissions');
     const digest = feed.body[0].session_id;
     expect(digest).not.toBe('student-1');
@@ -363,6 +370,7 @@ describe('stable feed IDs', () => {
 
     const a1 = real(dbPath);
     await request(a1).post('/api/submissions').send({ session_id: 's', colleges: [{ college_name: 'A' }] });
+    await request(a1).post('/api/submissions').send({ session_id: 't', colleges: [{ college_name: 'A' }] });
     const id1 = (await request(a1).get('/api/submissions')).body[0].session_id;
     await close(a1);
 
@@ -371,5 +379,91 @@ describe('stable feed IDs', () => {
     await close(a2);
     fs.unlinkSync(dbPath);
     expect(id2).toBe(id1);
+  });
+});
+
+describe('analytics events', () => {
+  test('markup in event values never reaches admin stats', async () => {
+    await request(app).post('/api/track/event')
+      .send({ type: 'college_click', value: '<img src=x onerror=alert(1)>' });
+    await request(app).post('/api/admin/setup').set('x-admin-secret', 'test-secret')
+      .send({ username: 'admin', password: 'correct-horse-battery' });
+    const { body: { token } } = await request(app).post('/api/admin/login')
+      .send({ username: 'admin', password: 'correct-horse-battery' });
+    const stats = await request(app).get('/api/admin/stats').set('x-admin-token', token);
+    expect(stats.body.top_colleges).toHaveLength(1);
+    expect(stats.body.top_colleges[0].name).not.toMatch(/[<>"]/);
+  });
+});
+
+describe('admin login recovery', () => {
+  const setup = (username, password, secret = 'test-secret') =>
+    request(app).post('/api/admin/setup').set('x-admin-secret', secret).send({ username, password });
+  const login = (username, password) =>
+    request(app).post('/api/admin/login').send({ username, password });
+
+  test('username is case-insensitive at login', async () => {
+    await setup('Leo', 'correct-horse-battery');
+    const res = await login(' leo ', 'correct-horse-battery');
+    expect(res.status).toBe(200);
+    expect(res.body.username).toBe('Leo');
+  });
+
+  test('security key resets an existing password', async () => {
+    await setup('Leo', 'old-password-123');
+    const reset = await setup('leo', 'new-password-456');
+    expect(reset.body.reset).toBe(true);
+    expect((await login('Leo', 'old-password-123')).status).toBe(401);
+    expect((await login('Leo', 'new-password-456')).status).toBe(200);
+    const users = await new Promise((resolve, reject) =>
+      app._db.all('SELECT username FROM admin_users', (e, r) => e ? reject(e) : resolve(r)));
+    expect(users).toEqual([{ username: 'Leo' }]);
+  });
+
+  test('wrong security key is rejected', async () => {
+    const res = await setup('Leo', 'correct-horse-battery', 'nope');
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('public feed privacy', () => {
+  const post = (session_id, colleges) => request(app).post('/api/submissions').send({ session_id, colleges });
+
+  test('hides colleges only one student applied to', async () => {
+    await post('a', [{ college_name: 'UC Davis' }, { college_name: 'Tiny College' }]);
+    await post('b', [{ college_name: 'uc davis' }]);
+    const feed = await request(app).get('/api/submissions');
+    expect(feed.body.map(r => r.college_name).sort()).toEqual(['UC Davis', 'uc davis']);
+  });
+
+  test('spelling variants count as the same college', async () => {
+    await post('a', [{ college_name: 'Gavilan' }]);
+    await post('b', [{ college_name: 'Gavilan College' }]);
+    const feed = await request(app).get('/api/submissions');
+    expect(feed.body).toHaveLength(2);
+  });
+
+  test('omits first-gen and recruited flags, admin feed keeps them', async () => {
+    await post('a', [{ college_name: 'MIT', first_gen: 'yes', sport: 'yes' }]);
+    await post('b', [{ college_name: 'MIT' }]);
+    const feed = await request(app).get('/api/submissions');
+    feed.body.forEach(r => {
+      expect(r).not.toHaveProperty('first_gen');
+      expect(r).not.toHaveProperty('sport');
+    });
+
+    await request(app).post('/api/admin/setup').set('x-admin-secret', 'test-secret')
+      .send({ username: 'admin', password: 'correct-horse-battery' });
+    const { body: { token } } = await request(app).post('/api/admin/login')
+      .send({ username: 'admin', password: 'correct-horse-battery' });
+    const admin = await request(app).get('/api/admin/submissions').set('x-admin-token', token);
+    expect(admin.status).toBe(200);
+    expect(admin.body).toHaveLength(2);
+    expect(admin.body.some(r => r.first_gen === 'yes' && r.sport === 'yes')).toBe(true);
+    expect(admin.body[0]).not.toHaveProperty('extracurriculars');
+    expect(admin.body.map(r => r.session_id)).not.toContain('a');
+
+    const anon = await request(app).get('/api/admin/submissions');
+    expect(anon.status).toBe(401);
   });
 });

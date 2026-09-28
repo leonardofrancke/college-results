@@ -4,11 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin - College Results</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="/fonts/fonts.css" rel="stylesheet">
   <style>
-    :root { --bg:#f8f7f4;--surface:#fff;--border:#e8e5e0;--border2:#e0ddd8;--text:#1a1a1a;--text2:#666;--text3:#6f6f6f;--mono:'DM Mono',monospace; }
+    :root { --bg:#f8f7f4;--surface:#fff;--border:#e8e5e0;--border2:#e0ddd8;--text:#1a1a1a;--text2:#666;--text3:#6f6f6f;--mono:'IBM Plex Mono',monospace; }
     * { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:'Inter',-apple-system,sans-serif; font-size:0.875rem; background:var(--bg); color:var(--text); min-height:100vh; }
     header { background:#1a1a1a; padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:56px; }
@@ -27,6 +25,11 @@
     .btn-danger { background:none; border:1px solid #e8c4c0; color:#c0392b; border-radius:6px; padding:5px 12px; font-size:0.8125rem; font-family:inherit; cursor:pointer; }
     .btn-danger:hover { background:#fdf0ee; }
     .err { color:#c0392b; font-size:0.8125rem; margin-top:6px; display:none; }
+    .ok { color:#2e7d32; font-size:0.8125rem; margin-top:6px; display:none; }
+    .btn:disabled, .btn-danger:disabled { opacity:0.55; cursor:wait; }
+    #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); background:#1a1a1a; color:#fff; padding:10px 18px; border-radius:8px; font-size:0.875rem; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:10; max-width:calc(100% - 32px); }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    #toast.bad { background:#c0392b; }
     .toggle-link { font-size:0.8125rem; color:var(--text3); margin-top:1rem; cursor:pointer; text-decoration:underline; }
     .toggle-link:hover { color:var(--text2); }
     table { width:100%; border-collapse:collapse; font-size:0.875rem; }
@@ -66,25 +69,26 @@
   <div class="card" style="max-width:380px;">
     <h2>Log in</h2>
     <div class="field-col">
-      <input type="text" id="login-user" placeholder="Username" autocomplete="username" />
+      <input type="text" id="login-user" placeholder="Username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" />
       <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password" />
-      <button class="btn btn-dark" onclick="doLogin()">Log in</button>
+      <button class="btn btn-dark" id="login-btn" onclick="doLogin()">Log in</button>
       <div class="err" id="login-err"></div>
     </div>
-    <div class="toggle-link" onclick="showSection('setup')">First-time setup &rarr;</div>
+    <div class="toggle-link" onclick="showSection('setup')">Forgot password or first-time setup &rarr;</div>
   </div>
 </div>
 
 <div class="container" id="section-setup" style="display:none">
   <div class="card" style="max-width:380px;">
-    <h2>First-time setup</h2>
-    <p style="font-size:0.8125rem;color:var(--text2);margin-bottom:1rem;">Enter the server admin secret to create the first account.</p>
+    <h2>Set up or reset password</h2>
+    <p style="font-size:0.8125rem;color:var(--text2);margin-bottom:1rem;">Enter the security key. An existing username gets the new password; a new username creates an account. Passwords need 12+ characters.</p>
     <div class="field-col">
-      <input type="password" id="setup-secret" placeholder="Admin secret" />
-      <input type="text" id="setup-user" placeholder="New username" autocomplete="username" />
+      <input type="password" id="setup-secret" placeholder="Security key" />
+      <input type="text" id="setup-user" placeholder="Username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" />
       <input type="password" id="setup-pass" placeholder="New password" autocomplete="new-password" />
-      <button class="btn btn-dark" onclick="doSetup()">Create account</button>
+      <button class="btn btn-dark" id="setup-btn" onclick="doSetup()">Save</button>
       <div class="err" id="setup-err"></div>
+      <div class="ok" id="setup-ok"></div>
     </div>
     <div class="toggle-link" onclick="showSection('login')">&larr; Back to login</div>
   </div>
@@ -109,16 +113,18 @@
     <div class="field-row">
       <input type="text" id="new-user" placeholder="Username" style="min-width:140px;" />
       <input type="password" id="new-pass" placeholder="Password" style="min-width:140px;" />
-      <button class="btn btn-dark" onclick="addUser()">Add account</button>
+      <button class="btn btn-dark" id="add-user-btn" onclick="addUser()">Add account</button>
     </div>
     <div class="err" id="user-err" style="margin-top:6px;"></div>
   </div>
 </div>
 
+<div id="toast" role="status" aria-live="polite"></div>
 <script>
 let token = localStorage.getItem('admin_token') || '';
 let currentUser = localStorage.getItem('admin_user') || '';
 
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const decisionColor = d => {
   if (!d) return 'pill-gray';
   const l = d.toLowerCase();
@@ -127,6 +133,40 @@ const decisionColor = d => {
   return 'pill-gray';
 };
 const fmt = dt => dt ? new Date(dt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '&mdash;';
+
+// Every request goes through api(): it never throws, and always returns an
+// error message a person can read, so a failed click can't fail silently.
+async function api(path, opts = {}) {
+  let res;
+  try { res = await fetch(path, opts); }
+  catch { return { ok:false, status:0, data:{ error:"Can't reach the server. Check your connection and try again." } }; }
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (!data || typeof data !== 'object') {
+    data = { error:
+      res.status === 429 ? 'Too many attempts. Wait a minute, then try again.' :
+      res.status >= 500 ? 'The server had a problem (error ' + res.status + '). Try again in a moment.' :
+      'Unexpected response from the server (error ' + res.status + ').' };
+  }
+  return { ok: res.ok, status: res.status, data };
+}
+
+// Disable a button and show what it's doing; call the returned fn to undo.
+function busyBtn(btn, label) {
+  if (!btn) return () => {};
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = label;
+  return () => { btn.disabled = false; btn.textContent = orig; };
+}
+const busy = (id, label) => busyBtn(document.getElementById(id), label);
+
+let toastTimer;
+function toast(msg, bad) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show' + (bad ? ' bad' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = bad ? 'bad' : ''; }, bad ? 5000 : 2500);
+}
 
 function showSection(name) {
   ['login','setup','main'].forEach(s =>
@@ -137,6 +177,7 @@ function showErr(id, msg) {
   const el = document.getElementById(id);
   el.textContent = msg; el.style.display = msg ? '' : 'none';
 }
+const showOk = showErr;
 
 function setLoggedIn(tok, user) {
   token = tok; currentUser = user;
@@ -149,43 +190,57 @@ function setLoggedIn(tok, user) {
   loadAll();
 }
 
-function logout() {
+function logout(msg) {
+  const was = !!token;
   token = ''; currentUser = '';
   localStorage.removeItem('admin_token');
   localStorage.removeItem('admin_user');
   document.getElementById('hdr-user').style.display = 'none';
   document.getElementById('hdr-logout').style.display = 'none';
   showSection('login');
+  if (typeof msg === 'string') toast(msg, true);
+  else if (was) toast('Logged out');
 }
+const expired = () => logout('Your login expired. Please log in again.');
 
 async function doLogin() {
   const username = document.getElementById('login-user').value.trim();
   const password = document.getElementById('login-pass').value;
   showErr('login-err','');
   if (!username || !password) { showErr('login-err','Enter username and password.'); return; }
-  const res = await fetch('/api/admin/login', {
+  const done = busy('login-btn', 'Logging in…');
+  const { ok, status, data } = await api('/api/admin/login', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({username, password})
   });
-  const data = await res.json();
-  if (!res.ok) { showErr('login-err', data.error || 'Login failed.'); return; }
+  done();
+  if (!ok) {
+    showErr('login-err', status === 401 ? 'Wrong username or password. Forgot it? Use the link below.' : data.error);
+    return;
+  }
   setLoggedIn(data.token, data.username);
+  toast('Logged in as ' + data.username);
 }
 
 async function doSetup() {
   const secret = document.getElementById('setup-secret').value.trim();
   const username = document.getElementById('setup-user').value.trim();
   const password = document.getElementById('setup-pass').value;
-  showErr('setup-err','');
+  showErr('setup-err',''); showOk('setup-ok','');
   if (!secret||!username||!password) { showErr('setup-err','All fields required.'); return; }
-  const res = await fetch('/api/admin/setup', {
+  if (password.length < 12) { showErr('setup-err','Password must be at least 12 characters.'); return; }
+  const done = busy('setup-btn', 'Saving…');
+  const { ok, data } = await api('/api/admin/setup', {
     method:'POST',
     headers:{'Content-Type':'application/json','x-admin-secret':secret},
     body: JSON.stringify({username, password})
   });
-  const data = await res.json();
-  if (!res.ok) { showErr('setup-err', data.error || 'Setup failed.'); return; }
-  document.getElementById('login-user').value = username;
+  done();
+  if (!ok) { showErr('setup-err', data.error || 'Setup failed.'); return; }
+  toast((data.reset ? 'Password updated for ' : 'Account created for ') + (data.username || username));
+  document.getElementById('setup-secret').value = '';
+  document.getElementById('setup-pass').value = '';
+  document.getElementById('login-user').value = data.username || username;
   document.getElementById('login-pass').value = password;
   showSection('login');
   await doLogin();
@@ -197,10 +252,9 @@ async function loadAll() {
 
 async function loadStats() {
   const wrap = document.getElementById('stats-wrap');
-  const res = await fetch('/api/admin/stats', {headers:{'x-admin-token':token}});
-  if (res.status===401) { logout(); return; }
-  if (!res.ok) { wrap.innerHTML = '<p style="color:var(--text3);font-size:0.875rem;">Could not load stats.</p>'; return; }
-  const d = await res.json();
+  const { ok, status, data: d } = await api('/api/admin/stats', {headers:{'x-admin-token':token}});
+  if (status===401) return expired();
+  if (!ok) { wrap.innerHTML = '<p class="err" style="display:block">Could not load stats: ' + esc(d.error) + '</p>'; return; }
   const pv = d.page_views || {};
   const uv = d.unique_visitors || {};
   const daily = d.daily || [];
@@ -236,14 +290,14 @@ async function loadStats() {
   if (topCols.length) {
     html += '<div class="stats-section-label">Most clicked colleges</div>';
     html += '<table class="daily-table"><thead><tr><th>College</th><th>Clicks</th></tr></thead><tbody>';
-    topCols.forEach(r => { html += `<tr><td>${r.name}</td><td>${r.clicks}</td></tr>`; });
+    topCols.forEach(r => { html += `<tr><td>${esc(r.name)}</td><td>${r.clicks}</td></tr>`; });
     html += '</tbody></table>';
   }
 
   if (topFilters.length) {
     html += '<div class="stats-section-label">Most used filters</div>';
     html += '<table class="daily-table"><thead><tr><th>Filter</th><th>Clicks</th></tr></thead><tbody>';
-    topFilters.forEach(r => { html += `<tr><td>${r.name}</td><td>${r.clicks}</td></tr>`; });
+    topFilters.forEach(r => { html += `<tr><td>${esc(r.name)}</td><td>${r.clicks}</td></tr>`; });
     html += '</tbody></table>';
   }
 
@@ -261,8 +315,9 @@ async function loadStats() {
 }
 
 async function loadSubmissions() {
-  const res = await fetch('/api/submissions');
-  const rows = await res.json();
+  const { ok, status, data: rows } = await api('/api/admin/submissions', {headers:{'x-admin-token':token}});
+  if (status===401) return expired();
+  if (!ok) { document.getElementById('submissions-wrap').innerHTML = '<p class="err" style="display:block">Could not load submissions: ' + esc(rows.error) + '</p>'; return; }
   const groups = new Map();
   rows.forEach(r => {
     if (!groups.has(r.session_id)) groups.set(r.session_id, {meta:r, colleges:[]});
@@ -287,9 +342,9 @@ async function loadSubmissions() {
     ].filter(Boolean).join(' ') || '&mdash;';
     const tests = [m.sat, m.act].filter(Boolean).join(' / ') || '&mdash;';
     const colleges_html = colleges.map(c =>
-      '<div>' + c.college_name +
-      (c.decision ? ' <span class="pill '+decisionColor(c.decision)+'">'+c.decision+'</span>' : '') +
-      (c.decision_type ? '<span style="color:var(--text3);font-size:0.75rem;"> &middot; '+c.decision_type+'</span>' : '') +
+      '<div>' + esc(c.college_name) +
+      (c.decision ? ' <span class="pill '+decisionColor(c.decision)+'">'+esc(c.decision)+'</span>' : '') +
+      (c.decision_type ? '<span style="color:var(--text3);font-size:0.75rem;"> &middot; '+esc(c.decision_type)+'</span>' : '') +
       '</div>'
     ).join('');
     html += '<tr id="sess-'+sid+'">' +
@@ -300,32 +355,35 @@ async function loadSubmissions() {
       '<td>'+flags+'</td>' +
       '<td><div class="college-list">'+colleges_html+'</div></td>' +
       '<td>'+fmt(m.created_at)+'</td>' +
-      `<td><button class="btn-danger" onclick="deleteSession('${sid}')">Delete</button></td>` +
+      `<td><button class="btn-danger" onclick="deleteSession('${sid}', this)">Delete</button></td>` +
       '</tr>';
   });
   html += '</tbody></table>';
   document.getElementById('submissions-wrap').innerHTML = html;
 }
 
-async function deleteSession(session_id) {
+async function deleteSession(session_id, btn) {
   if (!confirm('Delete all submissions for this student?')) return;
-  const res = await fetch('/api/admin/sessions/'+encodeURIComponent(session_id), {
+  const done = busyBtn(btn, 'Deleting…');
+  const { ok, status, data } = await api('/api/admin/sessions/'+encodeURIComponent(session_id), {
     method:'DELETE', headers:{'x-admin-token':token}
   });
-  if (res.status===401) { alert('Session expired. Please log in again.'); logout(); return; }
-  if (res.ok) { loadSubmissions(); }
-  else { const d=await res.json().catch(()=>({})); alert('Failed: '+(d.error||res.status)); }
+  done();
+  if (status===401) return expired();
+  if (!ok) return toast('Delete failed: ' + data.error, true);
+  toast(data.deleted ? 'Deleted ' + data.deleted + ' row' + (data.deleted===1?'':'s') : 'Nothing was deleted. It may already be gone.', !data.deleted);
+  loadSubmissions();
 }
 
 async function loadUsers() {
-  const res = await fetch('/api/admin/users', {headers:{'x-admin-token':token}});
-  if (res.status===401) { logout(); return; }
-  const users = await res.json();
+  const { ok, status, data: users } = await api('/api/admin/users', {headers:{'x-admin-token':token}});
+  if (status===401) return expired();
+  if (!ok) { document.getElementById('users-wrap').innerHTML = '<p class="err" style="display:block">Could not load accounts: ' + esc(users.error) + '</p>'; return; }
   let html = '<table style="margin-bottom:0;"><thead><tr><th>Username</th><th>Created</th><th></th></tr></thead><tbody>';
   users.forEach(u => {
-    html += '<tr><td>'+u.username+(u.username===currentUser?' <span style="color:var(--text3);font-size:0.75rem;">(you)</span>':'')+'</td>' +
+    html += '<tr><td>'+esc(u.username)+(u.username===currentUser?' <span style="color:var(--text3);font-size:0.75rem;">(you)</span>':'')+'</td>' +
       '<td>'+fmt(u.created_at)+'</td>' +
-      `<td>${u.username!==currentUser?`<button class="btn-danger" onclick="deleteUser(${u.id},'${u.username}')">Remove</button>`:''}</td></tr>`;
+      `<td>${u.username!==currentUser?`<button class="btn-danger" data-username="${esc(u.username)}" onclick="deleteUser(${u.id}, this)">Remove</button>`:''}</td></tr>`;
   });
   html += '</tbody></table>';
   document.getElementById('users-wrap').innerHTML = html;
@@ -336,31 +394,39 @@ async function addUser() {
   const password = document.getElementById('new-pass').value;
   showErr('user-err','');
   if (!username||!password) { showErr('user-err','Username and password required.'); return; }
-  const res = await fetch('/api/admin/users', {
+  if (password.length < 12) { showErr('user-err','Password must be at least 12 characters.'); return; }
+  const done = busy('add-user-btn', 'Adding…');
+  const { ok, status, data } = await api('/api/admin/users', {
     method:'POST',
     headers:{'Content-Type':'application/json','x-admin-token':token},
     body: JSON.stringify({username, password})
   });
-  const data = await res.json();
-  if (!res.ok) { showErr('user-err', data.error||'Failed.'); return; }
+  done();
+  if (status===401) return expired();
+  if (!ok) { showErr('user-err', data.error||'Failed.'); return; }
   document.getElementById('new-user').value='';
   document.getElementById('new-pass').value='';
+  toast('Account "' + username + '" added');
   loadUsers();
 }
 
-async function deleteUser(id, username) {
+async function deleteUser(id, btn) {
+  const username = btn.dataset.username;
   if (!confirm('Remove admin account "'+username+'"?')) return;
-  const res = await fetch('/api/admin/users/'+id, {method:'DELETE',headers:{'x-admin-token':token}});
-  const data = await res.json().catch(()=>({}));
-  if (!res.ok) { alert(data.error||'Failed.'); return; }
+  const done = busyBtn(btn, 'Removing…');
+  const { ok, status, data } = await api('/api/admin/users/'+id, {method:'DELETE',headers:{'x-admin-token':token}});
+  done();
+  if (status===401) return expired();
+  if (!ok) return toast('Remove failed: ' + (data.error||'unknown error'), true);
+  toast('Account "' + username + '" removed');
   loadUsers();
 }
 
 async function loadQuestions() {
-  const res = await fetch('/api/admin/questions', {headers:{'x-admin-token':token}});
-  if (res.status===401) { logout(); return; }
-  const rows = await res.json();
+  const { ok, status, data: rows } = await api('/api/admin/questions', {headers:{'x-admin-token':token}});
+  if (status===401) return expired();
   const wrap = document.getElementById('questions-wrap');
+  if (!ok) { wrap.innerHTML = '<p class="err" style="display:block">Could not load questions: ' + esc(rows.error) + '</p>'; return; }
   const countEl = document.getElementById('q-count');
   if (countEl) countEl.textContent = rows.length ? `— ${rows.length} pending` : '';
   if (!rows.length) {
@@ -370,26 +436,36 @@ async function loadQuestions() {
   wrap.innerHTML = '<table><thead><tr><th>Question</th><th>Received</th><th></th></tr></thead><tbody>' +
     rows.map(q =>
       `<tr id="q-${q.id}">` +
-      `<td style="max-width:500px;word-break:break-word;">${q.question}</td>` +
+      `<td style="max-width:500px;word-break:break-word;">${esc(q.question)}</td>` +
       `<td style="white-space:nowrap;">${fmt(q.created_at)}</td>` +
-      `<td><button class="btn-danger" onclick="dismissQuestion(${q.id})">Dismiss</button></td>` +
+      `<td><button class="btn-danger" onclick="dismissQuestion(${q.id}, this)">Dismiss</button></td>` +
       `</tr>`
     ).join('') +
     '</tbody></table>';
 }
 
-async function dismissQuestion(id) {
-  const res = await fetch('/api/admin/questions/' + id, {method:'DELETE', headers:{'x-admin-token':token}});
-  if (res.ok) loadQuestions();
+async function dismissQuestion(id, btn) {
+  const done = busyBtn(btn, 'Dismissing…');
+  const { ok, status, data } = await api('/api/admin/questions/' + id, {method:'DELETE', headers:{'x-admin-token':token}});
+  done();
+  if (status===401) return expired();
+  if (!ok) return toast('Dismiss failed: ' + data.error, true);
+  toast('Question dismissed');
+  loadQuestions();
 }
 
 document.getElementById('login-user').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+['setup-secret','setup-user','setup-pass'].forEach(id =>
+  document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') doSetup(); }));
+['new-user','new-pass'].forEach(id =>
+  document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') addUser(); }));
 
 if (token) {
-  fetch('/api/admin/users', {headers:{'x-admin-token':token}}).then(res => {
-    if (res.ok) { setLoggedIn(token, currentUser); }
-    else logout();
+  api('/api/admin/users', {headers:{'x-admin-token':token}}).then(({ ok, status, data }) => {
+    if (ok) setLoggedIn(token, currentUser);
+    else if (status === 401) logout('Your login expired. Please log in again.');
+    else { logout(); showErr('login-err', data.error); }
   });
 } else {
   showSection('login');

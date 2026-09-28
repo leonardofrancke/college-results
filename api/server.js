@@ -15,7 +15,7 @@ function makeToken() {
 // Only a SHA-256 of each token is stored, so a copy of the DB can't be used to
 // act as an admin. Tokens are short-lived because admins can see every row.
 const hashToken = tok => crypto.createHash('sha256').update(String(tok)).digest('hex');
-const TOKEN_TTL_MS = 12 * 60 * 60 * 1000; // 12 h
+const TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 d
 
 // Student-entered text is rendered into HTML (and a few inline handlers) on the
 // public page and the admin page. Strip every character that can open a tag,
@@ -214,20 +214,45 @@ function createApp(dbPath) {
     return out;
   };
 
-  // The public feed leaves out free-text extracurriculars (a line like "varsity
-  // soccer captain" names a student at a single school) and submission
-  // timestamps (which can be matched to when someone was seen submitting).
+  // Same grouping as canonKey() in html/index.html, so "Gavilan" and
+  // "Gavilan College" count as one school. Keep the two in sync.
+  const canonKey = name => String(name || '').toLowerCase()
+    .replace(/csumb/g, 'cal state monterey bay')
+    .replace(/\b(university|college|the|of|at|state|cal)\b/g, '')
+    .replace(/gavill?an/g, 'gavilan')
+    .replace(/[^a-z]/g, '');
+
+  // A college only one student applied to shows that student's whole profile
+  // to anyone who clicks it, so the public feed only includes colleges at
+  // least this many different students applied to.
+  const MIN_STUDENTS_PER_COLLEGE = 2;
+
+  // The public feed also leaves out:
+  //  - free-text extracurriculars (a line like "varsity soccer captain" names
+  //    a student at a single school)
+  //  - submission timestamps (can be matched to when someone was seen submitting)
+  //  - first-generation and recruited-athlete flags (sensitive; admins still
+  //    see them via /api/admin/submissions)
   app.get('/api/submissions', (req, res) => {
     db.all('SELECT * FROM submissions ORDER BY created_at DESC', (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json((rows || []).map(r => {
-        const { extracurriculars, created_at, updated_at, ...rest } = cleanRow(r);
-        return {
-          ...rest,
-          session_id: groupId(r.session_id),
-          class_rank: rankBand(r.class_rank)
-        };
-      }));
+      rows = rows || [];
+      const students = new Map();
+      rows.forEach(r => {
+        const k = canonKey(r.college_name);
+        if (!students.has(k)) students.set(k, new Set());
+        students.get(k).add(r.session_id);
+      });
+      res.json(rows
+        .filter(r => students.get(canonKey(r.college_name)).size >= MIN_STUDENTS_PER_COLLEGE)
+        .map(r => {
+          const { extracurriculars, created_at, updated_at, first_gen, sport, ...rest } = cleanRow(r);
+          return {
+            ...rest,
+            session_id: groupId(r.session_id),
+            class_rank: rankBand(r.class_rank)
+          };
+        }));
     });
   });
 
@@ -332,8 +357,10 @@ function createApp(dbPath) {
   app.post('/api/track/event', (req, res) => {
     const { type, value, session_id } = req.body || {};
     if (!type) return res.status(400).json({ error: 'type required' });
-    const safeType  = String(type).slice(0, 50);
-    const safeValue = value != null ? String(value).slice(0, 200) : null;
+    // Values are shown on the admin page, so strip markup like submissions.
+    const safeType  = cleanText(type, 50);
+    const safeValue = cleanText(value, 200);
+    if (!safeType) return res.status(400).json({ error: 'type required' });
     const safeSid   = analyticsId(session_id);
     db.run('INSERT INTO events (session_id, event_type, event_value) VALUES (?, ?, ?)',
       [safeSid, safeType, safeValue], err => {
@@ -359,28 +386,47 @@ function createApp(dbPath) {
   };
   const secretOk = s => !!(s && process.env.ADMIN_SECRET && safeEqual(s, process.env.ADMIN_SECRET));
 
-  // ── Admin: setup (first account) ──────────────────────────────────────
+  // Usernames match case-insensitively everywhere ("leo" logs in as "Leo").
+  const findUser = (username, cb) =>
+    db.get('SELECT * FROM admin_users WHERE username = ? COLLATE NOCASE', [String(username || '').trim()], cb);
+
+  // ── Admin: setup / password reset ─────────────────────────────────────
+  // Whoever holds ADMIN_SECRET can already create admins, so it's also the
+  // recovery path: an existing username gets a new password instead of an
+  // error, and that account's old logins are signed out.
   app.post('/api/admin/setup', (req, res) => {
     if (!secretOk(req.headers['x-admin-secret']))
-      return res.status(403).json({ error: 'Forbidden' });
-    const { username, password } = req.body;
-    if (String(password || '').length < 12)
-      return res.status(400).json({ error: 'Password must be at least 12 characters' });
+      return res.status(403).json({ error: 'Wrong security key' });
+    const username = String(req.body.username || '').trim();
+    const { password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'username and password required' });
+    if (String(password).length < 12)
+      return res.status(400).json({ error: 'Password must be at least 12 characters' });
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = hashPassword(password, salt);
-    db.run('INSERT INTO admin_users (username, password_hash, salt) VALUES (?, ?, ?)',
-      [username, hash, salt], function(err) {
-        if (err) return res.status(400).json({ error: err.message.includes('UNIQUE') ? 'Username taken' : err.message });
-        res.json({ success: true, id: this.lastID });
-      });
+    findUser(username, (err, user) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (user) {
+        return db.run('UPDATE admin_users SET password_hash = ?, salt = ? WHERE id = ?',
+          [hash, salt, user.id], err2 => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            db.run('DELETE FROM admin_tokens WHERE username = ?', [user.username]);
+            res.json({ success: true, reset: true, username: user.username });
+          });
+      }
+      db.run('INSERT INTO admin_users (username, password_hash, salt) VALUES (?, ?, ?)',
+        [username, hash, salt], function(err2) {
+          if (err2) return res.status(400).json({ error: err2.message });
+          res.json({ success: true, id: this.lastID, username });
+        });
+    });
   });
 
   // ── Admin: login ───────────────────────────────────────────────────────
   app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'username and password required' });
-    db.get('SELECT * FROM admin_users WHERE username = ?', [username], (err, user) => {
+    findUser(username, (err, user) => {
       if (err) return res.status(500).json({ error: err.message });
       if (!user) return res.status(401).json({ error: 'Invalid credentials' });
       const hash = hashPassword(password, user.salt);
@@ -388,9 +434,9 @@ function createApp(dbPath) {
       const tok = makeToken();
       const expiresAt = Date.now() + TOKEN_TTL_MS;
       db.run('INSERT INTO admin_tokens (token, username, expires_at) VALUES (?, ?, ?)',
-        [hashToken(tok), username, expiresAt], err2 => {
+        [hashToken(tok), user.username, expiresAt], err2 => {
           if (err2) return res.status(500).json({ error: err2.message });
-          res.json({ token: tok, username });
+          res.json({ token: tok, username: user.username });
         });
     });
   });
@@ -408,13 +454,17 @@ function createApp(dbPath) {
     if (!username || !password) return res.status(400).json({ error: 'username and password required' });
     if (String(password).length < 12)
       return res.status(400).json({ error: 'Password must be at least 12 characters' });
-    const salt = crypto.randomBytes(16).toString('hex');
-    const hash = hashPassword(password, salt);
-    db.run('INSERT INTO admin_users (username, password_hash, salt) VALUES (?, ?, ?)',
-      [username, hash, salt], function(err) {
-        if (err) return res.status(400).json({ error: err.message.includes('UNIQUE') ? 'Username taken' : err.message });
-        res.json({ success: true, id: this.lastID });
-      });
+    findUser(username, (err, existing) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (existing) return res.status(400).json({ error: 'Username taken' });
+      const salt = crypto.randomBytes(16).toString('hex');
+      const hash = hashPassword(password, salt);
+      db.run('INSERT INTO admin_users (username, password_hash, salt) VALUES (?, ?, ?)',
+        [String(username).trim(), hash, salt], function(err2) {
+          if (err2) return res.status(400).json({ error: err2.message });
+          res.json({ success: true, id: this.lastID });
+        });
+    });
   });
 
   app.delete('/api/admin/users/:id', requireAdmin, (req, res) => {
@@ -425,6 +475,19 @@ function createApp(dbPath) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
       });
+    });
+  });
+
+  // ── Admin: all submissions ─────────────────────────────────────────────
+  // Everything the public feed hides, except the raw browser ID and the
+  // extracurriculars text.
+  app.get('/api/admin/submissions', requireAdmin, (req, res) => {
+    db.all('SELECT * FROM submissions ORDER BY created_at DESC', (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json((rows || []).map(r => {
+        const { extracurriculars, ...rest } = cleanRow(r);
+        return { ...rest, session_id: groupId(r.session_id) };
+      }));
     });
   });
 
@@ -538,8 +601,9 @@ function createApp(dbPath) {
           visitors, submitters,
           rate: visitors ? +(submitters / visitors * 100).toFixed(1) : 0,
         },
-        top_colleges: topColleges || [],
-        top_filters: topFilters || [],
+        // Re-cleaned so events stored before input cleaning can't inject markup.
+        top_colleges: (topColleges || []).map(r => ({ ...r, name: cleanText(r.name, 200) })),
+        top_filters: (topFilters || []).map(r => ({ ...r, name: cleanText(r.name, 200) })),
       });
     }).catch(err => res.status(500).json({ error: err.message }));
   });

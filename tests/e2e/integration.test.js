@@ -109,6 +109,11 @@ describe('complete user workflow', () => {
   });
 
   test('step 6: appears in global submissions list', async () => {
+    // A classmate applied to the same schools; single-applicant colleges are hidden.
+    await req('POST', '/api/submissions', {
+      session_id: 'classmate',
+      colleges: [{ college_name: 'MIT' }, { college_name: 'Stanford' }, { college_name: 'Carnegie Mellon' }],
+    });
     const res = await req('GET', '/api/submissions');
     expect(res.body.length).toBeGreaterThanOrEqual(3);
   });
@@ -223,6 +228,7 @@ describe('edge cases', () => {
       session_id: 'edge-xss',
       colleges: [{ college_name: 'X U<img src=x onerror=alert(1)>', major: '"><script>alert(1)</script>' }],
     });
+    await req('POST', '/api/submissions', { session_id: 'edge-xss-2', colleges: [{ college_name: 'X U<img src=x onerror=alert(1)>' }] });
     const feed = await req('GET', '/api/submissions');
     const row = feed.body.find(r => r.college_name.startsWith('X U'));
     expect(row.college_name).not.toMatch(/[<>"]/);

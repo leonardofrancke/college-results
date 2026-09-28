@@ -747,7 +747,7 @@
     <button class="chat-head-close" aria-label="Close chat" onclick="toggleChat()">×</button>
   </div>
   <div class="chat-msgs" id="chat-msgs">
-    <div class="chat-msg-bot">Hi! Ask me anything about the Live Oak admissions data. 👋</div>
+    <div class="chat-msg-bot">Hi! Send a question about the Live Oak admissions data and it goes to the site's admins. Please don't include your name or other personal info. 👋</div>
   </div>
   <div class="chat-input-row">
     <input class="chat-input" id="chat-input" type="text" placeholder="Type a question…" onkeydown="if(event.key==='Enter')sendChat()">
@@ -1097,6 +1097,12 @@ const PUBLIC_EXTRA_RE = /nevada|reno|csumb|monterey bay|boise state|southern ore
 
 // Collapses "Gavilan college" / "Gavilan" / "Gavillan" and
 // "CSUMB" / "Cal State Monterey Bay" onto one key.
+// Escape text for insertion into HTML. Needed where a value can come from the
+// URL (e.g. ?college=) rather than from server-cleaned submission data.
+function escHtml(v) {
+  return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 function canonKey(name) {
   return String(name || '').toLowerCase()
     .replace(/csumb/g, 'cal state monterey bay')
@@ -1920,7 +1926,6 @@ function showTooltip(evt, r) {
 
   const profile = [];
   if (r.major) profile.push(`<div><span class="tip-label">Major</span> ${r.major}</div>`);
-  if (r.first_gen === 'yes') profile.push('<div style="color:#9be3b8;">First-generation student</div>');
 
   const decisions = sibs.map(s => {
     const extras = [];
@@ -1928,7 +1933,6 @@ function showTooltip(evt, r) {
     if (s.school_type && s.school_type !== 'University') extras.push(s.school_type);
     if (s.enrolling === 'yes') extras.push('🎓 Enrolling');
     if (s.scholarship === 'yes') extras.push('💰 Scholarship');
-    if (s.sport === 'yes') extras.push('🏅 Recruited');
     const extrasStr = extras.length ? ` <span style="opacity:0.7;font-size:10.5px;">(${extras.join(' · ')})</span>` : '';
     const isClicked = s.college_name === r.college_name && s.decision === r.decision && s.decision_type === r.decision_type;
     const style = isClicked
@@ -1981,7 +1985,7 @@ function openCollegeDetail(name) {
       <div class="dec-bar-count">${n}</div>
     </div>`).join('');
   document.getElementById('college-modal-content').innerHTML = `
-    <h2>${name}</h2>
+    <h2>${escHtml(name)}</h2>
     <p class="modal-sub">${total} submission${total!==1?'s':''} from Live Oak${extRate?` · ~${extRate}% national acceptance rate`:''}</p>
     <div class="modal-stats-grid">
       <div class="modal-stat"><div class="mn">${total}</div><div class="ml">Applied</div></div>
@@ -2236,7 +2240,6 @@ function renderEntries(data) {
       rankBand(g.class_rank)?`<span class="epill epill-gray">Rank ${rankBand(g.class_rank)}</span>`:'',
       g.essay_rating?`<span class="epill epill-gray">Essay ${g.essay_rating}/5</span>`:'',
       g.major?`<span class="epill epill-gray" style="font-family:inherit">${g.major}</span>`:'',
-      g.first_gen==='yes'?`<span class="epill epill-gray" style="font-family:inherit">First-gen</span>`:'',
     ].filter(Boolean).join('');
     const dPills = g.colleges.map(c => {
       const extras = [];
@@ -2244,7 +2247,6 @@ function renderEntries(data) {
       if (c.school_type && c.school_type !== 'University') extras.push(c.school_type);
       if (c.enrolling === 'yes') extras.push('🎓');
       if (c.scholarship === 'yes') extras.push('💰');
-      if (c.sport === 'yes') extras.push('🏅');
       const extrasStr = extras.length ? ` <span style="opacity:0.6;font-weight:400">${extras.join(' · ')}</span>` : '';
       return `<span class="dpill-entry ${PILL_CLASS[c.decision]||'epill-gray'}" style="font-family:inherit">${c.name} — ${c.decision}${extrasStr}</span>`;
     }).join('');
@@ -2844,24 +2846,39 @@ function toggleChat() {
   const panel = document.getElementById('chat-panel');
   panel.classList.toggle('open');
 }
-function sendChat() {
+// Questions go to /api/questions and show up on the admin page.
+async function sendChat() {
   const input = document.getElementById('chat-input');
   const msgs = document.getElementById('chat-msgs');
+  const sendBtn = document.querySelector('.chat-send');
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || input.disabled) return;
+  const addMsg = (cls, str) => {
+    const m = document.createElement('div');
+    m.className = cls; m.textContent = str;
+    msgs.appendChild(m); msgs.scrollTop = msgs.scrollHeight;
+    return m;
+  };
+  addMsg('chat-msg-user', text);
   input.value = '';
-  const um = document.createElement('div');
-  um.className = 'chat-msg-user';
-  um.textContent = text;
-  msgs.appendChild(um);
-  msgs.scrollTop = msgs.scrollHeight;
-  setTimeout(() => {
-    const bm = document.createElement('div');
-    bm.className = 'chat-msg-bot';
-    bm.innerHTML = `Thanks for your question! Live chat is coming soon — for now, reach out directly at <a href="mailto:leonardo.francke@gmail.com" style="color:var(--accent);text-decoration:none;border-bottom:1px solid #b8c8e8;">leonardo.francke@gmail.com</a> 📬`;
-    msgs.appendChild(bm);
-    msgs.scrollTop = msgs.scrollHeight;
-  }, 600);
+  input.disabled = true; if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = 'Sending…'; }
+  let ok = false, errMsg = '';
+  try {
+    const res = await fetch('/api/questions', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ question: text })
+    });
+    ok = res.ok;
+    if (!ok) errMsg = res.status === 429 ? 'Too many messages. Wait a minute and try again.' : 'Something went wrong on our end.';
+  } catch (e) { errMsg = "Couldn't reach the server. Check your connection."; }
+  input.disabled = false; if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send'; }
+  if (ok) {
+    addMsg('chat-msg-bot', "Got it. Your question was sent to the site's admins. ✅");
+  } else {
+    addMsg('chat-msg-bot', errMsg + ' Your question was not sent.');
+    input.value = text;
+  }
+  input.focus();
 }
 
 // ── Theme ──────────────────────────────────────────────────────────────────
