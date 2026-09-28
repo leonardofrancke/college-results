@@ -12,6 +12,9 @@ services:
       - /var/local/docker/leo-app/dev/db:/app/db
     environment:
       - ADMIN_SECRET=${ADMIN_SECRET}
+      # Keep scrambled browser IDs stable across restarts (set in .env)
+      - GROUP_SALT=${GROUP_SALT}
+      - ANALYTICS_SALT=${ANALYTICS_SALT}
     networks:
       - webinfra_frontend
     labels:
