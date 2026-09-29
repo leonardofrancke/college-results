@@ -7,6 +7,7 @@
   <link href="/fonts/fonts.css" rel="stylesheet">
   <style>
     :root { --bg:#f8f7f4;--surface:#fff;--border:#e8e5e0;--border2:#e0ddd8;--text:#1a1a1a;--text2:#666;--text3:#6f6f6f;--mono:'IBM Plex Mono',monospace; }
+    html { font-size:18px; } /* everything below is in rem, so this sizes the whole page */
     * { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:'Inter',-apple-system,sans-serif; font-size:0.875rem; background:var(--bg); color:var(--text); min-height:100vh; }
     header { background:#1a1a1a; padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:56px; }
@@ -53,6 +54,25 @@
     .daily-table th { text-align:left; padding:6px 10px; font-weight:600; font-size:0.75rem; color:var(--text2); border-bottom:1px solid var(--border); background:#f0ede8; }
     .daily-table td { padding:6px 10px; border-bottom:1px solid var(--border); }
     .daily-table tr:last-child td { border-bottom:none; }
+    .daily-head { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; }
+    .link-btn { background:none; border:none; color:#2f5bb7; font:inherit; font-size:0.8125rem; cursor:pointer; padding:0; }
+    .link-btn:hover { text-decoration:underline; }
+    .daily-click { cursor:pointer; }
+    .daily-click:hover td { background:#faf9f7; }
+    .hist-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.35); display:none; align-items:center; justify-content:center; padding:16px; z-index:20; }
+    .hist-overlay.open { display:flex; }
+    .hist-modal { background:var(--surface); border-radius:12px; width:100%; max-width:640px; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+    .hist-top { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid var(--border); }
+    .hist-top h3 { font-size:1rem; font-weight:600; }
+    .hist-sub { font-size:0.75rem; color:var(--text3); margin-top:2px; }
+    .hist-close { background:none; border:none; font-size:1.5rem; line-height:1; cursor:pointer; color:var(--text2); padding:0 4px; }
+    .hist-body { overflow-y:auto; padding:0 1.25rem 1rem; }
+    .hist-body table { font-size:0.8125rem; }
+    .hist-body th { position:sticky; top:0; z-index:1; }
+    .hist-bar { height:8px; background:#dbe4f5; border-radius:4px; min-width:2px; }
+    .hist-zero td { color:var(--text3); }
+    .hist-month td { background:#f7f5f1 !important; font-weight:600; font-size:0.75rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.05em; }
+    .hist-status { text-align:center; color:var(--text3); font-size:0.8125rem; padding:12px 0 4px; }
     .stats-section-label { font-size:0.75rem; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.6rem; margin-top:1rem; }
   </style>
 </head>
@@ -81,7 +101,7 @@
 <div class="container" id="section-setup" style="display:none">
   <div class="card" style="max-width:380px;">
     <h2>Set up or reset password</h2>
-    <p style="font-size:0.8125rem;color:var(--text2);margin-bottom:1rem;">Enter the security key. An existing username gets the new password; a new username creates an account. Passwords need 12+ characters.</p>
+    <p style="font-size:0.8125rem;color:var(--text2);margin-bottom:1rem;">Enter the security key. An existing username gets the new password; a new username creates an account. Passwords need 5+ characters.</p>
     <div class="field-col">
       <input type="password" id="setup-secret" placeholder="Security key" />
       <input type="text" id="setup-user" placeholder="Username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" />
@@ -120,6 +140,18 @@
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
+<div class="hist-overlay" id="hist-overlay" onclick="if(event.target===this)closeHistory()">
+  <div class="hist-modal" role="dialog" aria-modal="true" aria-labelledby="hist-title">
+    <div class="hist-top">
+      <div><h3 id="hist-title">Daily breakdown</h3><div class="hist-sub" id="hist-sub"></div></div>
+      <button class="hist-close" aria-label="Close" onclick="closeHistory()">&times;</button>
+    </div>
+    <div class="hist-body" id="hist-body">
+      <table><thead><tr><th>Date</th><th>Page views</th><th style="width:30%"></th><th>Unique visitors</th></tr></thead><tbody id="hist-rows"></tbody></table>
+      <div class="hist-status" id="hist-status"></div>
+    </div>
+  </div>
+</div>
 <script>
 let token = localStorage.getItem('admin_token') || '';
 let currentUser = localStorage.getItem('admin_user') || '';
@@ -131,6 +163,12 @@ const decisionColor = d => {
   if (l === 'accepted') return 'pill-green';
   if (l === 'denied' || l === 'rejected') return 'pill-red';
   return 'pill-gray';
+};
+// "2026-09-28" as a local date. new Date("2026-09-28") is UTC midnight, which
+// is the previous evening in California, so every day showed one day early.
+const fmtDay = (d, opts) => {
+  const [y, m, day] = String(d).split('-').map(Number);
+  return new Date(y, m - 1, day).toLocaleDateString('en-US', opts || {weekday:'short', month:'short', day:'numeric', year:'numeric'});
 };
 const fmt = dt => dt ? new Date(dt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '&mdash;';
 
@@ -175,7 +213,9 @@ function showSection(name) {
 }
 function showErr(id, msg) {
   const el = document.getElementById(id);
-  el.textContent = msg; el.style.display = msg ? '' : 'none';
+  // 'block', not '': clearing the inline style let .err/.ok { display:none }
+  // win, so every error message was written but never visible.
+  el.textContent = msg; el.style.display = msg ? 'block' : 'none';
 }
 const showOk = showErr;
 
@@ -203,7 +243,7 @@ function logout(msg) {
 }
 const expired = () => logout('Your login expired. Please log in again.');
 
-async function doLogin() {
+async function doLogin(note) {
   const username = document.getElementById('login-user').value.trim();
   const password = document.getElementById('login-pass').value;
   showErr('login-err','');
@@ -219,7 +259,7 @@ async function doLogin() {
     return;
   }
   setLoggedIn(data.token, data.username);
-  toast('Logged in as ' + data.username);
+  toast((note ? note + ' · ' : '') + 'Logged in as ' + data.username);
 }
 
 async function doSetup() {
@@ -228,7 +268,7 @@ async function doSetup() {
   const password = document.getElementById('setup-pass').value;
   showErr('setup-err',''); showOk('setup-ok','');
   if (!secret||!username||!password) { showErr('setup-err','All fields required.'); return; }
-  if (password.length < 12) { showErr('setup-err','Password must be at least 12 characters.'); return; }
+  if (password.length < 5) { showErr('setup-err','Password must be at least 5 characters.'); return; }
   const done = busy('setup-btn', 'Saving…');
   const { ok, data } = await api('/api/admin/setup', {
     method:'POST',
@@ -237,13 +277,59 @@ async function doSetup() {
   });
   done();
   if (!ok) { showErr('setup-err', data.error || 'Setup failed.'); return; }
-  toast((data.reset ? 'Password updated for ' : 'Account created for ') + (data.username || username));
+  const note = data.reset ? 'Password updated' : 'Account created';
   document.getElementById('setup-secret').value = '';
   document.getElementById('setup-pass').value = '';
   document.getElementById('login-user').value = data.username || username;
   document.getElementById('login-pass').value = password;
   showSection('login');
-  await doLogin();
+  await doLogin(note);
+}
+
+// ── Full daily history (scrolls back to the first visit) ──
+const hist = { offset: 0, hasMore: true, loading: false, max: 1, month: '', observer: null };
+function openHistory() {
+  Object.assign(hist, { offset: 0, hasMore: true, loading: false, max: 1, month: '' });
+  document.getElementById('hist-rows').innerHTML = '';
+  document.getElementById('hist-sub').textContent = '';
+  document.getElementById('hist-overlay').classList.add('open');
+  document.getElementById('hist-body').scrollTop = 0;
+  const status = document.getElementById('hist-status');
+  if (!hist.observer) {
+    hist.observer = new IntersectionObserver(es => { if (es[0].isIntersecting) loadHistory(); },
+      { root: document.getElementById('hist-body'), rootMargin: '200px' });
+    hist.observer.observe(status);
+  }
+  loadHistory();
+}
+function closeHistory() { document.getElementById('hist-overlay').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHistory(); });
+async function loadHistory() {
+  if (hist.loading || !hist.hasMore || !document.getElementById('hist-overlay').classList.contains('open')) return;
+  hist.loading = true;
+  const status = document.getElementById('hist-status');
+  status.textContent = 'Loading…';
+  const { ok, status: code, data } = await api('/api/admin/daily?offset=' + hist.offset + '&limit=60', {headers:{'x-admin-token':token}});
+  hist.loading = false;
+  if (code === 401) { closeHistory(); return expired(); }
+  if (!ok) { status.textContent = 'Could not load: ' + data.error; return; }
+  if (data.first) document.getElementById('hist-sub').textContent = 'Since ' + fmtDay(data.first, {month:'long', day:'numeric', year:'numeric'}) + ' · scroll for older days';
+  hist.max = Math.max(hist.max, ...data.days.map(d => d.page_views));
+  const rows = document.getElementById('hist-rows');
+  let html = '';
+  data.days.forEach(d => {
+    const month = fmtDay(d.date, {month:'long', year:'numeric'});
+    if (month !== hist.month) { hist.month = month; html += `<tr class="hist-month"><td colspan="4">${month}</td></tr>`; }
+    html += `<tr class="${d.page_views ? '' : 'hist-zero'}"><td>${fmtDay(d.date)}</td><td>${d.page_views}</td>` +
+      `<td><div class="hist-bar" style="width:${Math.round(d.page_views / hist.max * 100)}%"></div></td><td>${d.unique_visitors}</td></tr>`;
+  });
+  rows.insertAdjacentHTML('beforeend', html);
+  hist.offset += data.days.length;
+  hist.hasMore = data.hasMore;
+  status.textContent = data.hasMore ? '' : (data.first ? 'That’s everything: first visit was ' + fmtDay(data.first) + '.' : 'No visits recorded yet.');
+  // Keep filling until the list is tall enough to scroll.
+  const body = document.getElementById('hist-body');
+  if (hist.hasMore && body.scrollHeight <= body.clientHeight + 50) loadHistory();
 }
 
 async function loadAll() {
@@ -302,11 +388,11 @@ async function loadStats() {
   }
 
   if (daily.length) {
-    html += '<div class="stats-section-label">Daily breakdown (last 14 days)</div>';
-    html += '<table class="daily-table"><thead><tr><th>Date</th><th>Page views</th><th>Unique visitors</th></tr></thead><tbody>';
+    html += '<div class="daily-head"><div class="stats-section-label">Daily breakdown (last 14 days)</div>' +
+      '<button class="link-btn" onclick="openHistory()">See full history &rarr;</button></div>';
+    html += '<table class="daily-table daily-click" onclick="openHistory()" title="Click to see full history"><thead><tr><th>Date</th><th>Page views</th><th>Unique visitors</th></tr></thead><tbody>';
     daily.slice().reverse().forEach(row => {
-      const date = new Date(row.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-      html += `<tr><td>${date}</td><td>${row.page_views??0}</td><td>${row.unique_visitors??0}</td></tr>`;
+      html += `<tr><td>${fmtDay(row.date)}</td><td>${row.page_views??0}</td><td>${row.unique_visitors??0}</td></tr>`;
     });
     html += '</tbody></table>';
   }
@@ -394,7 +480,7 @@ async function addUser() {
   const password = document.getElementById('new-pass').value;
   showErr('user-err','');
   if (!username||!password) { showErr('user-err','Username and password required.'); return; }
-  if (password.length < 12) { showErr('user-err','Password must be at least 12 characters.'); return; }
+  if (password.length < 5) { showErr('user-err','Password must be at least 5 characters.'); return; }
   const done = busy('add-user-btn', 'Adding…');
   const { ok, status, data } = await api('/api/admin/users', {
     method:'POST',

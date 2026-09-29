@@ -10,8 +10,11 @@
 <link href="/fonts/fonts.css" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { touch-action: manipulation; }
+  html { touch-action: manipulation; font-size: calc(16px * var(--fs)); }
   :root {
+    /* Text scale: every font size on the page is multiplied by this. Set by
+       the A−/A+ control in the nav (saved per browser); default is 115%. */
+    --fs: 1.15;
     color-scheme: light;
     --accent: #4f72c4;
     --green-text: #1a7a4a;
@@ -80,18 +83,18 @@
     position: sticky; top: 0; z-index: 100;
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   }
-  .nav-logo { font-family: var(--display); font-size: 22px; line-height: 1; font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; margin-right: auto; display: flex; align-items: baseline; gap: 5px; }
+  .nav-logo { font-family: var(--display); font-size: calc(22px * var(--fs)); line-height: 1; font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; margin-right: auto; display: flex; align-items: baseline; gap: 5px; }
   .nav-logo span { color: #777; font-weight: 400; }
   .nav-link {
     padding: 0 18px; height: 64px; display: flex; align-items: center;
-    font-size: 15px; color: #444; cursor: pointer;
+    font-size: calc(15px * var(--fs)); color: #444; cursor: pointer;
     border-bottom: 1.5px solid transparent; margin-bottom: -1px;
     transition: color 0.15s;
   }
   .nav-link:hover { color: #1c1c1c; }
   .nav-link.active { color: #1c1c1c; border-bottom-color: var(--accent); font-weight: 500; }
   .nav-submit {
-    margin-left: 16px; padding: 7px 16px; font-size: 14px; font-weight: 500;
+    margin-left: 16px; padding: 7px 16px; font-size: calc(14px * var(--fs)); font-weight: 500;
     color: #444; border: 1px solid #ccc; border-radius: 6px; cursor: pointer;
     background: none; font-family: inherit; transition: all 0.15s;
   }
@@ -99,12 +102,12 @@
 
   /* ── LAYOUT ── */
   .main-wrap { flex: 1; }
-  .content { max-width: 900px; margin: 0 auto; padding: 40px 40px; }
+  .content { max-width: calc(900px * var(--fs)); margin: 0 auto; padding: 40px 40px; }
   /* Widen on larger displays */
-  @media (min-width: 1180px) { .content { max-width: 1060px; } }
-  @media (min-width: 1380px) { .content { max-width: 1200px; } }
-  @media (min-width: 1620px) { .content { max-width: 1340px; } }
-  @media (min-width: 1900px) { .content { max-width: 1480px; } }
+  @media (min-width: 1180px) { .content { max-width: calc(1060px * var(--fs)); } }
+  @media (min-width: 1380px) { .content { max-width: calc(1200px * var(--fs)); } }
+  @media (min-width: 1620px) { .content { max-width: calc(1340px * var(--fs)); } }
+  @media (min-width: 1900px) { .content { max-width: calc(1480px * var(--fs)); } }
 
   /* ── PAGE TRANSITIONS ── */
   .page { display: none; }
@@ -117,11 +120,11 @@
     justify-content: space-between; gap: 16px; flex-wrap: wrap;
     position: relative;
   }
-  .cta-banner-text { font-size: 14px; font-weight: 600; color: #fff; }
-  .cta-banner-sub { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+  .cta-banner-text { font-size: calc(14px * var(--fs)); font-weight: 600; color: #fff; }
+  .cta-banner-sub { font-size: calc(13px * var(--fs)); color: rgba(255,255,255,0.55); margin-top: 2px; }
   .cta-banner-btn {
     padding: 9px 20px; background: #f5f1e8; color: #1c1c1c;
-    border: none; border-radius: 6px; font-size: 13.5px; font-weight: 600;
+    border: none; border-radius: 6px; font-size: calc(13.5px * var(--fs)); font-weight: 600;
     cursor: pointer; font-family: inherit; flex-shrink: 0;
     transition: opacity 0.15s, transform 0.1s;
     white-space: nowrap;
@@ -138,8 +141,8 @@
 
   /* ── PAGE HEADER ── */
   .page-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; }
-  .page-title { font-family: var(--display); font-size: 22px; font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; }
-  .page-meta { font-size: 13px; color: #666; }
+  .page-title { font-family: var(--display); font-size: calc(22px * var(--fs)); font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; }
+  .page-meta { font-size: calc(13px * var(--fs)); color: #666; }
 
   /* ── STATS ROW ── */
   .stats-row {
@@ -149,42 +152,42 @@
   .stat-cell { padding: 20px 22px; border-right: 1px solid #e8e8e6; transition: background 0.15s; }
   .stat-cell:last-child { border-right: none; }
   .stat-cell:hover { background: #f5f5f3; }
-  .stat-num { font-size: 26px; font-weight: 500; color: #1c1c1c; font-family: var(--mono); letter-spacing: -0.03em; line-height: 1; margin-bottom: 6px; }
-  .stat-label { font-size: 13px; color: #444; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; }
+  .stat-num { font-size: calc(26px * var(--fs)); font-weight: 500; color: #1c1c1c; font-family: var(--mono); letter-spacing: -0.03em; line-height: 1; margin-bottom: 6px; }
+  .stat-label { font-size: calc(13px * var(--fs)); color: #444; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; }
 
   /* ── COLLEGE FILTER TABS ── */
   .filter-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 0 2px; margin-bottom: 20px; border-bottom: 1px solid #ebebeb; }
-  .filter-label { font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; margin-right: 10px; white-space: nowrap; flex-shrink: 0; }
-  .filter-pill { font-size: 14px; padding: 9px 14px; border: none; border-bottom: 2px solid transparent; background: none; cursor: pointer; font-family: inherit; color: #555; margin-bottom: -1px; white-space: nowrap; transition: color 0.15s; }
+  .filter-label { font-size: calc(13px * var(--fs)); color: #555; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; margin-right: 10px; white-space: nowrap; flex-shrink: 0; }
+  .filter-pill { font-size: calc(14px * var(--fs)); padding: 9px 14px; border: none; border-bottom: 2px solid transparent; background: none; cursor: pointer; font-family: inherit; color: #555; margin-bottom: -1px; white-space: nowrap; transition: color 0.15s; }
   .filter-pill:hover { color: #1c1c1c; }
   .filter-pill.active { color: #1c1c1c; border-bottom-color: var(--accent); font-weight: 500; }
 
   /* ── CHART CARD ── */
   .chart-area { border: 1px solid #e8e8e6; border-radius: 8px; margin-bottom: 28px; background: #fff; }
   .chart-toolbar { display: flex; align-items: center; gap: 8px; padding: 14px 20px; border-bottom: 1px solid #f0f0ee; flex-wrap: wrap; }
-  .chart-tab { font-size: 14px; color: #555; background: none; border: none; cursor: pointer; padding: 4px 0; font-family: inherit; font-weight: 500; transition: color 0.15s; }
+  .chart-tab { font-size: calc(14px * var(--fs)); color: #555; background: none; border: none; cursor: pointer; padding: 4px 0; font-family: inherit; font-weight: 500; transition: color 0.15s; }
   .chart-tab + .chart-tab { margin-left: 16px; }
   .chart-tab:hover { color: #1c1c1c; }
   .chart-tab.active { color: #1c1c1c; }
   .chart-tab.active::after { content: ''; display: block; height: 1.5px; background: var(--accent); margin-top: 2px; border-radius: 1px; }
-  .compare-btn-sm { padding: 4px 10px; font-size: 13px; color: #444; border: 1px solid #e4e4e2; border-radius: 5px; background: none; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .compare-btn-sm { padding: 4px 10px; font-size: calc(13px * var(--fs)); color: #444; border: 1px solid #e4e4e2; border-radius: 5px; background: none; cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .compare-btn-sm:hover { color: #1c1c1c; border-color: #aaa; }
   .chart-spacer { flex: 1; }
-  .chart-search { padding: 7px 12px 7px 32px; font-size: 14px; border: 1.5px solid #b8b8b4; border-radius: 6px; font-family: inherit; color: #1c1c1c; outline: none; width: 220px; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'><circle cx='6' cy='6' r='4.5' stroke='%23555' stroke-width='1.5'/><line x1='9.5' y1='9.5' x2='12.5' y2='12.5' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/></svg>") 10px center no-repeat; transition: all 0.15s; }
+  .chart-search { padding: 7px 12px 7px 32px; font-size: calc(14px * var(--fs)); border: 1.5px solid #b8b8b4; border-radius: 6px; font-family: inherit; color: #1c1c1c; outline: none; width: 220px; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'><circle cx='6' cy='6' r='4.5' stroke='%23555' stroke-width='1.5'/><line x1='9.5' y1='9.5' x2='12.5' y2='12.5' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/></svg>") 10px center no-repeat; transition: all 0.15s; }
   .chart-search::placeholder { color: #777; }
   .chart-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,114,196,0.12); }
   .minsub-row { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid #f0f0ee; flex-wrap: wrap; }
-  .minsub-label { font-size: 13px; color: #444; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .minsub-label { font-size: calc(13px * var(--fs)); color: #444; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
   .minsub-help {
     display: inline-flex; align-items: center; justify-content: center;
     width: 16px; height: 16px; border-radius: 50%; border: 1px solid #ccc;
-    font-size: 10px; color: #888; cursor: default; position: relative; flex-shrink: 0;
+    font-size: calc(10px * var(--fs)); color: #888; cursor: default; position: relative; flex-shrink: 0;
   }
   .minsub-help::after {
     content: attr(data-tip);
     display: none; position: absolute; left: 50%; bottom: calc(100% + 7px);
     transform: translateX(-50%); background: #1c1c1c; color: #fff;
-    font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none;
+    font-size: calc(12px * var(--fs)); font-weight: 400; letter-spacing: 0; text-transform: none;
     white-space: nowrap; padding: 5px 10px; border-radius: 5px;
     pointer-events: none; z-index: 50; font-family: 'Inter', sans-serif;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
@@ -223,10 +226,10 @@
     border: 2.5px solid var(--accent); border-radius: 50%;
     cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
   }
-  .minsub-val { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); min-width: 32px; text-align: center; }
-  .minsub-count { font-size: 13px; color: #666; margin-left: 4px; }
+  .minsub-val { font-family: var(--mono); font-size: calc(14px * var(--fs)); font-weight: 600; color: var(--accent); min-width: 32px; text-align: center; }
+  .minsub-count { font-size: calc(13px * var(--fs)); color: #666; margin-left: 4px; }
   #legend { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px; border-bottom: 1px solid #f0f0ee; }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #444; cursor: pointer; padding: 3px 8px; border-radius: 4px; border: 1px solid transparent; transition: all 0.12s; user-select: none; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: calc(13px * var(--fs)); color: #444; cursor: pointer; padding: 3px 8px; border-radius: 4px; border: 1px solid transparent; transition: all 0.12s; user-select: none; }
   .legend-item:hover { border-color: #e4e4e2; }
   .legend-item.dimmed { opacity: 0.3; }
   .legend-dot {
@@ -253,7 +256,7 @@
     display: none; position: absolute; top: 50%;
     width: 34px; height: 34px;
     align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 600; color: var(--accent);
+    font-size: calc(22px * var(--fs)); font-weight: 600; color: var(--accent);
     background: #fff; border: none; border-radius: 50%;
     box-shadow: 0 2px 10px rgba(0,0,0,0.15);
     cursor: pointer; z-index: 3; font-family: inherit;
@@ -279,45 +282,57 @@
   }
   [id^="col-lbl-"] { transition: font-size 0.08s linear, fill 0.1s ease; }
   .chart-dot { transition: r 0.14s ease, opacity 0.14s ease; }
-  .chart-axis-note { font-size: 13px; color: #666; margin-top: 6px; font-family: var(--mono); }
+  .chart-axis-note { font-size: calc(13px * var(--fs)); color: #666; margin-top: 6px; font-family: var(--mono); }
 
   /* ── DOT TOOLTIP ── */
-  #dot-tooltip { display: none; position: fixed; background: #1c1c1c; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.7; max-width: 320px; pointer-events: none; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-  #dot-tooltip .tip-label { color: #aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .chart-dot.pinned { stroke: var(--text); stroke-width: 3px; }
+  #dot-tooltip { display: none; position: fixed; background: #1c1c1c; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: calc(13px * var(--fs)); line-height: 1.7; max-width: calc(320px * var(--fs)); pointer-events: none; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+  #dot-tooltip .tip-label { color: #aaa; font-size: calc(11px * var(--fs)); text-transform: uppercase; letter-spacing: 0.05em; }
   #dot-tooltip .tip-num { font-family: var(--mono); }
 
   /* ── STUDENTS LIKE ME ── */
   .slm-panel { border: 1px solid #e8e8e6; border-radius: 8px; padding: 18px 22px; margin-bottom: 28px; background: #fff; }
-  .slm-title { font-size: 14px; font-weight: 600; color: #1c1c1c; margin-bottom: 14px; }
+  .slm-title { font-size: calc(14px * var(--fs)); font-weight: 600; color: #1c1c1c; margin-bottom: 14px; }
   .slm-inputs { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; row-gap: 14px; }
   .slm-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-  .slm-field label { font-size: 12px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
-  .slm-field input, .slm-field select { padding: 8px 11px; border: 1px solid #d4d4d0; border-radius: 6px; font-size: 14px; font-family: var(--mono); color: #1c1c1c; background: #fff; outline: none; width: 120px; transition: all 0.15s; }
+  .slm-field label { font-size: calc(12px * var(--fs)); color: #555; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+  .slm-field input, .slm-field select { padding: 8px 11px; border: 1px solid #d4d4d0; border-radius: 6px; font-size: calc(14px * var(--fs)); font-family: var(--mono); color: #1c1c1c; background: #fff; outline: none; width: 120px; transition: all 0.15s; }
   .slm-field select { font-family: inherit; width: auto; min-width: 140px; padding-right: 28px; }
   .slm-field input:focus, .slm-field select:focus { border-color: #a8b8d8; box-shadow: 0 0 0 3px rgba(79,114,196,0.07); }
-  .slm-btn { padding: 7px 14px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+  .slm-btn { padding: 7px 14px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: calc(13px * var(--fs)); font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
   .slm-btn:hover { opacity: 0.8; }
-  .slm-clear { padding: 7px 12px; background: #fef2f2; color: #a83232; border: 1px solid #f0b8b8; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; display: none; }
+  .slm-tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid #ebebeb; }
+  .slm-tab { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 6px 14px; font-family: inherit; font-size: calc(14px * var(--fs)); color: #666; cursor: pointer; }
+  .slm-tab:hover { color: #1c1c1c; }
+  .slm-tab.active { color: #1c1c1c; font-weight: 600; border-bottom-color: var(--accent); }
+  .slm-tab .slm-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: middle; }
+  .slm-section[hidden] { display: none; }
+  .slm-active { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  .slm-active:empty { display: none; }
+  .slm-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 11px; background: #eef2fb; color: #2f4f99; border: 1px solid #cdd8f0; border-radius: 999px; font-size: calc(13px * var(--fs)); }
+  .slm-chip button { background: none; border: none; color: inherit; cursor: pointer; font-size: 1.1em; line-height: 1; padding: 0 4px; border-radius: 50%; }
+  .slm-chip button:hover { background: rgba(0,0,0,0.08); }
+  .slm-clear { padding: 5px 12px; background: #fef2f2; color: #a83232; border: 1px solid #f0b8b8; border-radius: 999px; font-size: calc(13px * var(--fs)); cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .slm-clear:hover { background: #fee2e2; }
-  .slm-status { font-size: 13px; color: #555; margin-top: 8px; display: none; }
+  .slm-status { font-size: calc(13px * var(--fs)); color: #555; margin-top: 8px; display: none; }
   .slm-status strong { color: #333; font-family: var(--mono); }
 
   /* ── INLINE STATS ── */
-  .sp-section-header { font-size: 16px; font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; margin-bottom: 16px; }
+  .sp-section-header { font-size: calc(16px * var(--fs)); font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; margin-bottom: 16px; }
   .sp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 28px; }
   .sp-card { background: #fff; border: 1px solid #e8e8e6; border-radius: 8px; padding: 18px 20px; }
   /* Stats disclaimer gate */
   .sd-modal { text-align: center; padding: 26px 28px; }
-  .sd-title { font-family: var(--display); font-size: 19px; font-weight: 600; margin: 0 0 14px; color: #1c1c1c; letter-spacing: -0.01em; }
-  .sd-text { font-size: 14px; line-height: 1.6; color: #444; margin: 0 0 14px; text-align: left; }
+  .sd-title { font-family: var(--display); font-size: calc(19px * var(--fs)); font-weight: 600; margin: 0 0 14px; color: #1c1c1c; letter-spacing: -0.01em; }
+  .sd-text { font-size: calc(14px * var(--fs)); line-height: 1.6; color: #444; margin: 0 0 14px; text-align: left; }
   .sd-quote {
-    text-align: left; font-size: 13px; line-height: 1.55; color: #888; font-style: italic;
+    text-align: left; font-size: calc(13px * var(--fs)); line-height: 1.55; color: #888; font-style: italic;
     border-left: 2px solid #e4e4e2; padding-left: 12px; margin: 0 0 14px;
   }
   .sd-emphasis { color: #1c1c1c; font-weight: 500; margin-bottom: 4px; }
   .sd-btn {
     margin-top: 18px; padding: 10px 28px; background: #1c1c1c; color: #fafaf9;
-    border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer;
+    border: none; border-radius: 6px; font-size: calc(14px * var(--fs)); font-weight: 500; cursor: pointer;
     font-family: inherit; transition: opacity 0.15s;
   }
   .sd-btn:hover { opacity: 0.85; }
@@ -327,89 +342,89 @@
   [data-theme="dark"] .sd-emphasis { color: var(--text); }
   [data-theme="dark"] .sd-btn { background: var(--text); color: var(--bg); }
   .sp-card-wide { grid-column: 1 / -1; }
-  .sp-card h3 { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+  .sp-card h3 { font-size: calc(12px * var(--fs)); font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
   .sp-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
-  .sp-bar-label { font-size: 13px; color: #333; width: 150px; min-width: 150px; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .sp-bar-label { font-size: calc(13px * var(--fs)); color: #333; width: calc(150px * var(--fs)); min-width: calc(150px * var(--fs)); max-width: calc(150px * var(--fs)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
   .sp-bar-track { flex: 1; height: 8px; background: #f0f0ee; border-radius: 4px; overflow: hidden; }
   .sp-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s cubic-bezier(0.16,1,0.3,1); }
-  .sp-bar-val { font-size: 13px; color: #555; font-family: var(--mono); min-width: 36px; text-align: right; flex-shrink: 0; }
+  .sp-bar-val { font-size: calc(13px * var(--fs)); color: #555; font-family: var(--mono); min-width: 36px; text-align: right; flex-shrink: 0; }
   .sp-hist { display: flex; align-items: flex-end; gap: 3px; height: 60px; }
   .sp-hist-col { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
   .sp-hist-bar { width: 100%; background: var(--accent); border-radius: 2px 2px 0 0; opacity: 0.7; }
-  .sp-hist-label { font-size: 12px; color: #555; white-space: nowrap; }
+  .sp-hist-label { font-size: calc(12px * var(--fs)); color: #555; white-space: nowrap; }
   .sp-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .sp-big-num { font-size: 2rem; font-weight: 600; font-family: var(--mono); color: #1c1c1c; line-height: 1; }
-  .sp-big-label { font-size: 13px; color: #555; margin-top: 4px; }
+  .sp-big-label { font-size: calc(13px * var(--fs)); color: #555; margin-top: 4px; }
   .sp-type-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
   .sp-type-pill { display: inline-flex; flex-direction: column; align-items: center; padding: 8px 14px; border: 1px solid #e8e8e6; border-radius: 6px; gap: 2px; }
   .sp-type-pill .tp-pct { font-size: 1.1rem; font-weight: 600; font-family: var(--mono); }
-  .sp-type-pill .tp-label { font-size: 12px; color: #555; }
-  .sp-type-pill .tp-count { font-size: 11px; color: #777; }
+  .sp-type-pill .tp-label { font-size: calc(12px * var(--fs)); color: #555; }
+  .sp-type-pill .tp-count { font-size: calc(11px * var(--fs)); color: #777; }
   .sp-divider { height: 1px; background: #f0f0ee; margin: 12px 0; }
   .sp-dec-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .sp-dec-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-  .sp-dec-name { font-size: 13px; color: #333; min-width: 80px; }
-  .sp-dec-count { font-size: 13px; font-family: var(--mono); color: #444; min-width: 28px; text-align: right; }
-  .sp-dec-pct { font-size: 13px; color: #666; min-width: 36px; text-align: right; }
+  .sp-dec-name { font-size: calc(13px * var(--fs)); color: #333; min-width: 80px; }
+  .sp-dec-count { font-size: calc(13px * var(--fs)); font-family: var(--mono); color: #444; min-width: 28px; text-align: right; }
+  .sp-dec-pct { font-size: calc(13px * var(--fs)); color: #666; min-width: 36px; text-align: right; }
 
   /* ── ENTRIES ── */
   .entries-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
-  .entries-title { font-size: 14px; font-weight: 600; color: #1c1c1c; }
-  .entries-sub { font-size: 13px; color: #666; }
+  .entries-title { font-size: calc(14px * var(--fs)); font-weight: 600; color: #1c1c1c; }
+  .entries-sub { font-size: calc(13px * var(--fs)); color: #666; }
   .entries { display: flex; flex-direction: column; gap: 8px; }
   .entry-card { background: #fff; border: 1px solid #e8e8e6; border-radius: 8px; padding: 14px 16px; transition: border-color 0.15s; }
   .entry-card:hover { border-color: #ccc; }
   .entry-top { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-  .epill { font-size: 12px; padding: 3px 8px; border-radius: 4px; font-family: var(--mono); font-weight: 400; }
+  .epill { font-size: calc(12px * var(--fs)); padding: 3px 8px; border-radius: 4px; font-family: var(--mono); font-weight: 400; }
   .epill-gray { background: #f2f2f0; color: #444; }
-  .entry-ecs { font-size: 13px; color: #555; margin-bottom: 8px; line-height: 1.5; }
-  .entry-ecs span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; font-weight: 600; font-family: inherit; }
+  .entry-ecs { font-size: calc(13px * var(--fs)); color: #555; margin-bottom: 8px; line-height: 1.5; }
+  .entry-ecs span { font-size: calc(11px * var(--fs)); text-transform: uppercase; letter-spacing: 0.05em; color: #888; font-weight: 600; font-family: inherit; }
   .entry-decisions { display: flex; flex-wrap: wrap; gap: 5px; }
-  .dpill-entry { font-size: 12px; padding: 3px 9px; border-radius: 4px; font-weight: 500; }
+  .dpill-entry { font-size: calc(12px * var(--fs)); padding: 3px 9px; border-radius: 4px; font-weight: 500; }
   .dp-acc { background: #f0fdf1; color: #008300; }
   .dp-den { background: #fdeeee; color: #e34948; }
   .dp-wl  { background: #fef6e6; color: #eda100; }
   .dp-pnd { background: #fdeff4; color: #e87ba4; }
   .empty-state { text-align: center; padding: 3rem 1rem; }
   .empty-icon { font-size: 2rem; margin-bottom: 12px; }
-  .empty-state h3 { font-size: 14px; font-weight: 600; color: #1c1c1c; margin-bottom: 6px; }
-  .empty-state p { font-size: 13px; color: #666; margin-bottom: 16px; }
-  .empty-state button { padding: 8px 18px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .empty-state h3 { font-size: calc(14px * var(--fs)); font-weight: 600; color: #1c1c1c; margin-bottom: 6px; }
+  .empty-state p { font-size: calc(13px * var(--fs)); color: #666; margin-bottom: 16px; }
+  .empty-state button { padding: 8px 18px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: calc(13px * var(--fs)); cursor: pointer; font-family: inherit; }
 
   /* ── MODALS ── */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 300; align-items: center; justify-content: center; padding: 1rem; }
   .modal-overlay.open { display: flex; }
-  .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalIn 0.2s cubic-bezier(0.16,1,0.3,1); }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: calc(520px * var(--fs)); width: 100%; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalIn 0.2s cubic-bezier(0.16,1,0.3,1); }
   @keyframes modalIn { from { opacity:0; transform:scale(0.97) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
   .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #bbb; line-height: 1; transition: color 0.15s; }
   .modal-close:hover { color: #1c1c1c; }
-  .modal h2 { font-family: var(--display); font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #1c1c1c; }
-  .modal-sub { font-size: 13px; color: #666; margin-bottom: 16px; }
+  .modal h2 { font-family: var(--display); font-size: calc(18px * var(--fs)); font-weight: 600; margin-bottom: 4px; color: #1c1c1c; }
+  .modal-sub { font-size: calc(13px * var(--fs)); color: #666; margin-bottom: 16px; }
   .modal-stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
   .modal-stat { background: #fafaf9; border-radius: 6px; padding: 12px; text-align: center; }
-  .modal-stat .mn { font-size: 20px; font-weight: 500; color: #1c1c1c; font-family: var(--mono); }
-  .modal-stat .ml { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+  .modal-stat .mn { font-size: calc(20px * var(--fs)); font-weight: 500; color: #1c1c1c; font-family: var(--mono); }
+  .modal-stat .ml { font-size: calc(11px * var(--fs)); color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
   .modal-section { margin-bottom: 14px; }
-  .modal-section h3 { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+  .modal-section h3 { font-size: calc(11px * var(--fs)); font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
   .dec-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-  .dec-bar-label { font-size: 13px; color: #444; width: 75px; flex-shrink: 0; }
+  .dec-bar-label { font-size: calc(13px * var(--fs)); color: #444; width: 75px; flex-shrink: 0; }
   .dec-bar-track { flex: 1; height: 4px; background: #f0f0ee; border-radius: 2px; overflow: hidden; }
   .dec-bar-fill { height: 100%; border-radius: 2px; }
-  .dec-bar-count { font-size: 12px; color: #666; width: 20px; text-align: right; font-family: var(--mono); }
+  .dec-bar-count { font-size: calc(12px * var(--fs)); color: #666; width: 20px; text-align: right; font-family: var(--mono); }
   .cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .cmp-col h3 { font-size: 14px; font-weight: 600; color: #1c1c1c; margin-bottom: 10px; border-bottom: 1px solid #f0f0ee; padding-bottom: 8px; }
-  .cmp-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 1px solid #f8f8f6; }
+  .cmp-col h3 { font-size: calc(14px * var(--fs)); font-weight: 600; color: #1c1c1c; margin-bottom: 10px; border-bottom: 1px solid #f0f0ee; padding-bottom: 8px; }
+  .cmp-row { display: flex; justify-content: space-between; font-size: calc(13px * var(--fs)); padding: 4px 0; border-bottom: 1px solid #f8f8f6; }
   .cmp-row:last-child { border-bottom: none; }
   .compare-pick { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-  .compare-pick select { flex: 1; padding: 8px 10px; border: 1px solid #e4e4e2; border-radius: 6px; font-size: 13px; font-family: inherit; color: #1c1c1c; background: #fff; min-width: 160px; }
-  .compare-pick button { padding: 8px 16px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .compare-pick select { flex: 1; padding: 8px 10px; border: 1px solid #e4e4e2; border-radius: 6px; font-size: calc(13px * var(--fs)); font-family: inherit; color: #1c1c1c; background: #fff; min-width: 160px; }
+  .compare-pick button { padding: 8px 16px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: calc(13px * var(--fs)); cursor: pointer; font-family: inherit; }
 
   /* ── CHATBOT ── */
   #chat-fab {
     position: fixed; bottom: 28px; right: 28px; width: 48px; height: 48px;
     background: #1c1c1c; border-radius: 50%; border: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    font-size: calc(20px * var(--fs)); box-shadow: 0 4px 16px rgba(0,0,0,0.18);
     transition: transform 0.2s, box-shadow 0.2s; z-index: 400;
   }
   #chat-fab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(0,0,0,0.22); }
@@ -423,27 +438,27 @@
   @keyframes chatIn { from { opacity:0; transform:scale(0.94) translateY(8px); transform-origin: bottom right; } to { opacity:1; transform:scale(1) translateY(0); } }
   #chat-panel.open { display: block; }
   .chat-head { background: #1c1c1c; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
-  .chat-head-title { font-size: 13.5px; font-weight: 600; color: #fff; }
-  .chat-head-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+  .chat-head-title { font-size: calc(13.5px * var(--fs)); font-weight: 600; color: #fff; }
+  .chat-head-sub { font-size: calc(12px * var(--fs)); color: rgba(255,255,255,0.5); margin-top: 1px; }
   .chat-head-close { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 1.1rem; line-height: 1; transition: color 0.15s; }
   .chat-head-close:hover { color: #fff; }
   .chat-msgs { padding: 14px 14px 6px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; max-height: 220px; overflow-y: auto; }
-  .chat-msg-bot { background: #f5f5f3; border-radius: 8px 8px 8px 2px; padding: 9px 12px; font-size: 13px; color: #333; line-height: 1.5; max-width: 90%; align-self: flex-start; }
-  .chat-msg-user { background: #1c1c1c; border-radius: 8px 8px 2px 8px; padding: 9px 12px; font-size: 13px; color: #fff; line-height: 1.5; max-width: 90%; align-self: flex-end; }
+  .chat-msg-bot { background: #f5f5f3; border-radius: 8px 8px 8px 2px; padding: 9px 12px; font-size: calc(13px * var(--fs)); color: #333; line-height: 1.5; max-width: 90%; align-self: flex-start; }
+  .chat-msg-user { background: #1c1c1c; border-radius: 8px 8px 2px 8px; padding: 9px 12px; font-size: calc(13px * var(--fs)); color: #fff; line-height: 1.5; max-width: 90%; align-self: flex-end; }
   .chat-input-row { display: flex; border-top: 1px solid #f0f0ee; }
-  .chat-input { flex: 1; padding: 11px 14px; font-size: 13px; border: none; font-family: inherit; color: #1c1c1c; outline: none; background: #fff; }
+  .chat-input { flex: 1; padding: 11px 14px; font-size: calc(13px * var(--fs)); border: none; font-family: inherit; color: #1c1c1c; outline: none; background: #fff; }
   .chat-input:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   .chat-input::placeholder { color: #aaa; }
-  .chat-send { padding: 0 16px; background: none; border: none; border-left: 1px solid #f0f0ee; font-size: 13px; font-weight: 500; color: #555; cursor: pointer; font-family: inherit; transition: color 0.15s; }
+  .chat-send { padding: 0 16px; background: none; border: none; border-left: 1px solid #f0f0ee; font-size: calc(13px * var(--fs)); font-weight: 500; color: #555; cursor: pointer; font-family: inherit; transition: color 0.15s; }
   .chat-send:hover { color: #1c1c1c; }
 
   /* ── FORM ── */
-  .form-wrap { max-width: 640px; margin: 0 auto; }
+  .form-wrap { max-width: calc(640px * var(--fs)); margin: 0 auto; }
   @media (min-width: 1180px) { .form-wrap { max-width: 760px; } }
-  .form-title { font-family: var(--display); font-size: 20px; font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; margin-bottom: 5px; }
-  .form-subtitle { font-size: 13px; color: #666; margin-bottom: 20px; }
-  .anon-note { font-size: 13px; color: var(--green-text); margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
-  .success-msg { background: #f0fdf6; color: var(--green-text); border: 1px solid #c6f0dc; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 13.5px; display: none; }
+  .form-title { font-family: var(--display); font-size: calc(20px * var(--fs)); font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; margin-bottom: 5px; }
+  .form-subtitle { font-size: calc(13px * var(--fs)); color: #666; margin-bottom: 20px; }
+  .anon-note { font-size: calc(13px * var(--fs)); color: var(--green-text); margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
+  .success-msg { background: #f0fdf6; color: var(--green-text); border: 1px solid #c6f0dc; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: calc(13.5px * var(--fs)); display: none; }
 
   /* ── ENTRANCE / SCROLL MOTION ── */
   .page-title .w { display: inline-block; opacity: 0; transform: translateY(14px); }
@@ -486,24 +501,24 @@
   }
   #celebration-overlay.visible .cel-check-path { stroke-dashoffset: 0; transition-delay: 0.4s; }
   .cel-title {
-    font-size: 28px; font-weight: 600; letter-spacing: -0.025em; color: var(--text);
+    font-size: calc(28px * var(--fs)); font-weight: 600; letter-spacing: -0.025em; color: var(--text);
     margin-bottom: 10px;
     transform: translateY(16px); opacity: 0;
     transition: transform 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease;
   }
   #celebration-overlay.visible .cel-title { transform: translateY(0); opacity: 1; transition-delay: 0.25s; }
   .cel-sub {
-    font-size: 15px; color: var(--text-muted); text-align: center; max-width: 280px; line-height: 1.5;
+    font-size: calc(15px * var(--fs)); color: var(--text-muted); text-align: center; max-width: 280px; line-height: 1.5;
     transform: translateY(12px); opacity: 0;
     transition: transform 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease;
   }
   #celebration-overlay.visible .cel-sub { transform: translateY(0); opacity: 1; transition-delay: 0.35s; }
   .form-group { margin-bottom: 15px; }
-  .form-group label { display: block; font-size: 12px; font-weight: 500; color: #555; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-group label { display: block; font-size: calc(12px * var(--fs)); font-weight: 500; color: #555; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
   .req { color: #dc8080; }
   .form-group input, .form-group select, .form-group textarea {
     width: 100%; padding: 9px 12px; border: 1px solid #e4e4e2; border-radius: 6px;
-    font-size: 14px; font-family: inherit; color: #1c1c1c; background: #fff; outline: none;
+    font-size: calc(14px * var(--fs)); font-family: inherit; color: #1c1c1c; background: #fff; outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
   .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
@@ -513,7 +528,7 @@
   .form-group textarea { resize: vertical; min-height: 70px; }
   .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  .form-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; cursor: pointer; margin-bottom: 15px; }
+  .form-check { display: flex; align-items: center; gap: 8px; font-size: calc(13px * var(--fs)); color: #555; cursor: pointer; margin-bottom: 15px; }
   .form-check input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
   .form-check:hover { color: #1c1c1c; }
   .major-wrap { position: relative; }
@@ -523,37 +538,37 @@
     border-radius: 0 0 6px 6px; max-height: 180px; overflow-y: auto;
     z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.07);
   }
-  .sug-item { padding: 8px 12px; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f5f5f3; transition: background 0.1s; }
+  .sug-item { padding: 8px 12px; font-size: calc(13px * var(--fs)); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f5f5f3; transition: background 0.1s; }
   .sug-item:last-child { border-bottom: none; }
   .sug-item:hover { background: #f5f5f3; }
-  .sug-rate { font-size: 12px; color: #888; font-family: var(--mono); }
+  .sug-rate { font-size: calc(12px * var(--fs)); color: #888; font-family: var(--mono); }
   .college-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
   .college-row-name { flex: 2; position: relative; }
   .college-row-decision { flex: 1; }
   .college-row-remove { background: none; border: 1px solid #e4e4e2; border-radius: 6px; padding: 8px 10px; cursor: pointer; color: #ccc; font-size: 1rem; flex-shrink: 0; line-height: 1; transition: all 0.15s; }
   .college-row-remove:hover { border-color: #a83232; color: #a83232; background: #fef2f2; }
-  .add-college-btn { width: 100%; padding: 8px; border: 1px dashed #ddd; border-radius: 6px; background: none; cursor: pointer; font-size: 13px; color: #888; font-family: inherit; margin-bottom: 18px; transition: all 0.15s; }
+  .add-college-btn { width: 100%; padding: 8px; border: 1px dashed #ddd; border-radius: 6px; background: none; cursor: pointer; font-size: calc(13px * var(--fs)); color: #888; font-family: inherit; margin-bottom: 18px; transition: all 0.15s; }
   .add-college-btn:hover { border-color: #aaa; color: #555; }
-  .form-submit { width: 100%; padding: 11px; background: #1c1c1c; color: #fafaf9; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s, transform 0.1s; }
+  .form-submit { width: 100%; padding: 11px; background: #1c1c1c; color: #fafaf9; border: none; border-radius: 6px; font-size: calc(14px * var(--fs)); font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s, transform 0.1s; }
   .form-submit:hover { opacity: 0.82; }
   .form-submit:active { transform: scale(0.99); }
   .delete-wrap { display: none; text-align: center; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0f0ee; }
-  .delete-btn { padding: 7px 18px; background: none; color: #a83232; border: 1px solid #f0b8b8; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .delete-btn { padding: 7px 18px; background: none; color: #a83232; border: 1px solid #f0b8b8; border-radius: 6px; font-size: calc(13px * var(--fs)); cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .delete-btn:hover { background: #fef2f2; border-color: #a83232; }
-  .privacy-note { margin-top: 18px; padding: 12px 14px; background: #f7f7f5; border: 1px solid #ebebeb; border-radius: 6px; font-size: 13px; color: #666; line-height: 1.6; }
+  .privacy-note { margin-top: 18px; padding: 12px 14px; background: #f7f7f5; border: 1px solid #ebebeb; border-radius: 6px; font-size: calc(13px * var(--fs)); color: #666; line-height: 1.6; }
   .privacy-note strong { color: #444; }
 
   /* ── FOOTER ── */
   footer { border-top: 1px solid #e8e8e6; padding: 24px 40px; background: #1c1c1c; margin-top: auto; }
-  .footer-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .footer-inner { max-width: calc(900px * var(--fs)); margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
   @media (min-width: 1180px) { .footer-inner { max-width: 1060px; } }
   @media (min-width: 1380px) { .footer-inner { max-width: 1200px; } }
   @media (min-width: 1620px) { .footer-inner { max-width: 1340px; } }
   @media (min-width: 1900px) { .footer-inner { max-width: 1480px; } }
-  .footer-left { font-size: 13px; color: #666; line-height: 1.6; }
+  .footer-left { font-size: calc(13px * var(--fs)); color: #666; line-height: 1.6; }
   .footer-left strong { color: #aaa; }
-  .footer-anon { font-size: 13px; color: #4ade80; display: flex; align-items: center; gap: 6px; }
-  .footer-contact { font-size: 13px; color: #666; line-height: 1.6; }
+  .footer-anon { font-size: calc(13px * var(--fs)); color: #4ade80; display: flex; align-items: center; gap: 6px; }
+  .footer-contact { font-size: calc(13px * var(--fs)); color: #666; line-height: 1.6; }
   .footer-contact a { color: #aaa; text-decoration: none; border-bottom: 1px solid #444; transition: color 0.15s, border-color 0.15s; }
   .footer-contact a:hover { color: #fff; border-color: #fff; }
 
@@ -622,6 +637,10 @@
   [data-theme="dark"] .slm-field label { color: var(--text-3); }
   [data-theme="dark"] .slm-field input, [data-theme="dark"] .slm-field select { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
   [data-theme="dark"] .slm-status { color: var(--text-3); }
+  [data-theme="dark"] .slm-tabs { border-color: var(--border); }
+  [data-theme="dark"] .slm-tab { color: var(--text-3); }
+  [data-theme="dark"] .slm-tab:hover, [data-theme="dark"] .slm-tab.active { color: var(--text); }
+  [data-theme="dark"] .slm-chip { background: rgba(79,114,196,0.18); color: #b9c9ee; border-color: rgba(79,114,196,0.4); }
   [data-theme="dark"] .slm-status strong { color: var(--text); }
   [data-theme="dark"] .entries-title { color: var(--text); }
   [data-theme="dark"] .entries-sub { color: var(--text-3); }
@@ -682,8 +701,14 @@
   [data-theme="dark"] .empty-state h3 { color: var(--text); }
   [data-theme="dark"] .empty-state p { color: var(--text-3); }
   [data-theme="dark"] .theme-toggle:hover { background: var(--surface-2); }
+  .text-size { display: flex; margin-left: 12px; border: 1px solid var(--border-2); border-radius: 6px; overflow: hidden; }
+  .text-size-btn { background: none; border: none; padding: 5px 10px; font-family: inherit; font-size: calc(14px * var(--fs)); font-weight: 600; color: var(--text-3); cursor: pointer; line-height: 1.2; }
+  .text-size-btn + .text-size-btn { border-left: 1px solid var(--border-2); font-size: calc(17px * var(--fs)); }
+  .text-size-btn span { font-size: 0.75em; margin-left: 1px; }
+  .text-size-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+  .text-size-btn:disabled { opacity: 0.35; cursor: default; }
   .theme-toggle {
-    margin-left: 10px; padding: 7px 14px; font-size: 13px; font-weight: 500; line-height: 1;
+    margin-left: 10px; padding: 7px 14px; font-size: calc(13px * var(--fs)); font-weight: 500; line-height: 1;
     color: var(--text-2); border: 1px solid var(--border-2); border-radius: 6px;
     cursor: pointer; background: none; font-family: inherit; transition: all 0.15s;
   }
@@ -693,7 +718,15 @@
     .content { padding: 24px 20px; }
     .stats-row { grid-template-columns: 1fr 1fr; }
     .form-row, .form-row-3 { grid-template-columns: 1fr; }
-    nav { padding: 0 20px; }
+    /* Phones: logo + text size + theme on the first row, page links below.
+       The single row didn't fit a phone even before the text-size buttons. */
+    nav { padding: 0 16px; height: auto; flex-wrap: wrap; }
+    .nav-logo { height: 56px; align-items: center; font-size: calc(19px * var(--fs)); }
+    .nav-logo span { display: none; }
+    .text-size { order: 1; margin-left: 0; }
+    .theme-toggle { order: 2; }
+    .nav-link { order: 3; flex: 1 0 50%; justify-content: center; height: 44px; padding: 0 8px; }
+    .sp-bar-label { width: 36%; min-width: 0; max-width: none; }
     footer { padding: 20px; }
     #chat-fab { bottom: 20px; right: 20px; }
     #chat-panel { right: 20px; width: calc(100vw - 40px); }
@@ -706,6 +739,10 @@
   <div class="nav-logo">Live Oak <span>/ admissions</span></div>
   <div class="nav-link active" id="nav-results" onclick="showPage('results')">Results</div>
   <div class="nav-link" id="nav-submit" onclick="showPage('submit')">Submit yours</div>
+  <div class="text-size" role="group" aria-label="Text size">
+    <button class="text-size-btn" id="text-smaller" onclick="changeTextSize(-1)" aria-label="Smaller text" title="Smaller text">A<span aria-hidden="true">−</span></button>
+    <button class="text-size-btn" id="text-bigger" onclick="changeTextSize(1)" aria-label="Bigger text" title="Bigger text">A<span aria-hidden="true">+</span></button>
+  </div>
   <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()" title="Toggle dark mode">Dark</button>
 </nav>
 
@@ -820,36 +857,51 @@
 
     <!-- Students Like Me -->
     <div class="slm-panel">
-      <div class="slm-title">🎯 Students like me — see what schools others with similar stats applied to</div>
-      <div class="slm-inputs">
+      <div class="slm-title">🎯 Students like me: filter by GPA, SAT, or major, or combine them</div>
+      <div class="slm-tabs" role="tablist" aria-label="Filter by">
+        <button class="slm-tab active" role="tab" id="slm-tab-gpa" aria-selected="true" aria-controls="slm-sec-gpa" onclick="slmTab('gpa')">GPA</button>
+        <button class="slm-tab" role="tab" id="slm-tab-sat" aria-selected="false" aria-controls="slm-sec-sat" onclick="slmTab('sat')">SAT</button>
+        <button class="slm-tab" role="tab" id="slm-tab-major" aria-selected="false" aria-controls="slm-sec-major" onclick="slmTab('major')">Major</button>
+      </div>
+      <div class="slm-inputs slm-section" id="slm-sec-gpa" role="tabpanel" aria-labelledby="slm-tab-gpa">
         <div class="slm-field">
           <label for="slm-gpa">Unweighted GPA</label>
-          <input type="number" id="slm-gpa" placeholder="e.g. 3.8" step="0.01" min="1" max="4">
+          <input type="number" id="slm-gpa" placeholder="e.g. 3.8" step="0.01" min="1" max="4" onkeydown="if(event.key==='Enter')applySlm('gpa')">
         </div>
         <div class="slm-field">
-          <label for="slm-gpa-range">GPA range ±</label>
+          <label for="slm-gpa-range">Range ±</label>
           <select id="slm-gpa-range">
             <option value="0.2">±0.2 (tight)</option>
             <option value="0.3" selected>±0.3 (default)</option>
             <option value="0.5">±0.5 (loose)</option>
           </select>
         </div>
+        <button class="slm-btn" onclick="applySlm('gpa')">Filter by GPA</button>
+      </div>
+      <div class="slm-inputs slm-section" id="slm-sec-sat" role="tabpanel" aria-labelledby="slm-tab-sat" hidden>
         <div class="slm-field">
-          <label for="slm-sat">SAT (optional)</label>
-          <input type="number" id="slm-sat" placeholder="e.g. 1400" step="10">
+          <label for="slm-sat">SAT score</label>
+          <input type="number" id="slm-sat" placeholder="e.g. 1400" step="10" min="400" max="1600" onkeydown="if(event.key==='Enter')applySlm('sat')">
         </div>
         <div class="slm-field">
-          <label for="slm-sat-range">SAT range ±</label>
+          <label for="slm-sat-range">Range ±</label>
           <select id="slm-sat-range">
             <option value="50">±50 (tight)</option>
             <option value="100" selected>±100 (default)</option>
             <option value="150">±150 (loose)</option>
           </select>
         </div>
-        <button class="slm-btn" onclick="applySlm()">Find matches</button>
-        <button class="slm-clear" id="slm-clear-btn" onclick="clearSlm()">✕ Clear</button>
+        <button class="slm-btn" onclick="applySlm('sat')">Filter by SAT</button>
       </div>
-      <div class="slm-status" id="slm-status"></div>
+      <div class="slm-inputs slm-section" id="slm-sec-major" role="tabpanel" aria-labelledby="slm-tab-major" hidden>
+        <div class="slm-field">
+          <label for="slm-major">Intended major</label>
+          <select id="slm-major"></select>
+        </div>
+        <button class="slm-btn" onclick="applySlm('major')">Filter by major</button>
+      </div>
+      <div class="slm-active" id="slm-active"></div>
+      <div class="slm-status" id="slm-status" role="status" aria-live="polite"></div>
     </div>
 
     <!-- Inline stats (formerly separate Stats page) -->
@@ -932,7 +984,7 @@
 
       <div class="form-group">
         <label>College decisions <span class="req">*</span></label>
-        <div style="font-size:12px;color:var(--text-muted);margin:-2px 0 8px;">Include every school you applied to, not just where you got in. Rejections and waitlists matter just as much.</div>
+        <div style="font-size:calc(12px * var(--fs));color:var(--text-muted);margin:-2px 0 8px;">Include every school you applied to, not just where you got in. Rejections and waitlists matter just as much.</div>
         <div id="college-inputs"></div>
         <button type="button" class="add-college-btn" onclick="addCollege()">+ Add another college</button>
       </div>
@@ -944,7 +996,7 @@
       <button type="button" class="form-submit" id="submit-btn" onclick="submitForm()">Submit</button>
 
       <div class="delete-wrap" id="delete-wrap">
-        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Want to remove your data?</p>
+        <p style="font-size:calc(12px * var(--fs));color:var(--text-muted);margin-bottom:8px;">Want to remove your data?</p>
         <button type="button" class="delete-btn" onclick="deleteSubmission()">Delete my submission</button>
       </div>
 
@@ -1424,11 +1476,7 @@ function setCollegeFilter(f) {
   activeCollegeFilter = f;
   trackEvent('filter_click', f);
   activeFilter = null;
-  slmFilter = null;
-  document.getElementById('slm-gpa').value = '';
-  document.getElementById('slm-sat').value = '';
-  document.getElementById('slm-clear-btn').style.display = 'none';
-  document.getElementById('slm-status').style.display = 'none';
+  resetSlmUi();
   writeUrlState(true);
   renderResults();
 }
@@ -1637,6 +1685,14 @@ function seededJitter(seed, range) {
   return (((h^(h>>>16))>>>0)/0xffffffff - 0.5)*2*range;
 }
 
+// Width of a chart label at a given font size, measured with a canvas so the
+// margins fit real names instead of a character-count guess.
+function chartTextMeasurer(px) {
+  const ctx = (chartTextMeasurer._c ||= document.createElement('canvas').getContext('2d'));
+  ctx.font = `600 ${px}px Inter, sans-serif`;
+  return str => ctx.measureText(str).width;
+}
+
 function buildChart(data, animate) {
   // FIRST — must happen before anything clears #chart-main further down,
   // otherwise there is nothing left to measure and every dot looks brand new.
@@ -1681,20 +1737,35 @@ function buildChart(data, animate) {
   const isMobile = window.innerWidth <= 600;
   const isWide = window.innerWidth >= 1180;
   const n = cols.length;
-  const baseLblSize = n > 55 ? 7 : n > 40 ? 8 : n > 28 ? 9 : n > 18 ? 10 : n > 12 ? 11 : n > 8 ? 12 : 13;
+  const baseLblSize = +((n > 55 ? 7 : n > 40 ? 8 : n > 28 ? 9 : n > 18 ? 10 : n > 12 ? 11 : n > 8 ? 12 : 13) * textScale).toFixed(1);
+  const tickSize = +(13 * textScale).toFixed(1);
   const dotR = n > 40 ? 4 : n > 25 ? 5 : 6;
   // Estimate the vertical extent of the longest rotated college name so PAD.bottom
   // fits without leaving big empty space. sin(38°) ~= 0.616; char width ~= 0.55em.
   const maxNameLen = Math.max(10, ...cols.map(c => shortenForChart(c).length));
-  const lblPxPerChar = (baseLblSize + 9) * 0.55; // include hover headroom up to peak
+  const lblPxPerChar = Math.max(baseLblSize + 9, 19) * 0.55; // include hover headroom up to peak
   const labelExtent = Math.ceil(maxNameLen * lblPxPerChar * 0.616);
   const padBottom = Math.max(110, 22 + labelExtent + 18);
   const plotHTarget = isMobile ? 220 : isWide ? 420 : 320;
   const H = 20 + plotHTarget + padBottom;
-  const PAD = {top:20, right:20, bottom: padBottom, left:58};
   const containerW = el.closest('.chart-area').clientWidth - 40;
   const minColW = n > 50 ? 20 : n > 35 ? 26 : n > 25 ? 30 : n > 18 ? 36 : n > 12 ? 46 : 56;
-  const colW = Math.max(containerW / cols.length, minColW);
+  // Room for hovered names at full size. Names are end-anchored and rotated
+  // -38°, so the first ones reach left past their column and the last one
+  // pokes slightly right; without this they got clipped by the scroll box.
+  const peakLbl = Math.max(baseLblSize + 9, 19);
+  const measure = chartTextMeasurer(peakLbl);
+  const COS38 = 0.788;
+  // Rotated, a name reaches left by its length·cos38° plus its letter height.
+  const leftReach = (i, w) => measure(shortenForChart(cols[i])) * COS38 + peakLbl * 0.62 - (i * w + w / 2);
+  const estColW = Math.max((containerW - 58 - peakLbl) / cols.length, minColW);
+  // Tick numbers ("1600") plus the rotated axis title must fit on the left too.
+  let padLeft = Math.max(58, Math.ceil(16 + 3.5 * tickSize));
+  for (let i = 0; i < Math.min(cols.length, 6); i++) padLeft = Math.max(padLeft, Math.ceil(leftReach(i, estColW)) + 10);
+  const PAD = {top:20, right: Math.ceil(peakLbl * 0.8) + 8, bottom: padBottom, left: padLeft};
+  // Columns share the width left after the margins; previously the margins
+  // were added on top, so the chart always overflowed its box by ~80px.
+  const colW = Math.max((containerW - PAD.left - PAD.right) / cols.length, minColW);
   const W = Math.max(PAD.left + PAD.right + colW * cols.length, containerW, 400);
   const plotW = W - PAD.left - PAD.right, plotH = H - PAD.top - PAD.bottom;
 
@@ -1708,9 +1779,10 @@ function buildChart(data, animate) {
   ySteps.forEach(v => {
     const y = PAD.top + plotH - (v-yMin)/(yMax-yMin)*plotH;
     svg += `<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+plotW}" y2="${y}" stroke="${gridC}" stroke-width="1"/>`;
-    svg += `<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="13" fill="${tickC}" font-family="'IBM Plex Mono',monospace">${isGpa?v.toFixed(1):v}</text>`;
+    svg += `<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="${tickSize}" fill="${tickC}" font-family="'IBM Plex Mono',monospace">${isGpa?v.toFixed(1):v}</text>`;
   });
-  svg += `<text x="13" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="13" fill="${tickC}" font-family="Inter,sans-serif" transform="rotate(-90,13,${PAD.top+plotH/2})">${yLabel}</text>`;
+  const yTitleX = Math.max(tickSize * 0.6, PAD.left - 12 - 2.9 * tickSize);
+  svg += `<text x="${yTitleX}" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="${tickSize}" fill="${tickC}" font-family="Inter,sans-serif" transform="rotate(-90,${yTitleX},${PAD.top+plotH/2})">${yLabel}</text>`;
   svg += `<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="${axisC}" stroke-width="1"/>`;
 
   cols.forEach((col, i) => {
@@ -1781,6 +1853,7 @@ function chartWave(fIdx) {
   const labels = document.querySelectorAll('[id^="col-lbl-"]');
   if (!labels.length) return;
   if (fIdx < 0) {
+    if (pinnedCol() >= 0) return chartSpot(pinnedCol());
     labels.forEach(el => { el.style.fontSize = ''; el.style.fill = ''; el.style.fontWeight = ''; });
     updateDotHighlight(-1);
     return;
@@ -1868,6 +1941,7 @@ function clearSpot() { clearWave(); }
 function chartSpot(idx) {
   const labels = document.querySelectorAll('[id^="col-lbl-"]');
   if (!labels.length) return;
+  if (idx < 0 && pinnedCol() >= 0) idx = pinnedCol();
   if (idx < 0) {
     labels.forEach(el => { el.style.fontSize = ''; el.style.fill = ''; el.style.fontWeight = ''; });
     updateDotHighlight(-1);
@@ -1892,17 +1966,38 @@ function chartMouseleave() { _lastWaveIdx = -2; _waveMode = 'none'; chartWave(-1
 
 // ── Dot tooltip ────────────────────────────────────────────────────────────
 let _tooltipDot = null;
-function handleDotClick(evt, idx) { evt.stopPropagation(); _tooltipDot = evt.currentTarget; showTooltip(evt, scatterData[idx]); }
+// While a dot's pane is open, that dot and its college stay highlighted even
+// after the cursor leaves; hover elsewhere still previews, then falls back.
+function pinnedCol() {
+  const tip = document.getElementById('dot-tooltip');
+  if (!_tooltipDot || !_tooltipDot.isConnected || tip.style.display !== 'block') return -1;
+  return parseInt(_tooltipDot.dataset.cidx);
+}
+function unpinDot() {
+  if (_tooltipDot) _tooltipDot.classList.remove('pinned');
+  _tooltipDot = null;
+  document.getElementById('dot-tooltip').style.display = 'none';
+  _lastWaveIdx = -2; _waveMode = 'none';
+  chartWave(-1);
+}
+function handleDotClick(evt, idx) {
+  evt.stopPropagation();
+  if (_tooltipDot) _tooltipDot.classList.remove('pinned');
+  _tooltipDot = evt.currentTarget;
+  _tooltipDot.classList.add('pinned');
+  showTooltip(evt, scatterData[idx]);
+  chartSpot(parseInt(_tooltipDot.dataset.cidx));
+}
 function positionTooltipNear(x, y) {
   const tip = document.getElementById('dot-tooltip');
-  tip.style.left = Math.min(x + 16, window.innerWidth - 330) + 'px';
+  tip.style.left = Math.min(x + 16, window.innerWidth - tip.offsetWidth - 10) + 'px';
   tip.style.top = Math.max(y - 10, 10) + 'px';
 }
 function repositionTooltip() {
   if (!_tooltipDot) return;
   const tip = document.getElementById('dot-tooltip');
   if (tip.style.display === 'none' || !tip.style.display) return;
-  if (!_tooltipDot.isConnected) { tip.style.display = 'none'; _tooltipDot = null; return; }
+  if (!_tooltipDot.isConnected) { unpinDot(); return; }
   const rect = _tooltipDot.getBoundingClientRect();
   positionTooltipNear(rect.right, rect.top);
 }
@@ -1933,7 +2028,7 @@ function showTooltip(evt, r) {
     if (s.school_type && s.school_type !== 'University') extras.push(s.school_type);
     if (s.enrolling === 'yes') extras.push('🎓 Enrolling');
     if (s.scholarship === 'yes') extras.push('💰 Scholarship');
-    const extrasStr = extras.length ? ` <span style="opacity:0.7;font-size:10.5px;">(${extras.join(' · ')})</span>` : '';
+    const extrasStr = extras.length ? ` <span style="opacity:0.7;font-size:calc(10.5px * var(--fs));">(${extras.join(' · ')})</span>` : '';
     const isClicked = s.college_name === r.college_name && s.decision === r.decision && s.decision_type === r.decision_type;
     const style = isClicked
       ? `color:${DOT_COLORS[s.decision]||'#aaa'};font-weight:600;background:rgba(255,255,255,0.08);padding:3px 6px;border-radius:4px;margin:1px 0;`
@@ -1950,11 +2045,9 @@ function showTooltip(evt, r) {
   positionTooltipNear(evt.clientX, evt.clientY);
 }
 document.addEventListener('click', e => {
-  if (!e.target.closest('circle')) {
-    document.getElementById('dot-tooltip').style.display = 'none';
-    _tooltipDot = null;
-  }
+  if (_tooltipDot && !e.target.closest('.chart-dot')) unpinDot();
 });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && _tooltipDot) unpinDot(); });
 window.addEventListener('scroll', repositionTooltip, { passive: true });
 window.addEventListener('resize', repositionTooltip, { passive: true });
 document.addEventListener('DOMContentLoaded', () => {
@@ -1994,7 +2087,7 @@ function openCollegeDetail(name) {
     </div>
     <div class="modal-section"><h3>Decisions</h3>${bars}</div>
     <div class="modal-section"><h3>GPA range (unweighted)</h3>
-      <div style="display:flex;gap:16px;font-size:13px;color:var(--text-3);">
+      <div style="display:flex;gap:16px;font-size:calc(13px * var(--fs));color:var(--text-3);">
         <span>Min <strong style="color:var(--text);font-family:var(--mono)">${gpaMin}</strong></span>
         <span>Avg <strong style="color:var(--text);font-family:var(--mono)">${gpaAvg}</strong></span>
         <span>Max <strong style="color:var(--text);font-family:var(--mono)">${gpaMax}</strong></span>
@@ -2030,7 +2123,7 @@ function renderCompare() {
   const picks = [a, b, c].filter(Boolean);
   const unique = [...new Set(picks)];
   if (unique.length < 2) {
-    document.getElementById('cmp-result').innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Pick at least two different colleges.</p>';
+    document.getElementById('cmp-result').innerHTML = '<p style="font-size:calc(13px * var(--fs));color:var(--text-muted);">Pick at least two different colleges.</p>';
     return;
   }
   document.getElementById('cmp-result').innerHTML = `<div class="cmp-grid" style="grid-template-columns:repeat(${unique.length},1fr);">${unique.map(colStats).join('')}</div>`;
@@ -2055,7 +2148,7 @@ function colStats(name) {
   const decBars = DECISION_ORDER.filter(d=>rows.some(r=>r.decision===d)).map(d => {
     const n = rows.filter(r=>r.decision===d).length;
     const pct = Math.round(n/total*100);
-    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px;">
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:calc(12px * var(--fs));">
       <span style="color:${DOT_COLORS[d]};min-width:74px;">${d}</span>
       <div style="flex:1;height:4px;background:#f0f0ee;border-radius:2px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${DOT_COLORS[d]};"></div></div>
       <span style="font-family:var(--mono);color:var(--text-3);min-width:22px;text-align:right;">${n}</span>
@@ -2066,28 +2159,28 @@ function colStats(name) {
     const r_t = rows.filter(r=>r.decision_type===t);
     if (!r_t.length) return null;
     const a_t = r_t.filter(r=>r.decision==='Accepted').length;
-    return `<div style="font-size:12px;color:var(--text-3);line-height:1.6;">${t}: <strong style="color:var(--text);font-family:var(--mono);">${a_t}/${r_t.length}</strong> <span style="color:var(--text-muted);">(${Math.round(a_t/r_t.length*100)}%)</span></div>`;
+    return `<div style="font-size:calc(12px * var(--fs));color:var(--text-3);line-height:1.6;">${t}: <strong style="color:var(--text);font-family:var(--mono);">${a_t}/${r_t.length}</strong> <span style="color:var(--text-muted);">(${Math.round(a_t/r_t.length*100)}%)</span></div>`;
   }).filter(Boolean).join('');
   return `<div class="cmp-col">
     <h3 style="margin-bottom:14px;">${name}</h3>
     <div style="text-align:center;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #f0f0ee;">
-      <div style="font-size:30px;font-weight:600;color:${accColor};font-family:var(--mono);line-height:1;">${accRate}%</div>
-      <div style="font-size:12px;color:var(--text-3);margin-top:5px;">${acc} of ${total} accepted</div>
-      ${natRate ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">~${natRate}% national</div>` : ''}
+      <div style="font-size:calc(30px * var(--fs));font-weight:600;color:${accColor};font-family:var(--mono);line-height:1;">${accRate}%</div>
+      <div style="font-size:calc(12px * var(--fs));color:var(--text-3);margin-top:5px;">${acc} of ${total} accepted</div>
+      ${natRate ? `<div style="font-size:calc(11px * var(--fs));color:var(--text-muted);margin-top:2px;">~${natRate}% national</div>` : ''}
     </div>
-    <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Accepted students</div>
-    <div style="font-size:13px;color:var(--text-2);line-height:1.8;margin-bottom:14px;">
-      ${avgGpaAcc!==null ? `<div>UW GPA: <strong style="color:var(--text);font-family:var(--mono)">${avgGpaAcc.toFixed(2)}</strong>${minG?` <span style="color:var(--text-muted);font-size:11px;">(${minG}–${maxG})</span>`:''}</div>` : ''}
+    <div style="font-size:calc(11px * var(--fs));font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Accepted students</div>
+    <div style="font-size:calc(13px * var(--fs));color:var(--text-2);line-height:1.8;margin-bottom:14px;">
+      ${avgGpaAcc!==null ? `<div>UW GPA: <strong style="color:var(--text);font-family:var(--mono)">${avgGpaAcc.toFixed(2)}</strong>${minG?` <span style="color:var(--text-muted);font-size:calc(11px * var(--fs));">(${minG}–${maxG})</span>`:''}</div>` : ''}
       ${avgGpaWAcc!==null ? `<div>W GPA: <strong style="color:var(--text);font-family:var(--mono)">${avgGpaWAcc.toFixed(2)}</strong></div>` : ''}
       ${avgSATAcc!==null ? `<div>SAT: <strong style="color:var(--text);font-family:var(--mono)">${Math.round(avgSATAcc)}</strong></div>` : ''}
     </div>
-    <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Decisions</div>
+    <div style="font-size:calc(11px * var(--fs));font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Decisions</div>
     <div style="margin-bottom:14px;">${decBars}</div>
     ${appRows ? `
-      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">By app type</div>
+      <div style="font-size:calc(11px * var(--fs));font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">By app type</div>
       <div style="margin-bottom:14px;">${appRows}</div>
     ` : ''}
-    ${(enrolled || scholarship) ? `<div style="font-size:12px;color:var(--text-2);line-height:1.7;border-top:1px solid #f0f0ee;padding-top:10px;">
+    ${(enrolled || scholarship) ? `<div style="font-size:calc(12px * var(--fs));color:var(--text-2);line-height:1.7;border-top:1px solid #f0f0ee;padding-top:10px;">
       ${enrolled ? `<div style="color:var(--green-text);">🎓 ${enrolled} enrolled</div>` : ''}
       ${scholarship ? `<div>💰 ${scholarship} got scholarship</div>` : ''}
     </div>` : ''}
@@ -2139,57 +2232,144 @@ function closeModal(id) {
 document.addEventListener('keydown', e => { if (e.key==='Escape') { closeModal('college-modal'); closeModal('compare-modal'); } });
 
 // ── Students Like Me ───────────────────────────────────────────────────────
-function applySlm() {
-  const gpaInput = document.getElementById('slm-gpa');
-  const gpa = parseFloat(gpaInput.value);
-  if (!gpa) { alert('Enter your GPA to find matches.'); return; }
-  // This is unweighted GPA, which every submission caps at 4.0 (see f-gpa's
-  // own max). A value outside [min,max] can never match anyone — say so
-  // instead of silently running a search that's guaranteed empty.
-  const gMin = parseFloat(gpaInput.min), gMax = parseFloat(gpaInput.max);
-  if (gpa < gMin || gpa > gMax) {
-    const status = document.getElementById('slm-status');
-    status.style.display = 'block';
-    status.innerHTML = `Unweighted GPA is ${gMin.toFixed(1)}–${gMax.toFixed(1)}. ${gpa > gMax ? 'Did you mean your <strong>weighted</strong> GPA?' : ''}`;
-    slmFilter = null;
-    document.getElementById('slm-clear-btn').style.display = 'inline-block';
-    buildChart(scatterData, false);
-    renderEntries(scatterData);
-    return;
-  }
-  const gpaRange = parseFloat(document.getElementById('slm-gpa-range').value);
-  const sat = parseInt(document.getElementById('slm-sat').value)||null;
-  const satRange = parseInt(document.getElementById('slm-sat-range').value);
-  slmFilter = {gpa, gpaRange, sat, satRange};
-  document.getElementById('slm-clear-btn').style.display = 'inline-block';
-  const status = document.getElementById('slm-status');
-  status.style.display = 'block';
-  const matched = new Set(scatterData.filter(r=>slmMatches(r)).map(r=>r.session_id)).size;
-  let desc = `Showing students with GPA <strong>${(gpa-gpaRange).toFixed(1)} – ${(gpa+gpaRange).toFixed(1)}</strong>`;
-  if (sat) desc += ` · SAT <strong>${sat-satRange} – ${sat+satRange}</strong>`;
-  if (!matched) desc += ` — <strong>no matches</strong>. Try widening the range.`;
-  status.innerHTML = desc;
-  buildChart(scatterData, false);
-  renderEntries(scatterData);
+// Three independent filters (GPA, SAT, major), each in its own tab. Any mix
+// can be active at once; each shows as a removable chip.
+let slmTabActive = 'gpa';
+const normMajor = m => String(m || '').toLowerCase().replace(/[^a-z]+/g, ' ').trim();
+
+function slmTab(kind) {
+  slmTabActive = kind;
+  ['gpa','sat','major'].forEach(k => {
+    const on = k === kind;
+    const tab = document.getElementById('slm-tab-' + k);
+    tab.classList.toggle('active', on);
+    tab.setAttribute('aria-selected', on ? 'true' : 'false');
+    document.getElementById('slm-sec-' + k).hidden = !on;
+  });
+  if (kind === 'major') populateMajorOptions();
 }
-function clearSlm() {
+
+// Majors actually in the data, grouped ignoring case/punctuation, shown with
+// the most common spelling and how many students picked it.
+function populateMajorOptions() {
+  const sel = document.getElementById('slm-major');
+  const groups = new Map();
+  const seen = new Set();
+  scatterData.forEach(r => {
+    const k = normMajor(r.major);
+    if (!k || seen.has(r.session_id + '|' + k)) return;
+    seen.add(r.session_id + '|' + k);
+    const g = groups.get(k) || { n: 0, names: new Map() };
+    g.n++;
+    g.names.set(r.major.trim(), (g.names.get(r.major.trim()) || 0) + 1);
+    groups.set(k, g);
+  });
+  const opts = [...groups.entries()].map(([k, g]) => ({
+    k, n: g.n, label: [...g.names.entries()].sort((a, b) => b[1] - a[1])[0][0]
+  })).sort((a, b) => b.n - a.n || a.label.localeCompare(b.label));
+  const current = slmFilter && slmFilter.major ? slmFilter.major.key : '';
+  sel.innerHTML = opts.length
+    ? '<option value="">Choose a major…</option>' + opts.map(o =>
+        `<option value="${escHtml(o.k)}"${o.k === current ? ' selected' : ''}>${escHtml(o.label)} (${o.n})</option>`).join('')
+    : '<option value="">No majors submitted yet</option>';
+}
+
+function slmStatus(html) {
+  const status = document.getElementById('slm-status');
+  status.innerHTML = html || '';
+  status.style.display = html ? 'block' : 'none';
+}
+
+function applySlm(kind) {
+  const next = Object.assign({}, slmFilter || {});
+  if (kind === 'gpa') {
+    const input = document.getElementById('slm-gpa');
+    const v = parseFloat(input.value);
+    // Unweighted GPA caps at 4.0; out-of-range values can never match.
+    const lo = parseFloat(input.min), hi = parseFloat(input.max);
+    if (!v) return slmStatus('Enter your unweighted GPA first.');
+    if (v < lo || v > hi) return slmStatus(`Unweighted GPA is ${lo.toFixed(1)}–${hi.toFixed(1)}.${v > hi ? ' Did you mean your <strong>weighted</strong> GPA?' : ''}`);
+    next.gpa = { v, range: parseFloat(document.getElementById('slm-gpa-range').value) };
+  } else if (kind === 'sat') {
+    const v = parseInt(document.getElementById('slm-sat').value);
+    if (!v) return slmStatus('Enter an SAT score first.');
+    if (v < 400 || v > 1600) return slmStatus('SAT scores are 400–1600.');
+    next.sat = { v, range: parseInt(document.getElementById('slm-sat-range').value) };
+  } else if (kind === 'major') {
+    const sel = document.getElementById('slm-major');
+    if (!sel.value) return slmStatus('Choose a major first.');
+    next.major = { key: sel.value, label: sel.options[sel.selectedIndex].text.replace(/ \(\d+\)$/, '') };
+  }
+  slmFilter = next;
+  refreshSlm();
+}
+function removeSlm(kind) {
+  if (!slmFilter) return;
+  delete slmFilter[kind];
+  if (!Object.keys(slmFilter).length) slmFilter = null;
+  refreshSlm();
+}
+function resetSlmUi() {
   slmFilter = null;
   document.getElementById('slm-gpa').value = '';
   document.getElementById('slm-sat').value = '';
-  document.getElementById('slm-clear-btn').style.display = 'none';
-  document.getElementById('slm-status').style.display = 'none';
+  const maj = document.getElementById('slm-major'); if (maj) maj.value = '';
+  renderSlmChips();
+  slmStatus('');
+}
+function clearSlm() {
+  resetSlmUi();
+  buildChart(scatterData, false);
+  renderEntries(scatterData);
+}
+function slmParts() {
+  if (!slmFilter) return [];
+  const f = slmFilter, parts = [];
+  if (f.gpa) parts.push({ kind: 'gpa', text: `GPA ${(f.gpa.v - f.gpa.range).toFixed(1)}–${(f.gpa.v + f.gpa.range).toFixed(1)}` });
+  if (f.sat) parts.push({ kind: 'sat', text: `SAT ${f.sat.v - f.sat.range}–${f.sat.v + f.sat.range}` });
+  if (f.major) parts.push({ kind: 'major', text: f.major.label });
+  return parts;
+}
+function renderSlmChips() {
+  const parts = slmParts();
+  document.getElementById('slm-active').innerHTML = parts.length
+    ? parts.map(p => `<span class="slm-chip">${escHtml(p.text)}<button aria-label="Remove ${escHtml(p.text)} filter" onclick="removeSlm('${p.kind}')">×</button></span>`).join('') +
+      (parts.length > 1 ? '<button class="slm-clear" onclick="clearSlm()">Clear all</button>' : '')
+    : '';
+  ['gpa','sat','major'].forEach(k => {
+    const tab = document.getElementById('slm-tab-' + k);
+    const on = !!(slmFilter && slmFilter[k]);
+    if (on && !tab.querySelector('.slm-dot')) tab.insertAdjacentHTML('beforeend', '<span class="slm-dot" aria-hidden="true"></span>');
+    if (!on) tab.querySelector('.slm-dot')?.remove();
+  });
+}
+function refreshSlm() {
+  renderSlmChips();
+  if (slmFilter) {
+    const matched = new Set(scatterData.filter(r => slmMatches(r)).map(r => r.session_id)).size;
+    slmStatus(matched
+      ? `<strong>${matched}</strong> student${matched !== 1 ? 's match' : ' matches'}. The chart and list below show only ${matched !== 1 ? 'them' : 'that student'}.`
+      : 'No students match. Try widening the range or removing a filter.');
+  } else slmStatus('');
   buildChart(scatterData, false);
   renderEntries(scatterData);
 }
 function slmMatches(r) {
   if (!slmFilter) return true;
-  const {gpa, gpaRange, sat, satRange} = slmFilter;
+  const { gpa, sat, major } = slmFilter;
   const studentRows = scatterData.filter(x => x.session_id === r.session_id);
   if (!studentRows.length) return false;
-  const sGpa = parseFloat(studentRows[0].gpa);
-  const sSat = parseInt(studentRows[0].sat)||null;
-  if (isNaN(sGpa) || Math.abs(sGpa-gpa) > gpaRange) return false;
-  if (sat && sSat && Math.abs(sSat-sat) > satRange) return false;
+  const s0 = studentRows[0];
+  if (gpa) {
+    const g = parseFloat(s0.gpa);
+    if (isNaN(g) || Math.abs(g - gpa.v) > gpa.range) return false;
+  }
+  if (sat) {
+    // Filtering by SAT only includes students who reported one.
+    const t = parseInt(s0.sat);
+    if (!t || Math.abs(t - sat.v) > sat.range) return false;
+  }
+  if (major && normMajor(s0.major) !== major.key) return false;
   return true;
 }
 
@@ -2202,8 +2382,8 @@ function updateEntriesHeader(filtered, allYearData) {
   let title = 'All submissions', sub = '';
   if (slmFilter) {
     const matched = new Set(allYearData.filter(r=>slmMatches(r)).map(r=>r.session_id)).size;
-    title = `${matched} student${matched!==1?'s':''} with similar stats`;
-    sub = `GPA ${(slmFilter.gpa-slmFilter.gpaRange).toFixed(1)}–${(slmFilter.gpa+slmFilter.gpaRange).toFixed(1)}${slmFilter.sat?` · SAT ${slmFilter.sat-slmFilter.satRange}–${slmFilter.sat+slmFilter.satRange}`:''}`;
+    title = `${matched} student${matched!==1?'s':''} matching your filters`;
+    sub = escHtml(slmParts().map(p => p.text).join(' · '));
   } else {
     sub = `${total} student${total!==1?'s':''} · Class of 2026${activeCollegeFilter!=='All'?' · '+activeCollegeFilter:''}`;
   }
@@ -2218,7 +2398,7 @@ function renderEntries(data) {
   }
   if (!displayData.length) {
     el.innerHTML = slmFilter
-      ? `<div class="empty-state"><div class="empty-icon">🔍</div><h3>No matches found</h3><p>No submissions match your stats yet. Try widening the range.</p><button onclick="clearSlm()">Clear filter</button></div>`
+      ? `<div class="empty-state"><div class="empty-icon">🔍</div><h3>No matches found</h3><p>No submissions match these filters yet. Try widening the range or removing a filter.</p><button onclick="clearSlm()">Clear filter</button></div>`
       : `<div class="empty-state"><div class="empty-icon">🎓</div><h3>No results yet for 2026</h3><p>Be the first from Live Oak to share your college decisions.</p><button onclick="showPage('submit')">Add your results</button></div>`;
     return;
   }
@@ -2343,7 +2523,7 @@ function renderStatsInline(data) {
       <div class="sp-bar-label" title="${name}">${name}</div>
       <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(apps/maxApp*100)}%;background:${_statsDark?'#3987e5':'#2a78d6'};opacity:0.8"></div></div>
       <div class="sp-bar-val">${apps}</div>
-      <div style="font-size:13px;color:${pct>=50?'var(--green-text)':pct>=30?'var(--amber-text)':'var(--red-text)'};min-width:42px;text-align:right;font-family:var(--mono)">${pct}%✓</div>
+      <div style="font-size:calc(13px * var(--fs));color:${pct>=50?'var(--green-text)':pct>=30?'var(--amber-text)':'var(--red-text)'};min-width:42px;text-align:right;font-family:var(--mono)">${pct}%✓</div>
     </div>`;
   }).join('');
 
@@ -2393,7 +2573,7 @@ function renderStatsInline(data) {
       <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${pct}%;background:${DEST_COLOR[d]};opacity:.85"></div></div>
       <div class="sp-bar-val">${n} · ${pct}%</div>
     </div>`;
-  }).join('') : '<span style="font-size:13px;color:var(--text-muted);">No data yet</span>';
+  }).join('') : '<span style="font-size:calc(13px * var(--fs));color:var(--text-muted);">No data yet</span>';
 
   // GPA range per destination — median plus the middle of the pack.
   const q = (arr,p) => { const a=[...arr].sort((x,y)=>x-y); return a[Math.floor((a.length-1)*p)]; };
@@ -2489,10 +2669,10 @@ function renderStatsInline(data) {
     const tone = natRate <= 20 ? 'var(--red-text)' : natRate <= 50 ? 'var(--amber-text)' : 'var(--text-muted)';
     return `<div class="sp-bar-row">
       <div class="sp-bar-label" title="${name}">${name}</div>
-      <div style="font-size:13px;color:${tone};font-family:var(--mono);min-width:74px;text-align:right;">${natRate}% admit</div>
-      <div style="font-size:13px;color:var(--green-text);font-family:var(--mono);min-width:52px;text-align:right;">${acc}/${apps} in</div>
+      <div style="font-size:calc(13px * var(--fs));color:${tone};font-family:var(--mono);min-width:74px;text-align:right;">${natRate}% admit</div>
+      <div style="font-size:calc(13px * var(--fs));color:var(--green-text);font-family:var(--mono);min-width:52px;text-align:right;">${acc}/${apps} in</div>
     </div>`;
-  }).join('') : '<span style="font-size:13px;color:var(--text-muted);">No data yet</span>';
+  }).join('') : '<span style="font-size:calc(13px * var(--fs));color:var(--text-muted);">No data yet</span>';
 
   // Popular majors
   const majorCount = new Map();
@@ -2508,7 +2688,7 @@ function renderStatsInline(data) {
       <div class="sp-bar-label" title="${m}">${m}</div>
       <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(n/maxMaj*100)}%;background:#0d9488;opacity:0.7"></div></div>
       <div class="sp-bar-val">${n}</div>
-    </div>`).join('') : '<span style="font-size:13px;color:var(--text-muted);">No major data yet</span>';
+    </div>`).join('') : '<span style="font-size:calc(13px * var(--fs));color:var(--text-muted);">No major data yet</span>';
 
   // Acceptance rate by weighted GPA bracket
   const gpaBrackets = [
@@ -2540,7 +2720,7 @@ function renderStatsInline(data) {
       <div class="sp-bar-label" style="min-width:78px;">${b.label}</div>
       <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${widthPct}%;background:${pctColor};opacity:0.7"></div></div>
       <div class="sp-bar-val" style="min-width:46px;">${b.apps} apps</div>
-      <div style="font-size:13px;color:${pctColor};font-family:var(--mono);min-width:46px;text-align:right;">${pct!==null?pct+'%':'—'}</div>
+      <div style="font-size:calc(13px * var(--fs));color:${pctColor};font-family:var(--mono);min-width:46px;text-align:right;">${pct!==null?pct+'%':'—'}</div>
     </div>`;
   }).join('');
 
@@ -2587,7 +2767,7 @@ function renderStatsInline(data) {
       <div class="tp-label">${t}</div>
       <div class="tp-count">${s.acc}/${s.total}</div>
     </div>`;
-  }).join('') || '<span style="font-size:13px;color:var(--text-muted);">No app type data yet</span>';
+  }).join('') || '<span style="font-size:calc(13px * var(--fs));color:var(--text-muted);">No app type data yet</span>';
 
   el.innerHTML = `
     <div class="sp-grid">
@@ -2597,7 +2777,7 @@ function renderStatsInline(data) {
       </div>
       ${gpaRangeHTML ? `<div class="sp-card sp-card-wide">
         <h3>Unweighted GPA range by destination</h3>
-        <div style="font-size:12px;color:var(--text-muted);margin:-8px 0 12px;">Bar spans the middle half of students; the line is the median. Scale 2.0 – 4.0.</div>
+        <div style="font-size:calc(12px * var(--fs));color:var(--text-muted);margin:-8px 0 12px;">Bar spans the middle half of students; the line is the median. Scale 2.0 – 4.0.</div>
         ${gpaRangeHTML}
       </div>` : ''}
       ${stateHTML ? `<div class="sp-card sp-card-wide">
@@ -2615,7 +2795,7 @@ function renderStatsInline(data) {
       <div class="sp-card sp-card-wide">
         <h3>Most Applied Schools</h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 24px;">
-          ${collegesHTML || '<span style="font-size:13px;color:var(--text-muted);">No data yet</span>'}
+          ${collegesHTML || '<span style="font-size:calc(13px * var(--fs));color:var(--text-muted);">No data yet</span>'}
         </div>
       </div>
       <div class="sp-card sp-card-wide">
@@ -2666,7 +2846,7 @@ function addCollege(name='', decision='Accepted', decisionType='RD', schoolType=
   div.className = 'college-row';
   div.style.cssText = 'animation:none;opacity:1;flex-wrap:wrap;';
   setTimeout(() => { div.style.cssText = 'flex-wrap:wrap;'; }, 50);
-  const inputStyle = "padding:9px 12px;border:1px solid var(--border-2);border-radius:6px;font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;";
+  const inputStyle = "padding:9px 12px;border:1px solid var(--border-2);border-radius:6px;font-size:calc(14px * var(--fs));font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;";
   div.innerHTML = `
     <div class="college-row-name">
       <input type="text" id="cn-${id}" placeholder="College name" value="${name.replace(/"/g,'&quot;')}" autocomplete="off"
@@ -2694,21 +2874,21 @@ function addCollege(name='', decision='Accepted', decisionType='RD', schoolType=
     </div>
     <button class="college-row-remove" aria-label="Remove this college" onclick="removeCollege('cr-${id}')">×</button>
     <div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-top:2px;margin-left:2px;">
-      <label style="font-size:11px;color:var(--text-3);">School type</label>
-      <select id="st-${id}" style="${inputStyle}padding:4px 10px;font-size:12.5px;width:auto;min-width:170px;flex:0 0 auto;"
+      <label style="font-size:calc(11px * var(--fs));color:var(--text-3);">School type</label>
+      <select id="st-${id}" style="${inputStyle}padding:4px 10px;font-size:calc(12.5px * var(--fs));width:auto;min-width:170px;flex:0 0 auto;"
         onfocus="this.style.borderColor='#a8b8d8';this.style.boxShadow='0 0 0 3px rgba(79,114,196,0.08)'"
         onblur="this.style.borderColor='var(--border-2)';this.style.boxShadow='none'">
         <option value="University"${schoolType==='University'?' selected':''}>4-year university</option>
         <option value="Community"${schoolType==='Community'?' selected':''}>Community college</option>
         <option value="Trade"${schoolType==='Trade'?' selected':''}>Trade / vocational school</option>
       </select>
-      <label style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:4px;cursor:pointer;">
+      <label style="font-size:calc(11px * var(--fs));color:var(--text-3);display:flex;align-items:center;gap:4px;cursor:pointer;">
         <input type="checkbox" id="en-${id}" ${enrolling==='yes'?'checked':''} style="width:11px;height:11px;accent-color:var(--accent);cursor:pointer;margin:0;"> Enrolling here
       </label>
-      <label style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:4px;cursor:pointer;">
+      <label style="font-size:calc(11px * var(--fs));color:var(--text-3);display:flex;align-items:center;gap:4px;cursor:pointer;">
         <input type="checkbox" id="sc-${id}" ${scholarship==='yes'?'checked':''} style="width:11px;height:11px;accent-color:var(--accent);cursor:pointer;margin:0;"> Got scholarship
       </label>
-      <label style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:4px;cursor:pointer;">
+      <label style="font-size:calc(11px * var(--fs));color:var(--text-3);display:flex;align-items:center;gap:4px;cursor:pointer;">
         <input type="checkbox" id="sp-${id}" ${sport==='yes'?'checked':''} style="width:11px;height:11px;accent-color:var(--accent);cursor:pointer;margin:0;"> Sports recruitment
       </label>
     </div>`;
@@ -2895,6 +3075,27 @@ function toggleTheme() {
   if (scatterData.length) buildChart(scatterData, false);
   if (allData.length) renderStatsInline(allData.filter(r => r.grad_year == 2026));
 }
+// ── Text size ──────────────────────────────────────────────────────────────
+const TEXT_SIZES = [1, 1.15, 1.3, 1.5];
+let textScale = 1.15;
+function applyTextSize(scale, rebuild) {
+  textScale = TEXT_SIZES.includes(scale) ? scale : 1.15;
+  document.documentElement.style.setProperty('--fs', textScale);
+  const i = TEXT_SIZES.indexOf(textScale);
+  const sm = document.getElementById('text-smaller'), bg = document.getElementById('text-bigger');
+  if (sm) sm.disabled = i === 0;
+  if (bg) bg.disabled = i === TEXT_SIZES.length - 1;
+  if (rebuild && scatterData.length) buildChart(scatterData, false);
+}
+function changeTextSize(dir) {
+  const i = TEXT_SIZES.indexOf(textScale);
+  const next = TEXT_SIZES[Math.min(TEXT_SIZES.length - 1, Math.max(0, i + dir))];
+  try { localStorage.setItem('cr_textsize', String(next)); } catch(e) {}
+  applyTextSize(next, true);
+}
+try { applyTextSize(parseFloat(localStorage.getItem('cr_textsize')) || 1.15, false); } catch(e) {}
+document.addEventListener('DOMContentLoaded', () => applyTextSize(textScale, false));
+
 // Apply saved theme as early as possible
 (function() {
   try {

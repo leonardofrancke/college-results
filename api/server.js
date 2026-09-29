@@ -400,8 +400,8 @@ function createApp(dbPath) {
     const username = String(req.body.username || '').trim();
     const { password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'username and password required' });
-    if (String(password).length < 12)
-      return res.status(400).json({ error: 'Password must be at least 12 characters' });
+    if (String(password).length < 5)
+      return res.status(400).json({ error: 'Password must be at least 5 characters' });
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = hashPassword(password, salt);
     findUser(username, (err, user) => {
@@ -452,8 +452,8 @@ function createApp(dbPath) {
   app.post('/api/admin/users', requireAdmin, (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'username and password required' });
-    if (String(password).length < 12)
-      return res.status(400).json({ error: 'Password must be at least 12 characters' });
+    if (String(password).length < 5)
+      return res.status(400).json({ error: 'Password must be at least 5 characters' });
     findUser(username, (err, existing) => {
       if (err) return res.status(500).json({ error: err.message });
       if (existing) return res.status(400).json({ error: 'Username taken' });
@@ -542,24 +542,37 @@ function createApp(dbPath) {
     });
   });
 
+  // Timestamps are stored in UTC; days in admin stats follow the school's
+  // time zone, so an evening visit isn't counted as tomorrow. Returns an
+  // SQLite modifier like '-7 hours' (uses today's offset, so DST is exact
+  // for recent days and at most an hour off for older ones).
+  const SITE_TZ = 'America/Los_Angeles';
+  const tzShift = () => {
+    const now = new Date();
+    const local = new Date(now.toLocaleString('en-US', { timeZone: SITE_TZ }));
+    const utc = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+    return Math.round((local - utc) / 3600000) + ' hours';
+  };
+
   // ── Admin: site stats ──────────────────────────────────────────────────
   app.get('/api/admin/stats', requireAdmin, (req, res) => {
+    const tz = tzShift();
     const q = (sql, params) => new Promise((resolve, reject) =>
       db.get(sql, params || [], (err, row) => err ? reject(err) : resolve(row))
     );
     Promise.all([
       q('SELECT COUNT(*) AS total FROM page_views'),
-      q(`SELECT COUNT(*) AS today FROM page_views WHERE date(created_at) = date('now')`),
+      q(`SELECT COUNT(*) AS today FROM page_views WHERE date(created_at, ?) = date('now', ?)`, [tz, tz]),
       q(`SELECT COUNT(*) AS week FROM page_views WHERE created_at >= datetime('now','-7 days')`),
       q(`SELECT COUNT(*) AS month FROM page_views WHERE created_at >= datetime('now','-30 days')`),
       q('SELECT COUNT(DISTINCT session_id) AS unique_sessions FROM page_views WHERE session_id IS NOT NULL'),
-      q(`SELECT COUNT(DISTINCT session_id) AS uniq_today FROM page_views WHERE session_id IS NOT NULL AND date(created_at) = date('now')`),
+      q(`SELECT COUNT(DISTINCT session_id) AS uniq_today FROM page_views WHERE session_id IS NOT NULL AND date(created_at, ?) = date('now', ?)`, [tz, tz]),
       q(`SELECT COUNT(DISTINCT session_id) AS uniq_week FROM page_views WHERE session_id IS NOT NULL AND created_at >= datetime('now','-7 days')`),
       // Daily breakdown for last 14 days
       new Promise((resolve, reject) =>
-        db.all(`SELECT date(created_at) AS date, COUNT(*) AS page_views, COUNT(DISTINCT session_id) AS unique_visitors
+        db.all(`SELECT date(created_at, ?) AS date, COUNT(*) AS page_views, COUNT(DISTINCT session_id) AS unique_visitors
                 FROM page_views WHERE created_at >= datetime('now','-14 days')
-                GROUP BY date ORDER BY date`, [], (err, rows) => err ? reject(err) : resolve(rows))
+                GROUP BY date ORDER BY date`, [tz], (err, rows) => err ? reject(err) : resolve(rows))
       ),
       q('SELECT COUNT(*) AS total_subs FROM submissions'),
       q('SELECT COUNT(DISTINCT session_id) AS total_students FROM submissions'),
@@ -606,6 +619,38 @@ function createApp(dbPath) {
         top_filters: (topFilters || []).map(r => ({ ...r, name: cleanText(r.name, 200) })),
       });
     }).catch(err => res.status(500).json({ error: err.message }));
+  });
+
+  // ── Admin: full daily history ──────────────────────────────────────────
+  // Every day from today back to the first recorded page view, newest first,
+  // including days with no visits, a page at a time (offset/limit in days).
+  app.get('/api/admin/daily', requireAdmin, (req, res) => {
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 60, 1), 366);
+    const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+    const tz = tzShift();
+    db.get("SELECT date(MIN(created_at), ?) AS first FROM page_views", [tz], (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!row || !row.first) return res.json({ days: [], first: null, hasMore: false });
+      db.all(`
+        WITH RECURSIVE d(day, n) AS (
+          SELECT date('now', ?, '-' || ? || ' days'), ?
+          UNION ALL
+          SELECT date(day, '-1 day'), n + 1 FROM d
+          WHERE n + 1 < ? + ? AND date(day, '-1 day') >= ?
+        )
+        SELECT d.day AS date,
+               COUNT(p.id) AS page_views,
+               COUNT(DISTINCT p.session_id) AS unique_visitors
+        FROM d LEFT JOIN page_views p ON date(p.created_at, ?) = d.day
+        WHERE d.day >= ?
+        GROUP BY d.day ORDER BY d.day DESC`,
+        [tz, offset, offset, offset, limit, row.first, tz, row.first], (err2, days) => {
+          if (err2) return res.status(500).json({ error: err2.message });
+          days = days || [];
+          const last = days.length ? days[days.length - 1].date : null;
+          res.json({ days, first: row.first, hasMore: !!last && last > row.first });
+        });
+    });
   });
 
   app._db = db;

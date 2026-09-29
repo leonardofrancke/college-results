@@ -313,7 +313,7 @@ describe('admin tokens and session deletion', () => {
   test('rejects short admin passwords', async () => {
     const res = await request(app).post('/api/admin/setup')
       .set('x-admin-secret', 'test-secret')
-      .send({ username: 'admin', password: 'short' });
+      .send({ username: 'admin', password: 'abc' });
     expect(res.status).toBe(400);
   });
 
@@ -465,5 +465,47 @@ describe('public feed privacy', () => {
 
     const anon = await request(app).get('/api/admin/submissions');
     expect(anon.status).toBe(401);
+  });
+});
+
+describe('admin password length', () => {
+  test('5 characters is enough, 4 is not', async () => {
+    const setup = password => request(app).post('/api/admin/setup')
+      .set('x-admin-secret', 'test-secret').send({ username: 'Leo', password });
+    expect((await setup('1234')).status).toBe(400);
+    expect((await setup('12345')).status).toBe(200);
+    const login = await request(app).post('/api/admin/login').send({ username: 'leo', password: '12345' });
+    expect(login.status).toBe(200);
+  });
+});
+
+describe('admin daily history', () => {
+  test('pages back to the first visit, including empty days', async () => {
+    const run = (sql, params = []) => new Promise((resolve, reject) =>
+      app._db.run(sql, params, err => err ? reject(err) : resolve()));
+    await run("INSERT INTO page_views (session_id, created_at) VALUES ('a', datetime('now','-40 days'))");
+    await run("INSERT INTO page_views (session_id, created_at) VALUES ('a', datetime('now','-40 days'))");
+    await run("INSERT INTO page_views (session_id, created_at) VALUES ('b', datetime('now'))");
+    await request(app).post('/api/admin/setup').set('x-admin-secret', 'test-secret')
+      .send({ username: 'admin', password: 'correct-horse' });
+    const { body: { token } } = await request(app).post('/api/admin/login')
+      .send({ username: 'admin', password: 'correct-horse' });
+    const get = q => request(app).get('/api/admin/daily' + q).set('x-admin-token', token);
+
+    const p1 = await get('?limit=30');
+    expect(p1.body.days).toHaveLength(30);
+    expect(p1.body.days[0].page_views).toBe(1);
+    expect(p1.body.days[1].page_views).toBe(0);
+    expect(p1.body.hasMore).toBe(true);
+
+    const p2 = await get('?offset=30&limit=30');
+    expect(p2.body.days).toHaveLength(11);
+    const last = p2.body.days[p2.body.days.length - 1];
+    expect(last.date).toBe(p2.body.first);
+    expect(last.page_views).toBe(2);
+    expect(last.unique_visitors).toBe(1);
+    expect(p2.body.hasMore).toBe(false);
+
+    expect((await request(app).get('/api/admin/daily')).status).toBe(401);
   });
 });
