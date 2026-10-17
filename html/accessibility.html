@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<title>Accessibility — College Results</title>
+<link rel="stylesheet" href="/info.css">
+</head>
+<body>
+<main>
+  <a class="back" href="/">← Back to College Results</a>
+  <h1>Accessibility</h1>
+  <p class="meta">Last reviewed October 16, 2026</p>
+
+  <div class="box">
+    <p>We want everyone to be able to use College Results, including people who use a keyboard, a screen reader, zoom or other assistive technology. The site does not yet fully meet the standard below, and this page says where it falls short.</p>
+  </div>
+
+  <h2>Our target</h2>
+  <p>We're working toward the Web Content Accessibility Guidelines (WCAG) 2.1, level AA. We don't claim the site conforms to it.</p>
+
+  <h2>What has been checked</h2>
+  <p>In October 2026 the results page, its dialogs, the question box and these information pages were checked in Google Chrome on a Mac, using made-up test data:</p>
+  <ul>
+    <li>Using a keyboard only: skip link, navigation, school filters, chart (college names and dots), Students-like-me tabs, college details, Compare, and the statistics notice.</li>
+    <li>That dialogs have a name, move focus in, keep focus inside, close with Escape where allowed, and return focus to where you were.</li>
+    <li>Layout at 320, 390 and 768 pixels wide and on a desktop screen, which matches browser zoom of 200% and 400% on a typical laptop. These were simulated window sizes, not real phones.</li>
+    <li>Colour contrast in light and dark themes, reduced-motion settings, and an automated scan (axe-core) for common WCAG 2.1 A and AA issues.</li>
+  </ul>
+  <p>Not yet checked: screen readers (VoiceOver, NVDA, JAWS), real phones and tablets, school Chromebooks, Safari and Firefox, and Windows High Contrast mode.</p>
+
+  <h2>Known problems</h2>
+  <ul>
+    <li><strong>Submission form.</strong> The "Submit yours" form hasn't been updated yet. Some of its fields have no programmatic label, the college-name suggestions can't be chosen with the arrow keys, the decision menus get cramped on small phones, and errors appear as pop-up alerts. Changes to the form are on hold while the way submissions work is reviewed.</li>
+    <li><strong>The chart.</strong> The scatter chart is keyboard-operable, but it is dense. "Show chart as a table" under the chart lists the same colleges and decision counts in a table.</li>
+    <li><strong>Language.</strong> The site is in English only.</li>
+  </ul>
+
+  <h2>Tell us about a problem</h2>
+  <p>If something on the site doesn't work for you, or you need information in a different format, email <a href="mailto:leonardo.francke@gmail.com">leonardo.francke@gmail.com</a>. Say which page and what you were trying to do. Please don't include personal or student information.</p>
+
+  <ul class="page-nav" aria-label="More about this site">
+    <li><a href="/about.html">About</a></li>
+    <li><a href="/methodology.html">How the numbers work</a></li>
+    <li><a href="/privacy.html">Privacy policy</a></li>
+  </ul>
+</main>
+</body>
+</html>

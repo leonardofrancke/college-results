@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<title>How the numbers work — College Results</title>
+<link rel="stylesheet" href="/info.css">
+</head>
+<body>
+<main>
+  <a class="back" href="/">← Back to College Results</a>
+  <h1>How the numbers work</h1>
+  <p class="meta">What each figure on the results page counts, and why none of it is a prediction. Describes the site as of October 2026.</p>
+
+  <div class="box">
+    <p><strong>In short:</strong> every number comes from voluntary, self-reported submissions. Nobody checks them against school records, the students who share are not a random sample, and many groups are tiny. Treat the results as stories from classmates, not odds.</p>
+  </div>
+
+  <h2 id="data">Where the data comes from</h2>
+  <ul>
+    <li><strong>Voluntary and self-reported.</strong> Students choose to submit. Values are whatever they typed or picked; the site doesn't verify GPAs, scores or decisions.</li>
+    <li><strong>Class of 2026 only.</strong> The results page shows submissions with graduation year 2026.</li>
+    <li><strong>Selection bias.</strong> Students who share may differ from those who don't (for example, people may be more likely to share good news). The results can't be assumed to represent the whole class.</li>
+    <li><strong>Colleges shown publicly.</strong> A college appears only once at least two different submitters have reported a decision from it. Spelling variants of the same name (for example "CSUMB" and "Cal State Monterey Bay") are grouped for that check.</li>
+    <li><strong>Values hidden from the public page:</strong> exact class rank (shown only as a seven-place range such as "8-14"), first-generation status, recruited-athlete status, and when an entry was submitted.</li>
+  </ul>
+
+  <h2 id="students">"Students" means submission groups</h2>
+  <p>Each browser that submits gets its own random ID, and all the colleges submitted from it are grouped together. The site counts each group as one student. That's usually right, but:</p>
+  <ul>
+    <li>one person who submits from two browsers or devices is counted twice;</li>
+    <li>two people sharing one browser are counted as one;</li>
+    <li>there is no check that a group is a real Live Oak student.</li>
+  </ul>
+
+  <h2 id="levels">Per application vs per student</h2>
+  <p>Some figures count <em>applications</em> (one row per student per college); others count <em>students</em> (submission groups). They answer different questions and can't be compared directly.</p>
+  <div class="table-wrap">
+  <table>
+    <caption class="sr-only">Figures on the results page and what they count</caption>
+    <thead><tr><th scope="col">Figure</th><th scope="col">Counts</th><th scope="col">How it's calculated</th></tr></thead>
+    <tbody>
+      <tr><td>Students</td><td>Students</td><td>Submission groups in the selected school category.</td></tr>
+      <tr><td>Got in somewhere</td><td>Students</td><td>Groups with at least one "Accepted" in the selected category.</td></tr>
+      <tr><td>4-yr accept rate</td><td>Applications</td><td>Accepted ÷ (accepted + rejected + waitlisted), at colleges that aren't open admission. Pending decisions are left out. Community colleges are left out because they admit everyone.</td></tr>
+      <tr><td>Avg UW GPA</td><td>Students</td><td>Average unweighted GPA, one value per group.</td></tr>
+      <tr><td>College details: Rate</td><td>Applications</td><td>Accepted ÷ all decisions reported for that college, <em>including</em> waitlisted and pending ones.</td></tr>
+      <tr><td>Compare</td><td>Applications</td><td>Same as college details, plus averages over accepted applications only.</td></tr>
+      <tr><td>Where people ended up</td><td>Students</td><td>Students reporting "enrolling" at each type of school. If nobody in the view has marked enrolling, acceptances are used instead, and the heading says so.</td></tr>
+      <tr><td>GPA range by destination</td><td>Applications</td><td>Middle half (25th–75th percentile) and median unweighted GPA of the rows behind "Where people ended up". Only shown with two or more values.</td></tr>
+      <tr><td>Acceptance rate by weighted GPA</td><td>Applications</td><td>Accepted ÷ all decisions in each GPA band at non-open-admission colleges. Pending decisions count in the denominator here.</td></tr>
+      <tr><td>Early vs Regular</td><td>Applications</td><td>Accepted ÷ (accepted + rejected + waitlisted) at non-open-admission colleges, by EA/ED vs RD.</td></tr>
+      <tr><td>Most applied schools</td><td>Applications</td><td>Colleges with two or more reported decisions, spelling variants grouped.</td></tr>
+      <tr><td>Popular majors</td><td>Students</td><td>Intended major as typed, one per group.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2 id="outcomes">Waitlists, pending decisions and missing values</h2>
+  <ul>
+    <li>Decisions are one of Accepted, Rejected, Waitlisted or Pending. A waitlist counts as "not accepted" wherever a rate is shown; there is no later update unless the student edits their entry.</li>
+    <li>Pending decisions are excluded from the summary accept rate and the Early vs Regular comparison, but included in the college-details rate and the GPA-band rates (which therefore read lower while decisions are still out).</li>
+    <li>Optional fields (SAT, ACT, rank, essay rating, major) are often blank. Anything that uses them only covers the students who filled them in. The SAT chart, for example, only plots submissions that include an SAT score.</li>
+  </ul>
+
+  <h2 id="gpa">GPA</h2>
+  <p>The form asks for an unweighted GPA (1.0–4.0) and a weighted GPA (1.0–5.0). It doesn't say which grades, years or weighting rules to use, so students may have calculated them differently. Treat small GPA differences as noise.</p>
+
+  <h2 id="schools">School categories</h2>
+  <p>Students type college names freely, so categories are worked out from the name: UC and CSU by name pattern; "Public" from a list of public universities plus name patterns; "Private" for four-year colleges that aren't on the public list; "Community" by a list of local community colleges or the school type the student picked; T20, Ivies and liberal arts colleges by exact name lists. Because these are name matches, a college spelled differently from the list (for example "Stanford University" instead of "Stanford") can land in a different category or none.</p>
+
+  <h2 id="admission-rates">Overall admission rates ("unverified estimate")</h2>
+  <p>College details, Compare and "Hardest schools" show an approximate overall admission rate for many colleges. These come from a table built into the site. <strong>The table records no source or year for its figures</strong>, and a note in the site's code says several UC and CSU figures were found to be out of date and corrected in August 2026 while the rest were not re-checked. That's why they're labeled unverified estimates. For a college's real figure, use the college's own Common Data Set or the U.S. Department of Education's College Navigator.</p>
+
+  <h2 id="not-chances">Why these aren't your chances</h2>
+  <ul>
+    <li>Groups are small. A 100% rate from two applications says almost nothing.</li>
+    <li>Students who apply to a selective school are already a selected group, so a GPA band with a lower acceptance rate usually reflects where those students applied, not that GPA hurt them.</li>
+    <li>Colleges read essays, recommendations, activities, course rigor, major choice and more. None of that is here.</li>
+    <li>Results are from one class at one school, self-reported. Use them to start conversations with a counselor, not to decide where to apply.</li>
+  </ul>
+
+  <h2 id="filters">Which controls change what</h2>
+  <ul>
+    <li><strong>School category</strong> (UCs, CSUs, …): changes everything on the results page.</li>
+    <li><strong>Search, minimum submissions, decision highlight</strong>: change the chart and its table only. The minimum hides colleges with few submissions from the chart. It's a display setting, not a privacy protection.</li>
+    <li><strong>Students like me</strong>: narrows the chart and the student list. The statistics cards keep describing the whole category.</li>
+  </ul>
+
+  <h2 id="known-issues">Known inconsistencies</h2>
+  <p>These are documented rather than "fixed" because fixing them means changing how existing submissions are grouped or counted, which is under review:</p>
+  <ul>
+    <li>The chart and college details merge spelling variants of a college; Compare, "Where we're enrolling" and majors use the exact text typed, so the same school can show different counts in different places.</li>
+    <li>Rates use different denominators (with or without pending and waitlisted decisions), as listed above.</li>
+    <li>The average GPA tile treats a group with no unweighted GPA as 0. GPA is required on the form, so this should be rare.</li>
+    <li>Category lists match exact names, so some colleges are missing from T20, Ivies or LACs.</li>
+  </ul>
+
+  <ul class="page-nav" aria-label="More about this site">
+    <li><a href="/about.html">About</a></li>
+    <li><a href="/privacy.html">Privacy policy</a></li>
+    <li><a href="/accessibility.html">Accessibility</a></li>
+  </ul>
+</main>
+</body>
+</html>

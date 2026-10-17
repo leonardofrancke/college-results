@@ -14,3 +14,7 @@ deploy/**/.env
 .agents/
 .codex/
 skills-lock.json
+
+# Browser test tooling and output
+tests/browser/node_modules/
+tests/browser/screenshots/

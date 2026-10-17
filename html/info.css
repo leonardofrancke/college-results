@@ -1,0 +1,36 @@
+/* Shared styles for the plain informational pages (about, methodology,
+   accessibility, terms draft, 404). Same look as privacy.html; no scripts. */
+:root {
+  --bg: #fafaf9; --surface: #ffffff; --border: #e8e8e6;
+  --text: #1c1c1c; --text-2: #3d3d3d; --text-muted: #5f5f5d; --accent: #3a5fb5;
+  --warn-bg: #fff7e6; --warn-border: #e0b44c; --warn-text: #5c3d00; --focus: #2f55b0;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1115; --surface: #171a20; --border: #2a2e36;
+          --text: #eceae6; --text-2: #c8c6c2; --text-muted: #a3a19d; --accent: #9db4ee;
+          --warn-bg: #2b2210; --warn-border: #8a6a1e; --warn-text: #f3d48a; --focus: #9db4ee; }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 100%; }
+body { background: var(--bg); color: var(--text-2); font: 1rem/1.65 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow-wrap: anywhere; }
+main { max-width: 46rem; margin: 0 auto; padding: 3rem 1rem 5rem; }
+h1 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; font-size: 2rem; line-height: 1.2; color: var(--text); margin-bottom: 0.4rem; }
+h2 { font-size: 1.1rem; color: var(--text); margin: 2rem 0 0.5rem; }
+h3 { font-size: 1rem; color: var(--text); margin: 1.25rem 0 0.4rem; }
+p, ul, ol, table { margin-bottom: 0.75rem; }
+ul, ol { padding-left: 1.25rem; }
+li { margin-bottom: 0.3rem; }
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+code { font-family: ui-monospace, Menlo, monospace; font-size: 0.9em; }
+.meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.75rem; }
+.back { display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem; text-decoration: none; }
+.box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.draft { background: var(--warn-bg); border: 2px solid var(--warn-border); color: var(--warn-text); border-radius: 8px; padding: 1rem 1.1rem; margin-bottom: 1.5rem; }
+.draft strong { color: inherit; }
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--border); }
+th { color: var(--text); }
+.table-wrap { overflow-x: auto; }
+.page-nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: 0.9rem; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); list-style: none; padding-left: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

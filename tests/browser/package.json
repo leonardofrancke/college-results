@@ -1,0 +1,12 @@
+{
+  "name": "admission-stats-browser-tests",
+  "private": true,
+  "description": "Browser tests for the read-only results surfaces. Uses the system Chrome via playwright-core and synthetic fixtures only.",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 *.test.js"
+  },
+  "devDependencies": {
+    "axe-core": "4.14.0",
+    "playwright-core": "1.64.1"
+  }
+}

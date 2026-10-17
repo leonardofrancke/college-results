@@ -84,10 +84,10 @@
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   }
   .nav-logo { font-family: var(--display); font-size: calc(22px * var(--fs)); line-height: 1; font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; margin-right: auto; display: flex; align-items: baseline; gap: 5px; }
-  .nav-logo span { color: #777; font-weight: 400; }
+  .nav-logo span { color: #666; font-weight: 400; }
   .nav-link {
     padding: 0 18px; height: 64px; display: flex; align-items: center;
-    font-size: calc(15px * var(--fs)); color: #444; cursor: pointer;
+    font-size: calc(15px * var(--fs)); color: #444; cursor: pointer; text-decoration: none;
     border-bottom: 1.5px solid transparent; margin-bottom: -1px;
     transition: color 0.15s;
   }
@@ -133,14 +133,14 @@
   .cta-banner-btn:active { transform: scale(0.98); }
   .cta-dismiss {
     position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
-    background: none; border: none; color: rgba(255,255,255,0.4);
+    background: none; border: none; color: rgba(255,255,255,0.7);
     cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 2px;
     transition: color 0.15s;
   }
   .cta-dismiss:hover { color: #fff; }
 
   /* ── PAGE HEADER ── */
-  .page-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; }
+  .page-header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 28px; }
   .page-title { font-family: var(--display); font-size: calc(22px * var(--fs)); font-weight: 600; color: #1c1c1c; letter-spacing: -0.01em; }
   .page-meta { font-size: calc(13px * var(--fs)); color: #666; }
 
@@ -173,26 +173,11 @@
   .compare-btn-sm { padding: 4px 10px; font-size: calc(13px * var(--fs)); color: #444; border: 1px solid #e4e4e2; border-radius: 5px; background: none; cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .compare-btn-sm:hover { color: #1c1c1c; border-color: #aaa; }
   .chart-spacer { flex: 1; }
-  .chart-search { padding: 7px 12px 7px 32px; font-size: calc(14px * var(--fs)); border: 1.5px solid #b8b8b4; border-radius: 6px; font-family: inherit; color: #1c1c1c; outline: none; width: 220px; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'><circle cx='6' cy='6' r='4.5' stroke='%23555' stroke-width='1.5'/><line x1='9.5' y1='9.5' x2='12.5' y2='12.5' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/></svg>") 10px center no-repeat; transition: all 0.15s; }
-  .chart-search::placeholder { color: #777; }
+  .chart-search { padding: 7px 12px 7px 32px; font-size: calc(14px * var(--fs)); border: 1.5px solid #8a8a86; border-radius: 6px; font-family: inherit; color: #1c1c1c; outline: none; width: 220px; max-width: 100%; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'><circle cx='6' cy='6' r='4.5' stroke='%23555' stroke-width='1.5'/><line x1='9.5' y1='9.5' x2='12.5' y2='12.5' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/></svg>") 10px center no-repeat; transition: all 0.15s; }
+  .chart-search::placeholder { color: #6e6e6c; }
   .chart-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,114,196,0.12); }
   .minsub-row { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid #f0f0ee; flex-wrap: wrap; }
   .minsub-label { font-size: calc(13px * var(--fs)); color: #444; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-  .minsub-help {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; border-radius: 50%; border: 1px solid #ccc;
-    font-size: calc(10px * var(--fs)); color: #888; cursor: default; position: relative; flex-shrink: 0;
-  }
-  .minsub-help::after {
-    content: attr(data-tip);
-    display: none; position: absolute; left: 50%; bottom: calc(100% + 7px);
-    transform: translateX(-50%); background: #1c1c1c; color: #fff;
-    font-size: calc(12px * var(--fs)); font-weight: 400; letter-spacing: 0; text-transform: none;
-    white-space: nowrap; padding: 5px 10px; border-radius: 5px;
-    pointer-events: none; z-index: 50; font-family: 'Inter', sans-serif;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  }
-  .minsub-help:hover::after { display: block; }
   .minsub-slider {
     -webkit-appearance: none; appearance: none;
     flex: 1 1 240px; min-width: 200px; max-width: 320px;
@@ -229,9 +214,11 @@
   .minsub-val { font-family: var(--mono); font-size: calc(14px * var(--fs)); font-weight: 600; color: var(--accent); min-width: 32px; text-align: center; }
   .minsub-count { font-size: calc(13px * var(--fs)); color: #666; margin-left: 4px; }
   #legend { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px; border-bottom: 1px solid #f0f0ee; }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: calc(13px * var(--fs)); color: #444; cursor: pointer; padding: 3px 8px; border-radius: 4px; border: 1px solid transparent; transition: all 0.12s; user-select: none; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: calc(13px * var(--fs)); font-family: inherit; color: #444; background: none; cursor: pointer; padding: 3px 8px; border-radius: 4px; border: 1px solid transparent; transition: all 0.12s; user-select: none; }
   .legend-item:hover { border-color: #e4e4e2; }
-  .legend-item.dimmed { opacity: 0.3; }
+  .legend-item.dimmed { color: #6e6e6c; }
+  .legend-item.dimmed .legend-dot { opacity: 0.35; }
+  .legend-item[aria-pressed="true"] { border-color: #8a8a86; }
   .legend-dot {
     width: 13px; height: 13px; display: inline-block; flex-shrink: 0; overflow: visible;
     transition: transform .35s cubic-bezier(.34,1.5,.64,1);
@@ -286,7 +273,7 @@
 
   /* ── DOT TOOLTIP ── */
   .chart-dot.pinned { stroke: var(--text); stroke-width: 3px; }
-  #dot-tooltip { display: none; position: fixed; background: #1c1c1c; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: calc(13px * var(--fs)); line-height: 1.7; max-width: calc(320px * var(--fs)); pointer-events: none; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+  #dot-tooltip { display: none; position: fixed; background: #1c1c1c; color: #fff; border-radius: 8px; padding: 12px 14px; font-size: calc(13px * var(--fs)); line-height: 1.7; max-width: min(calc(320px * var(--fs)), calc(100vw - 20px)); overflow-wrap: anywhere; pointer-events: none; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
   #dot-tooltip .tip-label { color: #aaa; font-size: calc(11px * var(--fs)); text-transform: uppercase; letter-spacing: 0.05em; }
   #dot-tooltip .tip-num { font-family: var(--mono); }
 
@@ -296,7 +283,7 @@
   .slm-inputs { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; row-gap: 14px; }
   .slm-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
   .slm-field label { font-size: calc(12px * var(--fs)); color: #555; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
-  .slm-field input, .slm-field select { padding: 8px 11px; border: 1px solid #d4d4d0; border-radius: 6px; font-size: calc(14px * var(--fs)); font-family: var(--mono); color: #1c1c1c; background: #fff; outline: none; width: 120px; transition: all 0.15s; }
+  .slm-field input, .slm-field select { padding: 8px 11px; border: 1px solid #8a8a86; border-radius: 6px; font-size: calc(14px * var(--fs)); font-family: var(--mono); color: #1c1c1c; background: #fff; outline: none; width: 120px; transition: all 0.15s; }
   .slm-field select { font-family: inherit; width: auto; min-width: 140px; padding-right: 28px; }
   .slm-field input:focus, .slm-field select:focus { border-color: #a8b8d8; box-shadow: 0 0 0 3px rgba(79,114,196,0.07); }
   .slm-btn { padding: 7px 14px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: calc(13px * var(--fs)); font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
@@ -326,7 +313,7 @@
   .sd-title { font-family: var(--display); font-size: calc(19px * var(--fs)); font-weight: 600; margin: 0 0 14px; color: #1c1c1c; letter-spacing: -0.01em; }
   .sd-text { font-size: calc(14px * var(--fs)); line-height: 1.6; color: #444; margin: 0 0 14px; text-align: left; }
   .sd-quote {
-    text-align: left; font-size: calc(13px * var(--fs)); line-height: 1.55; color: #888; font-style: italic;
+    text-align: left; font-size: calc(13px * var(--fs)); line-height: 1.55; color: #666; font-style: italic;
     border-left: 2px solid #e4e4e2; padding-left: 12px; margin: 0 0 14px;
   }
   .sd-emphasis { color: #1c1c1c; font-weight: 500; margin-bottom: 4px; }
@@ -359,7 +346,7 @@
   .sp-type-pill { display: inline-flex; flex-direction: column; align-items: center; padding: 8px 14px; border: 1px solid #e8e8e6; border-radius: 6px; gap: 2px; }
   .sp-type-pill .tp-pct { font-size: 1.1rem; font-weight: 600; font-family: var(--mono); }
   .sp-type-pill .tp-label { font-size: calc(12px * var(--fs)); color: #555; }
-  .sp-type-pill .tp-count { font-size: calc(11px * var(--fs)); color: #777; }
+  .sp-type-pill .tp-count { font-size: calc(11px * var(--fs)); color: #6e6e6c; }
   .sp-divider { height: 1px; background: #f0f0ee; margin: 12px 0; }
   .sp-dec-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .sp-dec-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
@@ -382,9 +369,9 @@
   .entry-decisions { display: flex; flex-wrap: wrap; gap: 5px; }
   .dpill-entry { font-size: calc(12px * var(--fs)); padding: 3px 9px; border-radius: 4px; font-weight: 500; }
   .dp-acc { background: #f0fdf1; color: #008300; }
-  .dp-den { background: #fdeeee; color: #e34948; }
-  .dp-wl  { background: #fef6e6; color: #eda100; }
-  .dp-pnd { background: #fdeff4; color: #e87ba4; }
+  .dp-den { background: #fdeeee; color: #b42a29; }
+  .dp-wl  { background: #fef6e6; color: #8a5a00; }
+  .dp-pnd { background: #fdeff4; color: #a3366a; }
   .empty-state { text-align: center; padding: 3rem 1rem; }
   .empty-icon { font-size: 2rem; margin-bottom: 12px; }
   .empty-state h3 { font-size: calc(14px * var(--fs)); font-weight: 600; color: #1c1c1c; margin-bottom: 6px; }
@@ -396,7 +383,7 @@
   .modal-overlay.open { display: flex; }
   .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: calc(520px * var(--fs)); width: 100%; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalIn 0.2s cubic-bezier(0.16,1,0.3,1); }
   @keyframes modalIn { from { opacity:0; transform:scale(0.97) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
-  .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #bbb; line-height: 1; transition: color 0.15s; }
+  .modal-close { position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #666; line-height: 1; transition: color 0.15s; }
   .modal-close:hover { color: #1c1c1c; }
   .modal h2 { font-family: var(--display); font-size: calc(18px * var(--fs)); font-weight: 600; margin-bottom: 4px; color: #1c1c1c; }
   .modal-sub { font-size: calc(13px * var(--fs)); color: #666; margin-bottom: 16px; }
@@ -411,12 +398,16 @@
   .dec-bar-track { flex: 1; height: 4px; background: #f0f0ee; border-radius: 2px; overflow: hidden; }
   .dec-bar-fill { height: 100%; border-radius: 2px; }
   .dec-bar-count { font-size: calc(12px * var(--fs)); color: #666; width: 20px; text-align: right; font-family: var(--mono); }
-  .cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .cmp-col h3 { font-size: calc(14px * var(--fs)); font-weight: 600; color: #1c1c1c; margin-bottom: 10px; border-bottom: 1px solid #f0f0ee; padding-bottom: 8px; }
+  /* One card per college, stacked on narrow screens; side by side once each
+     column has room. Fixed 3-across grids overflowed a 320px phone. */
+  .cmp-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  @media (min-width: 640px) { .cmp-grid { grid-template-columns: repeat(var(--cmp-cols, 2), minmax(0, 1fr)); } }
+  .cmp-col { min-width: 0; }
+  .cmp-col h3 { overflow-wrap: anywhere; font-size: calc(14px * var(--fs)); font-weight: 600; color: #1c1c1c; margin-bottom: 10px; border-bottom: 1px solid #f0f0ee; padding-bottom: 8px; }
   .cmp-row { display: flex; justify-content: space-between; font-size: calc(13px * var(--fs)); padding: 4px 0; border-bottom: 1px solid #f8f8f6; }
   .cmp-row:last-child { border-bottom: none; }
   .compare-pick { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-  .compare-pick select { flex: 1; padding: 8px 10px; border: 1px solid #e4e4e2; border-radius: 6px; font-size: calc(13px * var(--fs)); font-family: inherit; color: #1c1c1c; background: #fff; min-width: 160px; }
+  .compare-pick select { flex: 1; padding: 8px 10px; border: 1px solid #8a8a86; border-radius: 6px; font-size: calc(13px * var(--fs)); font-family: inherit; color: #1c1c1c; background: #fff; min-width: 160px; }
   .compare-pick button { padding: 8px 16px; background: #1c1c1c; color: #fff; border: none; border-radius: 6px; font-size: calc(13px * var(--fs)); cursor: pointer; font-family: inherit; }
 
   /* ── CHATBOT ── */
@@ -448,7 +439,7 @@
   .chat-input-row { display: flex; border-top: 1px solid #f0f0ee; }
   .chat-input { flex: 1; padding: 11px 14px; font-size: calc(13px * var(--fs)); border: none; font-family: inherit; color: #1c1c1c; outline: none; background: #fff; }
   .chat-input:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-  .chat-input::placeholder { color: #aaa; }
+  .chat-input::placeholder { color: #6e6e6c; }
   .chat-send { padding: 0 16px; background: none; border: none; border-left: 1px solid #f0f0ee; font-size: calc(13px * var(--fs)); font-weight: 500; color: #555; cursor: pointer; font-family: inherit; transition: color 0.15s; }
   .chat-send:hover { color: #1c1c1c; }
 
@@ -565,12 +556,15 @@
   @media (min-width: 1380px) { .footer-inner { max-width: 1200px; } }
   @media (min-width: 1620px) { .footer-inner { max-width: 1340px; } }
   @media (min-width: 1900px) { .footer-inner { max-width: 1480px; } }
-  .footer-left { font-size: calc(13px * var(--fs)); color: #666; line-height: 1.6; }
+  .footer-left { font-size: calc(13px * var(--fs)); color: #a8a8a5; line-height: 1.6; }
   .footer-left strong { color: #aaa; }
   .footer-anon { font-size: calc(13px * var(--fs)); color: #4ade80; display: flex; align-items: center; gap: 6px; }
-  .footer-contact { font-size: calc(13px * var(--fs)); color: #666; line-height: 1.6; }
+  .footer-contact { font-size: calc(13px * var(--fs)); color: #a8a8a5; line-height: 1.6; overflow-wrap: anywhere; }
   .footer-contact a { color: #aaa; text-decoration: none; border-bottom: 1px solid #444; transition: color 0.15s, border-color 0.15s; }
   .footer-contact a:hover { color: #fff; border-color: #fff; }
+  .footer-links { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: calc(13px * var(--fs)); }
+  .footer-links a { color: #c8c8c4; }
+  .footer-links a:hover { color: #fff; }
 
   /* ── DARK MODE OVERRIDES ── */
   [data-theme="dark"] nav { background: var(--nav-bg); border-bottom-color: var(--border); }
@@ -597,13 +591,12 @@
   [data-theme="dark"] .compare-btn-sm { color: var(--text-2); border-color: var(--border-2); }
   [data-theme="dark"] .compare-btn-sm:hover { color: var(--text); border-color: var(--text-muted); }
   [data-theme="dark"] .chart-search {
-    color: var(--text); background-color: var(--surface-2); border-color: var(--border-strong);
+    color: var(--text); background-color: var(--surface-2); border-color: #6e7178;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'><circle cx='6' cy='6' r='4.5' stroke='%23a8a8a5' stroke-width='1.5'/><line x1='9.5' y1='9.5' x2='12.5' y2='12.5' stroke='%23a8a8a5' stroke-width='1.5' stroke-linecap='round'/></svg>");
   }
   [data-theme="dark"] .chart-search::placeholder { color: var(--text-muted); }
   [data-theme="dark"] .chart-search:focus { background-color: var(--surface); }
   [data-theme="dark"] .minsub-label { color: var(--text-2); }
-  [data-theme="dark"] .minsub-help { border-color: var(--border-strong); color: var(--text-muted); }
   [data-theme="dark"] .minsub-slider::-webkit-slider-runnable-track,
   [data-theme="dark"] .minsub-slider::-moz-range-track {
     background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--fill), var(--surface-3) var(--fill), var(--surface-3) 100%);
@@ -613,6 +606,8 @@
   [data-theme="dark"] .minsub-count { color: var(--text-3); }
   [data-theme="dark"] .legend-item { color: var(--text-2); }
   [data-theme="dark"] .legend-item:hover { border-color: var(--border-2); }
+  [data-theme="dark"] .legend-item.dimmed { color: var(--text-muted); }
+  [data-theme="dark"] .legend-item[aria-pressed="true"] { border-color: #6e7178; }
   [data-theme="dark"] .chart-axis-note { color: var(--text-3); }
   [data-theme="dark"] .scroll-fade-left { background: linear-gradient(to left, transparent, var(--bg) 80%); }
   [data-theme="dark"] .scroll-fade-right { background: linear-gradient(to right, transparent, var(--bg) 80%); }
@@ -635,7 +630,7 @@
   [data-theme="dark"] .slm-panel { background: var(--surface); border-color: var(--border); }
   [data-theme="dark"] .slm-title { color: var(--text); }
   [data-theme="dark"] .slm-field label { color: var(--text-3); }
-  [data-theme="dark"] .slm-field input, [data-theme="dark"] .slm-field select { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
+  [data-theme="dark"] .slm-field input, [data-theme="dark"] .slm-field select { background: var(--surface-2); color: var(--text); border-color: #6e7178; }
   [data-theme="dark"] .slm-status { color: var(--text-3); }
   [data-theme="dark"] .slm-tabs { border-color: var(--border); }
   [data-theme="dark"] .slm-tab { color: var(--text-3); }
@@ -667,7 +662,7 @@
   [data-theme="dark"] .dec-bar-count { color: var(--text-3); }
   [data-theme="dark"] .cmp-col h3 { color: var(--text); border-bottom-color: var(--border); }
   [data-theme="dark"] .cmp-row { border-bottom-color: var(--border); }
-  [data-theme="dark"] .compare-pick select { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
+  [data-theme="dark"] .compare-pick select { background: var(--surface-2); color: var(--text); border-color: #6e7178; }
   [data-theme="dark"] .modal-overlay { background: var(--modal-overlay); }
   [data-theme="dark"] .sp-card { background: var(--surface); border-color: var(--border); }
   [data-theme="dark"] .sp-card h3 { color: var(--text-3); }
@@ -678,7 +673,7 @@
   [data-theme="dark"] .sp-big-label { color: var(--text-3); }
   [data-theme="dark"] .sp-type-pill { background: var(--surface-2); border-color: var(--border); }
   [data-theme="dark"] .sp-type-pill .tp-label { color: var(--text-3); }
-  [data-theme="dark"] .sp-type-pill .tp-count { color: var(--text-muted); }
+  [data-theme="dark"] .sp-type-pill .tp-count { color: var(--text-3); }
   [data-theme="dark"] .sp-hist-label { color: var(--text-3); }
   [data-theme="dark"] .form-title { color: var(--text); }
   [data-theme="dark"] .form-subtitle { color: var(--text-3); }
@@ -705,8 +700,8 @@
   .text-size-btn { background: none; border: none; padding: 5px 10px; font-family: inherit; font-size: calc(14px * var(--fs)); font-weight: 600; color: var(--text-3); cursor: pointer; line-height: 1.2; }
   .text-size-btn + .text-size-btn { border-left: 1px solid var(--border-2); font-size: calc(17px * var(--fs)); }
   .text-size-btn span { font-size: 0.75em; margin-left: 1px; }
-  .text-size-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
-  .text-size-btn:disabled { opacity: 0.35; cursor: default; }
+  .text-size-btn:hover:not([aria-disabled="true"]) { background: var(--surface-2); color: var(--text); }
+  .text-size-btn[aria-disabled="true"] { opacity: 0.45; cursor: default; }
   .theme-toggle {
     margin-left: 10px; padding: 7px 14px; font-size: calc(13px * var(--fs)); font-weight: 500; line-height: 1;
     color: var(--text-2); border: 1px solid var(--border-2); border-radius: 6px;
@@ -731,72 +726,215 @@
     #chat-fab { bottom: 20px; right: 20px; }
     #chat-panel { right: 20px; width: calc(100vw - 40px); }
   }
+
+  /* ── ACCESSIBILITY (results, nav, dialogs, question panel) ──
+     Scoped to those surfaces on purpose: the submission form is styled by its
+     own rules above and is left exactly as it was. */
+  :root { --focus: #2f55b0; --nav-h: 72px; }
+  [data-theme="dark"] { --focus: #9db4ee; }
+  html { scroll-padding-top: calc(var(--nav-h) + 12px); }
+  .sr-only {
+    position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+  .skip-link {
+    position: absolute; left: 12px; top: -60px; z-index: 1000; padding: 10px 16px;
+    background: var(--surface); color: var(--text); border: 2px solid var(--focus); border-radius: 6px;
+    font-size: calc(14px * var(--fs)); font-weight: 600; text-decoration: none;
+  }
+  .skip-link:focus { top: 8px; }
+  nav :focus-visible, #page-results :focus-visible, .modal :focus-visible,
+  #chat-panel :focus-visible, #chat-fab:focus-visible, footer :focus-visible, .skip-link:focus-visible {
+    outline: 2px solid var(--focus); outline-offset: 2px;
+  }
+  footer :focus-visible { outline-color: #9db4ee; }
+  .page-title:focus, #main-content:focus, .modal h2:focus, .sd-title:focus { outline: none; }
+  .nav-link[aria-current="page"] { color: #1c1c1c; border-bottom-color: var(--accent); font-weight: 500; }
+  [data-theme="dark"] .nav-link[aria-current="page"] { color: var(--text); }
+  /* Short viewports (landscape phones, 400% zoom): a sticky bar would cover
+     a third of the screen, so it scrolls away with the page instead. */
+  @media (max-height: 500px) { nav { position: static; } html { scroll-padding-top: 12px; } }
+
+  .scope-note { font-size: calc(13px * var(--fs)); color: #555; line-height: 1.5; }
+  [data-theme="dark"] .scope-note { color: var(--text-3); }
+  .chart-scope { padding: 0 20px 12px; border-bottom: 1px solid #f0f0ee; }
+  [data-theme="dark"] .chart-scope { border-bottom-color: var(--border); }
+  .metric-group { display: flex; align-items: center; gap: 16px; }
+  .metric-group .chart-tab + .chart-tab { margin-left: 0; }
+  .chart-tab[aria-pressed="true"] { color: #1c1c1c; }
+  .chart-tab[aria-pressed="true"]::after { content: ''; display: block; height: 1.5px; background: var(--accent); margin-top: 2px; border-radius: 1px; }
+  [data-theme="dark"] .chart-tab[aria-pressed="true"] { color: var(--text); }
+  .chart-search { flex: 0 1 220px; }
+  .minsub-label { cursor: pointer; }
+  .chart-reset {
+    padding: 3px 10px; font-size: calc(13px * var(--fs)); font-family: inherit; color: #444;
+    border: 1px solid #8a8a86; border-radius: 5px; background: none; cursor: pointer;
+  }
+  [data-theme="dark"] .chart-reset { color: var(--text-2); border-color: #6e7178; }
+  .chart-empty { padding: 28px 8px; text-align: center; }
+  .chart-empty p { font-size: calc(14px * var(--fs)); color: #444; margin-bottom: 12px; overflow-wrap: anywhere; }
+  .chart-empty .chart-empty-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  [data-theme="dark"] .chart-empty p { color: var(--text-2); }
+  #chart-main [role="button"] { cursor: pointer; }
+  #chart-main text[role="button"]:focus { outline: none; text-decoration: underline; }
+  #chart-main .chart-dot:focus { outline: none; stroke: var(--focus); stroke-width: 3px; }
+  .chart-table-wrap { margin-top: 10px; }
+  .chart-table-wrap summary { cursor: pointer; font-size: calc(13px * var(--fs)); color: #444; padding: 6px 0; width: fit-content; }
+  [data-theme="dark"] .chart-table-wrap summary { color: var(--text-2); }
+  .chart-table-scroll { overflow-x: auto; max-width: 100%; }
+  .chart-table { width: 100%; border-collapse: collapse; font-size: calc(13px * var(--fs)); margin-top: 6px; }
+  .chart-table caption { text-align: left; color: #555; padding-bottom: 6px; caption-side: top; }
+  .chart-table th, .chart-table td { padding: 6px 8px; border-bottom: 1px solid #e8e8e6; text-align: right; white-space: nowrap; }
+  .chart-table th:first-child, .chart-table td:first-child { text-align: left; white-space: normal; overflow-wrap: anywhere; }
+  .chart-table td { font-family: var(--mono); }
+  .chart-table td:first-child { font-family: inherit; }
+  .chart-table button { font: inherit; color: var(--accent); background: none; border: none; padding: 4px 2px; cursor: pointer; text-decoration: underline; text-align: left; }
+  [data-theme="dark"] .chart-table caption { color: var(--text-3); }
+  [data-theme="dark"] .chart-table th, [data-theme="dark"] .chart-table td { border-bottom-color: var(--border); color: var(--text-2); }
+
+  .load-status:empty { display: none; }
+  .load-status { margin-bottom: 20px; font-size: calc(14px * var(--fs)); color: #444; }
+  .load-error {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 16px;
+    border: 1px solid #f0b8b8; background: #fef2f2; color: #8a1f1f; border-radius: 8px;
+  }
+  .load-error button { padding: 6px 14px; border-radius: 6px; border: 1px solid #a83232; background: #fff; color: #8a1f1f; font: inherit; font-weight: 500; cursor: pointer; }
+  [data-theme="dark"] .load-status { color: var(--text-2); }
+  [data-theme="dark"] .load-error { background: rgba(200,64,64,0.14); border-color: rgba(240,138,138,0.5); color: #f6b4b4; }
+  [data-theme="dark"] .load-error button { background: var(--surface-2); color: #f6b4b4; border-color: rgba(240,138,138,0.6); }
+
+  .stats-section-head { margin-bottom: 16px; }
+  .stats-section-head .sp-section-header { margin-bottom: 4px; }
+  [data-theme="dark"] .sp-section-header { color: var(--text); }
+  .sp-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 24px; }
+  .sp-cols-narrow { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+  .slm-scope { margin: -6px 0 14px; }
+  .entry-card, .dpill-entry, .epill { overflow-wrap: anywhere; }
+  .modal-sub a, .chart-axis-note a { color: inherit; }
+
+  .chat-head-title { margin: 0; }
+  .chat-label { display: block; font-size: calc(12px * var(--fs)); font-weight: 600; color: #444; padding: 10px 14px 0; }
+  [data-theme="dark"] .chat-label { color: var(--text-2); }
+  .chat-note { font-size: calc(12px * var(--fs)); color: #555; padding: 4px 14px 10px; line-height: 1.5; }
+  [data-theme="dark"] .chat-note { color: var(--text-3); }
+  .chat-input-row { border-top: none; }
+  .chat-input { border-top: 1px solid #f0f0ee; }
+  #chat-panel { max-height: calc(100vh - 120px); max-height: calc(100dvh - 120px); overflow-y: auto; overscroll-behavior: contain; }
+  [data-theme="dark"] .chat-input { background: var(--surface); color: var(--text); border-top-color: var(--border); }
+  [data-theme="dark"] .chat-send { color: var(--text-2); border-left-color: var(--border); }
+
+  .modal { overscroll-behavior: contain; max-height: min(85vh, 85dvh); }
+  .modal h2 { padding-right: 40px; overflow-wrap: anywhere; }
+  .compare-pick { align-items: flex-end; }
+  .compare-pick label { display: flex; flex-direction: column; gap: 4px; flex: 1 1 160px; min-width: 0; font-size: calc(12px * var(--fs)); color: #555; font-weight: 500; }
+  .compare-pick label select { min-width: 0; width: 100%; }
+  [data-theme="dark"] .compare-pick label { color: var(--text-3); }
+  .cmp-bar-track { flex: 1; height: 4px; background: #f0f0ee; border-radius: 2px; overflow: hidden; }
+  [data-theme="dark"] .cmp-bar-track { background: var(--surface-3); }
+  .cmp-divider { border-top: 1px solid #f0f0ee; }
+  [data-theme="dark"] .cmp-divider { border-top-color: var(--border); }
+  .sd-modal .sd-title { padding-right: 0; }
+
+  @media (max-width: 600px) {
+    .modal { padding: 20px 16px; }
+    .chart-toolbar { padding: 12px 16px; }
+    .minsub-row, .chart-scope, #legend { padding-left: 16px; padding-right: 16px; }
+    .chart-body { padding: 12px 12px 10px; }
+    .chart-search { flex: 1 1 100%; width: 100%; }
+    .minsub-slider { min-width: 0; flex: 1 1 140px; }
+    /* Keep the last lines of the page clear of the floating question button. */
+    footer { padding-bottom: 88px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .modal, #chat-panel { animation: none; }
+    .scroll-chev { animation: none; }
+    #chart-scroll-wrap { scroll-behavior: auto; }
+    .sp-bar-fill, .chart-dot, [id^="col-lbl-"], #chat-fab { transition: none; }
+  }
+
+  /* Windows High Contrast / forced colours: keep state visible without
+     relying on colour or transparent borders. */
+  @media (forced-colors: active) {
+    .filter-pill[aria-pressed="true"], .chart-tab[aria-pressed="true"], .slm-tab[aria-selected="true"],
+    .nav-link[aria-current="page"], .legend-item[aria-pressed="true"] { text-decoration: underline; text-decoration-thickness: 2px; }
+    .legend-item.dimmed { text-decoration: line-through; }
+    .modal, #chat-panel, #dot-tooltip { border: 1px solid CanvasText; }
+    .skip-link:focus { outline: 2px solid Highlight; }
+  }
 </style>
 </head>
 <body>
 
-<nav>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<nav aria-label="Main">
   <div class="nav-logo">Live Oak <span>/ admissions</span></div>
-  <div class="nav-link active" id="nav-results" onclick="showPage('results')">Results</div>
-  <div class="nav-link" id="nav-submit" onclick="showPage('submit')">Submit yours</div>
+  <a class="nav-link active" id="nav-results" href="/" data-page="results" aria-current="page">Results</a>
+  <a class="nav-link" id="nav-submit" href="/?page=submit" data-page="submit">Submit yours</a>
   <div class="text-size" role="group" aria-label="Text size">
-    <button class="text-size-btn" id="text-smaller" onclick="changeTextSize(-1)" aria-label="Smaller text" title="Smaller text">A<span aria-hidden="true">−</span></button>
-    <button class="text-size-btn" id="text-bigger" onclick="changeTextSize(1)" aria-label="Bigger text" title="Bigger text">A<span aria-hidden="true">+</span></button>
+    <button type="button" class="text-size-btn" id="text-smaller" aria-label="A− smaller text" title="Smaller text">A<span>−</span></button>
+    <button type="button" class="text-size-btn" id="text-bigger" aria-label="A+ bigger text" title="Bigger text">A<span>+</span></button>
   </div>
-  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()" title="Toggle dark mode">Dark</button>
+  <button type="button" class="theme-toggle" id="theme-toggle" title="Switch to dark theme"><span id="theme-toggle-text">Dark</span><span class="sr-only"> theme</span></button>
 </nav>
 
 <!-- College detail modal -->
-<div class="modal-overlay" id="college-modal" onclick="if(event.target===this)closeModal('college-modal')">
-  <div class="modal">
-    <button class="modal-close" aria-label="Close" onclick="closeModal('college-modal')">×</button>
+<div class="modal-overlay" id="college-modal" data-dismissable="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="college-modal-title">
+    <button type="button" class="modal-close" aria-label="Close college details" data-close-modal="college-modal">×</button>
     <div id="college-modal-content"></div>
   </div>
 </div>
 <!-- Compare modal -->
-<div class="modal-overlay" id="compare-modal" onclick="if(event.target===this)closeModal('compare-modal')">
-  <div class="modal" style="max-width:880px;">
-    <button class="modal-close" aria-label="Close" onclick="closeModal('compare-modal')">×</button>
+<div class="modal-overlay" id="compare-modal" data-dismissable="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="compare-modal-title" style="max-width:880px;">
+    <button type="button" class="modal-close" aria-label="Close comparison" data-close-modal="compare-modal">×</button>
     <div id="compare-modal-content"></div>
   </div>
 </div>
-<!-- Stats disclaimer gate — no backdrop-click or × close; must be read and
-     acknowledged before the stats section is reachable. -->
+<!-- Stats disclaimer gate — no backdrop-click, Escape or × close; must be read
+     and acknowledged with "Got it" before the stats section is reachable. -->
 <div class="modal-overlay" id="stats-disclaimer-modal">
-  <div class="modal sd-modal" style="max-width:440px;">
-    <h2 class="sd-title">A quick note on these numbers</h2>
-    <p class="sd-text">A GPA band with a lower acceptance rate usually just means those students applied to harder schools, not that a higher GPA worked against them.</p>
-    <div class="sd-quote" id="stats-disclaimer-quote" style="display:none;"></div>
-    <p class="sd-text">Some groups here are only one or two students, and this page can't see essays, recommendations, or anything else that actually decides an application.</p>
-    <p class="sd-text sd-emphasis">Don't let one data point talk you out of applying somewhere you're excited about.</p>
-    <button class="sd-btn" onclick="acknowledgeStatsDisclaimer()">Got it</button>
+  <div class="modal sd-modal" role="dialog" aria-modal="true" aria-labelledby="sd-title" aria-describedby="sd-desc" style="max-width:440px;">
+    <h2 class="sd-title" id="sd-title" tabindex="-1">A quick note on these numbers</h2>
+    <div id="sd-desc">
+      <p class="sd-text">A GPA band with a lower acceptance rate usually just means those students applied to harder schools, not that a higher GPA worked against them.</p>
+      <div class="sd-quote" id="stats-disclaimer-quote" style="display:none;"></div>
+      <p class="sd-text">Some groups here are only one or two students, and this page can't see essays, recommendations, or anything else that actually decides an application.</p>
+      <p class="sd-text sd-emphasis">Don't let one data point talk you out of applying somewhere you're excited about.</p>
+    </div>
+    <button type="button" class="sd-btn" id="sd-ack">Got it</button>
   </div>
 </div>
 
-<!-- Chatbot -->
-<button id="chat-fab" onclick="toggleChat()" aria-label="Ask a question" title="Ask a question">💬</button>
-<div id="chat-panel">
+<!-- Question panel: messages go to the people who run the site (stored for
+     the admin page). It is not an AI chatbot and has no reply channel. -->
+<button type="button" id="chat-fab" aria-expanded="false" aria-controls="chat-panel" aria-label="Ask the site admins a question" title="Ask the site admins a question">💬</button>
+<div id="chat-panel" role="region" aria-labelledby="chat-title">
   <div class="chat-head">
     <div>
-      <div class="chat-head-title">Ask a question</div>
-      <div class="chat-head-sub">About this data</div>
+      <h2 class="chat-head-title" id="chat-title">Ask the site admins</h2>
+      <div class="chat-head-sub">Goes to people, not an AI</div>
     </div>
-    <button class="chat-head-close" aria-label="Close chat" onclick="toggleChat()">×</button>
+    <button type="button" class="chat-head-close" id="chat-close" aria-label="Close question panel">×</button>
   </div>
-  <div class="chat-msgs" id="chat-msgs">
-    <div class="chat-msg-bot">Hi! Send a question about the Live Oak admissions data and it goes to the site's admins. Please don't include your name or other personal info. 👋</div>
+  <div class="chat-msgs" id="chat-msgs" tabindex="0" role="log" aria-live="polite" aria-label="Question panel messages">
+    <div class="chat-msg-bot">Your question goes to the people who run this site and shows up on their admin page. There's no reply in this box, since it doesn't collect any contact info. Please don't include your name or anyone's personal or student information.</div>
   </div>
+  <label class="chat-label" for="chat-input">Your question</label>
   <div class="chat-input-row">
-    <input class="chat-input" id="chat-input" type="text" placeholder="Type a question…" onkeydown="if(event.key==='Enter')sendChat()">
-    <button class="chat-send" onclick="sendChat()">Send</button>
+    <input class="chat-input" id="chat-input" type="text" maxlength="1000" placeholder="Type a question…" aria-describedby="chat-note">
+    <button type="button" class="chat-send" id="chat-send">Send</button>
   </div>
+  <p class="chat-note" id="chat-note">Need an answer back? Email <a href="mailto:leonardo.francke@gmail.com">leonardo.francke@gmail.com</a> instead.</p>
 </div>
 
 <!-- Dot tooltip -->
-<div id="dot-tooltip"></div>
+<div id="dot-tooltip" role="tooltip"></div>
 
-<div class="main-wrap">
-<div class="content" id="main-content">
+<main class="main-wrap">
+<div class="content" id="main-content" tabindex="-1">
 
   <!-- ── RESULTS PAGE ── -->
   <div class="page active" id="page-results">
@@ -807,66 +945,85 @@
           <div class="cta-banner-text">🎓 Add your college results</div>
           <div class="cta-banner-sub">Takes 2 minutes · no name collected · helps future students</div>
         </div>
-        <button class="cta-banner-btn" onclick="showPage('submit');dismissCta()">Share mine →</button>
-        <button class="cta-dismiss" aria-label="Dismiss" onclick="dismissCta()">×</button>
+        <button type="button" class="cta-banner-btn" data-action="cta-share">Share mine →</button>
+        <button type="button" class="cta-dismiss" aria-label="Dismiss this message" data-action="cta-dismiss">×</button>
       </div>
     </div>
 
     <div class="page-header">
-      <div class="page-title">College Results</div>
+      <h1 class="page-title" id="results-title" tabindex="-1">College Results</h1>
       <div class="page-meta" id="page-meta">Loading…</div>
     </div>
+    <div class="load-status" id="load-status"></div>
 
-    <div class="stats-row" id="stats-row">
+    <h2 class="sr-only" id="summary-heading">Summary</h2>
+    <div class="stats-row" id="stats-row" role="group" aria-labelledby="summary-heading">
       <div class="stat-cell"><div class="stat-num" id="s0">—</div><div class="stat-label">Students</div></div>
       <div class="stat-cell"><div class="stat-num" id="s1">—</div><div class="stat-label">Got in somewhere</div></div>
       <div class="stat-cell"><div class="stat-num" id="s2">—</div><div class="stat-label">4-yr accept rate</div></div>
       <div class="stat-cell"><div class="stat-num" id="s3">—</div><div class="stat-label">Avg UW GPA</div></div>
     </div>
 
-    <!-- College type filter tabs -->
-    <div class="filter-bar" id="college-filter-bar"></div>
+    <!-- College type filter (filter buttons, not tabs: each one re-scopes the whole page) -->
+    <div class="filter-bar" id="college-filter-bar" role="group" aria-labelledby="schools-label">
+      <span class="filter-label" id="schools-label">Schools</span>
+    </div>
 
-    <div class="chart-area">
+    <section class="chart-area" aria-labelledby="chart-heading">
+      <h2 class="sr-only" id="chart-heading">Chart of decisions by college</h2>
       <div class="chart-toolbar">
-        <button class="chart-tab active" id="chart-tab-gpa" onclick="switchChart('gpa',this)">Weighted GPA</button>
-        <button class="chart-tab" id="chart-tab-sat" onclick="switchChart('sat',this)">SAT</button>
-        <button class="compare-btn-sm" onclick="openCompare()">Compare colleges</button>
+        <div class="metric-group" role="group" aria-label="Chart metric">
+          <button type="button" class="chart-tab active" id="chart-tab-gpa" data-metric="gpa" aria-pressed="true">Weighted GPA</button>
+          <button type="button" class="chart-tab" id="chart-tab-sat" data-metric="sat" aria-pressed="false">SAT</button>
+        </div>
+        <button type="button" class="compare-btn-sm" id="compare-open">Compare colleges</button>
         <div class="chart-spacer"></div>
-        <input class="chart-search" id="college-search" placeholder="Search a college…" type="text" oninput="filterChart(this.value)">
+        <label class="sr-only" for="college-search">Search colleges in the chart</label>
+        <input class="chart-search" id="college-search" placeholder="Search a college…" type="search" autocomplete="off" aria-describedby="chart-scope-note">
       </div>
       <div class="minsub-row">
-        <span class="minsub-label">Min. submissions</span>
-        <span class="minsub-help" data-tip="Only show colleges that at least this many Live Oak students applied to">?</span>
-        <input type="range" id="minsub-slider" class="minsub-slider" min="1" max="5" step="any" value="1" oninput="onMinSubsInput(this.value)" onchange="onMinSubsChange(this.value)">
-        <span class="minsub-val" id="minsub-val">1+</span>
+        <label class="minsub-label" for="minsub-slider">Min. submissions</label>
+        <input type="range" id="minsub-slider" class="minsub-slider" min="1" max="5" step="any" value="1" aria-valuetext="At least 1 submission" aria-describedby="minsub-note">
+        <span class="minsub-val" id="minsub-val" aria-hidden="true">1+</span>
         <span class="minsub-count" id="chart-col-count"></span>
+        <span class="scope-note" id="minsub-note">Hides colleges with fewer submissions from the chart. A display setting, not a privacy protection.</span>
       </div>
-      <div id="legend"></div>
+      <div class="chart-scope">
+        <p class="scope-note" id="chart-scope-note">Search, the minimum and decision highlights change this chart and its table only. The statistics below aren't filtered by them.</p>
+        <p class="scope-note" id="chart-active" hidden></p>
+      </div>
+      <div id="legend" role="group" aria-label="Highlight one decision in the chart"></div>
       <div class="chart-body">
+        <p class="sr-only" id="chart-instructions">College names are buttons. Use Left and Right arrow keys to move between colleges, Enter to open a college's details, and Down arrow to step through that college's dots. Escape hides a dot's details.</p>
         <div class="chart-scroll-outer" id="chart-scroll-outer">
           <div id="chart-scroll-wrap"><div id="chart-main"></div></div>
           <div class="scroll-fade-left"></div>
           <div class="scroll-fade-right"></div>
-          <button class="scroll-chev scroll-chev-left" aria-label="Scroll left" onclick="scrollChart(-1)"></button>
-          <button class="scroll-chev scroll-chev-right" aria-label="Scroll right" onclick="scrollChart(1)"></button>
+          <button type="button" class="scroll-chev scroll-chev-left" aria-hidden="true" tabindex="-1" data-scroll="-1"></button>
+          <button type="button" class="scroll-chev scroll-chev-right" aria-hidden="true" tabindex="-1" data-scroll="1"></button>
         </div>
-        <div class="chart-axis-note">Sorted by submissions · click a college name for details</div>
+        <div class="chart-axis-note">Sorted by submissions · select a college name for details</div>
+        <details class="chart-table-wrap" id="chart-table-wrap">
+          <summary>Show chart as a table</summary>
+          <div class="chart-table-scroll" id="chart-table"></div>
+        </details>
+        <div class="sr-only" id="chart-status" role="status" aria-live="polite"></div>
       </div>
-    </div>
+    </section>
 
     <!-- Students Like Me -->
-    <div class="slm-panel">
-      <div class="slm-title">🎯 Students like me: filter by GPA, SAT, or major, or combine them</div>
+    <section class="slm-panel" aria-labelledby="slm-title">
+      <h2 class="slm-title" id="slm-title">🎯 Students like me: filter by GPA, SAT, or major, or combine them</h2>
+      <p class="scope-note slm-scope">Narrows the chart and the student list. The statistics below still describe everyone in the selected school category.</p>
       <div class="slm-tabs" role="tablist" aria-label="Filter by">
-        <button class="slm-tab active" role="tab" id="slm-tab-gpa" aria-selected="true" aria-controls="slm-sec-gpa" onclick="slmTab('gpa')">GPA</button>
-        <button class="slm-tab" role="tab" id="slm-tab-sat" aria-selected="false" aria-controls="slm-sec-sat" onclick="slmTab('sat')">SAT</button>
-        <button class="slm-tab" role="tab" id="slm-tab-major" aria-selected="false" aria-controls="slm-sec-major" onclick="slmTab('major')">Major</button>
+        <button type="button" class="slm-tab active" role="tab" id="slm-tab-gpa" aria-selected="true" aria-controls="slm-sec-gpa" data-slm-tab="gpa">GPA</button>
+        <button type="button" class="slm-tab" role="tab" id="slm-tab-sat" aria-selected="false" aria-controls="slm-sec-sat" data-slm-tab="sat" tabindex="-1">SAT</button>
+        <button type="button" class="slm-tab" role="tab" id="slm-tab-major" aria-selected="false" aria-controls="slm-sec-major" data-slm-tab="major" tabindex="-1">Major</button>
       </div>
       <div class="slm-inputs slm-section" id="slm-sec-gpa" role="tabpanel" aria-labelledby="slm-tab-gpa">
         <div class="slm-field">
           <label for="slm-gpa">Unweighted GPA</label>
-          <input type="number" id="slm-gpa" placeholder="e.g. 3.8" step="0.01" min="1" max="4" onkeydown="if(event.key==='Enter')applySlm('gpa')">
+          <input type="number" id="slm-gpa" placeholder="e.g. 3.8" step="0.01" min="1" max="4" data-slm-enter="gpa">
         </div>
         <div class="slm-field">
           <label for="slm-gpa-range">Range ±</label>
@@ -876,12 +1033,12 @@
             <option value="0.5">±0.5 (loose)</option>
           </select>
         </div>
-        <button class="slm-btn" onclick="applySlm('gpa')">Filter by GPA</button>
+        <button type="button" class="slm-btn" data-slm-apply="gpa">Filter by GPA</button>
       </div>
       <div class="slm-inputs slm-section" id="slm-sec-sat" role="tabpanel" aria-labelledby="slm-tab-sat" hidden>
         <div class="slm-field">
           <label for="slm-sat">SAT score</label>
-          <input type="number" id="slm-sat" placeholder="e.g. 1400" step="10" min="400" max="1600" onkeydown="if(event.key==='Enter')applySlm('sat')">
+          <input type="number" id="slm-sat" placeholder="e.g. 1400" step="10" min="400" max="1600" data-slm-enter="sat">
         </div>
         <div class="slm-field">
           <label for="slm-sat-range">Range ±</label>
@@ -891,24 +1048,32 @@
             <option value="150">±150 (loose)</option>
           </select>
         </div>
-        <button class="slm-btn" onclick="applySlm('sat')">Filter by SAT</button>
+        <button type="button" class="slm-btn" data-slm-apply="sat">Filter by SAT</button>
       </div>
       <div class="slm-inputs slm-section" id="slm-sec-major" role="tabpanel" aria-labelledby="slm-tab-major" hidden>
         <div class="slm-field">
           <label for="slm-major">Intended major</label>
           <select id="slm-major"></select>
         </div>
-        <button class="slm-btn" onclick="applySlm('major')">Filter by major</button>
+        <button type="button" class="slm-btn" data-slm-apply="major">Filter by major</button>
       </div>
-      <div class="slm-active" id="slm-active"></div>
+      <div class="slm-active" id="slm-active" role="group" aria-label="Active students-like-me filters"></div>
       <div class="slm-status" id="slm-status" role="status" aria-live="polite"></div>
-    </div>
+    </section>
 
     <!-- Inline stats (formerly separate Stats page) -->
-    <div id="stats-inline"></div>
+    <section aria-labelledby="stats-heading">
+      <div class="stats-section-head" id="stats-section-head" hidden>
+        <h2 class="sp-section-header" id="stats-heading">Statistics</h2>
+        <p class="scope-note" id="stats-scope-note"></p>
+      </div>
+      <div id="stats-inline"></div>
+    </section>
 
-    <div class="entries-header" id="entries-header"></div>
-    <div class="entries" id="entries"></div>
+    <section aria-labelledby="entries-heading">
+      <div class="entries-header" id="entries-header"></div>
+      <div class="entries" id="entries" role="list"></div>
+    </section>
 
   </div>
 
@@ -1007,7 +1172,7 @@
   </div>
 
 </div><!-- .content -->
-</div><!-- .main-wrap -->
+</main><!-- .main-wrap -->
 
 <footer>
   <div class="footer-inner">
@@ -1016,6 +1181,11 @@
       College decision data shared by Live Oak students — no names attached.
     </div>
     <div class="footer-anon">🔒 No names stored · no login required · <a href="/privacy.html" style="color:inherit;">Privacy policy</a></div>
+    <ul class="footer-links" aria-label="About this site">
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/methodology.html">How the numbers work</a></li>
+      <li><a href="/accessibility.html">Accessibility</a></li>
+    </ul>
     <div class="footer-contact">
       Suggestions or concerns?<br>
       <a href="mailto:leonardo.francke@gmail.com">leonardo.francke@gmail.com</a>
@@ -1034,6 +1204,13 @@ const DECISION_ORDER = ['Accepted','Waitlisted','Rejected','Pending'];
 // Green/red kept for accepted/rejected since that convention is near-universal
 // for admissions charts; shape carries the signal color can't for CVD readers.
 const DOT_COLORS = {Accepted:'#008300',Waitlisted:'#eda100',Rejected:'#e34948',Pending:'#e87ba4'};
+// Darker outlines and text shades of the same hues. On white the yellow and
+// pink fills are ~2:1, too faint to make out as shapes (non-text needs 3:1)
+// and far too faint as text (4.5:1). Fills stay as they were.
+const DOT_STROKE = {Accepted:'#008300',Waitlisted:'#b87d00',Rejected:'#e34948',Pending:'#c94f84'};
+const DECISION_TEXT = {Accepted:'#1a7a4a',Waitlisted:'#8a5a00',Rejected:'#b42a29',Pending:'#a3366a'};
+const DECISION_TEXT_DARK = {Accepted:'#4ade80',Waitlisted:'#fbbf24',Rejected:'#f87171',Pending:'#f9a8d4'};
+const decisionText = d => (document.documentElement.dataset.theme === 'dark' ? DECISION_TEXT_DARK : DECISION_TEXT)[d] || 'inherit';
 
 // Exact class rank identifies people — everyone knows who is #1, and most
 // reported ranks belong to a single student. Show a fixed-width 7-rank range
@@ -1329,6 +1506,10 @@ const REDUCED_MOTION = window.matchMedia
 let currentPage = 'results';
 let _openCollegeName = null; // for URL sync only — which college's modal is open
 let _suppressUrlWrite = false; // true while popstate is restoring, so restoring doesn't itself push history
+let _loadSeq = 0, _loadState = 'idle', _dataLoadedAt = null; // results feed request state
+let _chartCols = [];         // display names of the chart's current columns, in order
+let _chartRovingKey = null;  // canonKey of the college label holding the chart's single Tab stop
+let _openModalId = null, _modalReturn = null;
 
 // ── URL state sync ───────────────────────────────────────────────────────
 // Tabs, filters, search, the min-submissions slider, and the open college
@@ -1369,17 +1550,24 @@ function writeUrlState(push) {
 // <select>-like slider thumb need to be told directly).
 function syncControlsToState() {
   const search = document.getElementById('college-search');
-  if (search) search.value = searchFilter;
+  if (search && search.value.toLowerCase().trim() !== searchFilter) search.value = searchFilter;
   const slider = document.getElementById('minsub-slider');
   const val = document.getElementById('minsub-val');
-  if (slider) { slider.value = minSubs; slider.style.setProperty('--fill', (((minSubs - 1) / 4) * 100) + '%'); }
+  if (slider) {
+    slider.value = minSubs;
+    slider.style.setProperty('--fill', (((minSubs - 1) / 4) * 100) + '%');
+    slider.setAttribute('aria-valuetext', minSubsText(minSubs));
+  }
   if (val) val.textContent = minSubs + '+';
   const gpaTab = document.getElementById('chart-tab-gpa'), satTab = document.getElementById('chart-tab-sat');
   if (gpaTab && satTab) {
     gpaTab.classList.toggle('active', activeChartType === 'gpa');
     satTab.classList.toggle('active', activeChartType === 'sat');
+    gpaTab.setAttribute('aria-pressed', activeChartType === 'gpa' ? 'true' : 'false');
+    satTab.setAttribute('aria-pressed', activeChartType === 'sat' ? 'true' : 'false');
   }
 }
+function minSubsText(n) { return `At least ${n} submission${n !== 1 ? 's' : ''} per college`; }
 
 // ── Navigation ────────────────────────────────────────────────────────────
 function updateNav() {
@@ -1403,9 +1591,12 @@ function showPage(name, opts) {
   const oldEl = document.getElementById('page-' + currentPage);
   const newEl = document.getElementById('page-' + name);
 
-  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-  document.getElementById('nav-' + name).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l => { l.classList.remove('active'); l.removeAttribute('aria-current'); });
+  const navEl = document.getElementById('nav-' + name);
+  navEl.classList.add('active');
+  navEl.setAttribute('aria-current', 'page');
   updateNav();
+  setDocTitle(name);
 
   if (REDUCED_MOTION) {
     oldEl.classList.remove('active');
@@ -1414,6 +1605,7 @@ function showPage(name, opts) {
     if (!fromPopstate) writeUrlState(true);
     if (name === 'results') loadData();
     if (name === 'submit') loadExistingSubmission();
+    if (opts && opts.focus) focusPageStart(name);
     return;
   }
 
@@ -1435,25 +1627,98 @@ function showPage(name, opts) {
       if (!fromPopstate) writeUrlState(true);
       if (name === 'results') loadData();
       if (name === 'submit') loadExistingSubmission();
+      if (opts && opts.focus) focusPageStart(name);
     }, 220);
   }, 160);
 }
 
+// After a nav link switches views, put keyboard focus at the start of the new
+// view instead of leaving it on a link in the other one. Results has a real
+// heading; the submit view's title is part of the untouched form, so focus
+// goes to the main region there.
+function focusPageStart(name) {
+  const target = name === 'results'
+    ? document.getElementById('results-title')
+    : document.getElementById('main-content');
+  if (target) target.focus();
+}
+function setDocTitle(name) {
+  document.title = name === 'submit' ? 'Submit your results — College Results — Live Oak' : 'College Results — Live Oak';
+}
+
 // ── Data ───────────────────────────────────────────────────────────────────
 async function loadData() {
+  // Results load in three distinct outcomes: fresh data, a failed request,
+  // or a response that isn't the expected list. Only fresh data replaces what
+  // is on screen; a failure keeps the last good data and says how old it is.
+  // A sequence number drops responses that arrive after a newer request.
+  const seq = ++_loadSeq;
+  setLoadState('loading');
+  let rows;
   try {
     const res = await fetch('/api/submissions');
-    allData = await res.json();
-    renderResults();
-  } catch(e) { console.error(e); }
+    if (!res.ok) throw { kind: 'http', status: res.status };
+    let json;
+    try { json = await res.json(); } catch (e) { throw { kind: 'malformed' }; }
+    if (!Array.isArray(json)) throw { kind: 'malformed' };
+    rows = json.filter(r => r && typeof r === 'object');
+  } catch (e) {
+    if (seq !== _loadSeq) return;
+    setLoadState('error', e && e.kind ? e : { kind: 'network' });
+    return;
+  }
+  if (seq !== _loadSeq) return;
+  allData = rows;
+  _dataLoadedAt = new Date();
+  setLoadState('ready');
+  renderResults();
+}
+
+function setLoadState(state, err) {
+  _loadState = state;
+  const box = document.getElementById('load-status');
+  if (!box) return;
+  box.textContent = '';
+  box.removeAttribute('role');
+  if (state === 'loading') {
+    // Only announce the first load; quiet background refreshes stay quiet.
+    if (!_dataLoadedAt) { box.setAttribute('role', 'status'); box.textContent = 'Loading results…'; }
+    return;
+  }
+  if (state !== 'error') return;
+  const reason = err.kind === 'http'
+    ? (err.status === 429 ? 'Too many requests right now.' : `The server returned an error (${err.status}).`)
+    : err.kind === 'malformed' ? 'The server sent a response this page could not read.'
+    : 'The server could not be reached. Check your connection.';
+  const wrap = document.createElement('div');
+  wrap.className = 'load-error';
+  wrap.setAttribute('role', 'alert');
+  const msg = document.createElement('span');
+  msg.textContent = _dataLoadedAt
+    ? `Couldn't refresh results. ${reason} Still showing results loaded at ${_dataLoadedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`
+    : `Couldn't load results. ${reason}`;
+  const retry = document.createElement('button');
+  retry.type = 'button';
+  retry.dataset.action = 'retry-load';
+  retry.textContent = 'Try again';
+  wrap.append(msg, retry);
+  box.appendChild(wrap);
+  if (!_dataLoadedAt) document.getElementById('page-meta').textContent = 'Results unavailable';
+}
+
+// The one definition of "what the page is currently showing": Class of 2026
+// rows in the selected school category. Everything that re-renders (filters,
+// theme, text size, resize, Back/Forward) works from this same set.
+function getViewData() {
+  const allYear = allData.filter(r => r.grad_year == 2026);
+  return activeCollegeFilter === 'All'
+    ? allYear
+    : allYear.filter(r => matchesCollegeFilter(r, activeCollegeFilter));
 }
 
 function renderResults() {
-  renderCollegeFilterTabs();
-  const allYear = allData.filter(r => r.grad_year == 2026);
-  const d = activeCollegeFilter === 'All'
-    ? allYear
-    : allYear.filter(r => matchesCollegeFilter(r, activeCollegeFilter));
+  updateCollegeFilterTabs();
+  const d = getViewData();
   renderStats(d);
   scatterData = d;
   buildChart(d, true);
@@ -1464,21 +1729,46 @@ function renderResults() {
   initStatsDisclaimerGate();
 }
 
-function renderCollegeFilterTabs() {
-  document.getElementById('college-filter-bar').innerHTML =
-    '<span class="filter-label">Schools</span>' +
-    COLLEGE_FILTER_TABS.map(f =>
-      `<button class="filter-pill${f===activeCollegeFilter?' active':''}" onclick="setCollegeFilter('${f}')">${f}</button>`
-    ).join('');
+// Appearance changes (theme) only recolour. The chart and the statistics bake
+// theme colours into their markup, so they are redrawn from the current view
+// rather than from a fresh, unfiltered slice of the data.
+function rerenderAppearance() {
+  if (!_dataLoadedAt) return;
+  buildChart(scatterData, false);
+  renderStatsInline(scatterData);
 }
 
-function setCollegeFilter(f) {
+// The category buttons are created once and then only have their state
+// updated, so keyboard focus stays on the button that was just pressed.
+function updateCollegeFilterTabs() {
+  const bar = document.getElementById('college-filter-bar');
+  if (!bar.querySelector('.filter-pill')) {
+    COLLEGE_FILTER_TABS.forEach(f => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'filter-pill';
+      b.dataset.schools = f;
+      b.textContent = f;
+      bar.appendChild(b);
+    });
+  }
+  bar.querySelectorAll('.filter-pill').forEach(b => {
+    const on = b.dataset.schools === activeCollegeFilter;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+
+function setCollegeFilter(f, opts) {
   activeCollegeFilter = f;
-  trackEvent('filter_click', f);
+  // Analytics fire only from the category buttons themselves, exactly as
+  // before; "Show all schools" shortcuts added for empty states don't record.
+  if (!(opts && opts.track === false)) trackEvent('filter_click', f);
   activeFilter = null;
   resetSlmUi();
   writeUrlState(true);
   renderResults();
+  announceChart();
 }
 
 // ── Stats row ──────────────────────────────────────────────────────────────
@@ -1629,22 +1919,54 @@ function flipDots(el, prev) {
 }
 
 // ── Chart ──────────────────────────────────────────────────────────────────
-function filterChart(val) { searchFilter = val.toLowerCase().trim(); writeUrlState(false); buildChart(scatterData, false); }
-function switchChart(type, btn) {
+function filterChart(val) { searchFilter = val.toLowerCase().trim(); writeUrlState(false); buildChart(scatterData, false); announceChart(); }
+function switchChart(type) {
   activeChartType = type;
   trackEvent('chart_switch', type);
-  document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  syncControlsToState();
   writeUrlState(true);
   buildChart(scatterData, true);
+  announceChart();
 }
-function toggleFilter(d) { activeFilter = activeFilter===d ? null : d; writeUrlState(true); buildChart(scatterData, false); }
+function toggleFilter(d) { activeFilter = activeFilter===d ? null : d; writeUrlState(true); buildChart(scatterData, false); announceChart(); }
+
+// Clears only the chart's own display controls (search, minimum, decision
+// highlight). The school category and Students-like-me filters stay as they are.
+function resetChartFilters() {
+  searchFilter = '';
+  const search = document.getElementById('college-search');
+  if (search) search.value = '';
+  minSubs = 1;
+  activeFilter = null;
+  syncControlsToState();
+  writeUrlState(true);
+  buildChart(scatterData, false);
+  announceChart();
+}
+
+// One short, polite summary after a chart control changes, debounced so typing
+// in the search box doesn't produce an announcement per keystroke.
+let _announceTimer = 0;
+function announceChart() {
+  clearTimeout(_announceTimer);
+  _announceTimer = setTimeout(() => {
+    const el = document.getElementById('chart-status');
+    if (!el || !_dataLoadedAt) return;
+    const n = _chartCols.length;
+    let msg = n
+      ? `Chart shows ${n} college${n !== 1 ? 's' : ''}${activeCollegeFilter !== 'All' ? ' in ' + activeCollegeFilter : ''}.`
+      : (document.querySelector('#chart-main .chart-empty p') || {}).textContent || 'No colleges in the chart.';
+    if (n && activeFilter) msg += ` ${activeFilter} highlighted.`;
+    el.textContent = msg;
+  }, 500);
+}
 function onMinSubsInput(v) {
   const f = parseFloat(v) || 1;
   const slider = document.getElementById('minsub-slider');
   if (slider) {
     slider.classList.remove('snap');
     slider.style.setProperty('--fill', (((f - 1) / 4) * 100) + '%');
+    slider.setAttribute('aria-valuetext', minSubsText(Math.round(f)));
   }
   const val = document.getElementById('minsub-val');
   if (val) val.textContent = Math.round(f) + '+';
@@ -1656,12 +1978,15 @@ function onMinSubsChange(v) {
     slider.classList.add('snap');
     slider.value = snapped;
     slider.style.setProperty('--fill', (((snapped - 1) / 4) * 100) + '%');
+    slider.setAttribute('aria-valuetext', minSubsText(snapped));
   }
   const val = document.getElementById('minsub-val');
   if (val) val.textContent = snapped + '+';
+  const changed = snapped !== minSubs;
   minSubs = snapped;
   writeUrlState(false);
   buildChart(scatterData, true);
+  if (changed) announceChart();
 }
 
 function shortenForChart(name) {
@@ -1724,8 +2049,24 @@ function buildChart(data, animate) {
   if (cnt) cnt.textContent = cols.length ? `${cols.length} college${cols.length!==1?'s':''}` : '';
 
   const el = document.getElementById('chart-main');
+  // A rebuild (filter, resize, theme) replaces every chart node. Remember
+  // which chart control or legend button had focus and put focus back on the
+  // same college/decision afterwards instead of dropping it to <body>.
+  const active = document.activeElement;
+  const refocusKey = active && el.contains(active) ? active.dataset.focusKey : null;
+  const legendEl = document.getElementById('legend');
+  const refocusLegend = active && legendEl.contains(active) ? active.dataset.decision : null;
   el.innerHTML = '';
-  if (!cols.length) { document.getElementById('legend').innerHTML = ''; updateScrollHint(); return; }
+  _chartCols = cols;
+  updateChartActive();
+  if (!cols.length) {
+    legendEl.innerHTML = '';
+    renderChartEmpty(el, data);
+    renderChartTable([], [], displayName);
+    updateEntriesHeader([], data);
+    updateScrollHint();
+    return;
+  }
 
   const isGpa = activeChartType === 'gpa';
   const yKey = isGpa ? 'gpa_weighted' : 'sat';
@@ -1774,8 +2115,11 @@ function buildChart(data, animate) {
   const axisC = _isDark ? '#2a2d33' : '#e4e4e2';
   const tickC = _isDark ? '#a8a8a5' : '#555';
   const lblC = _isDark ? '#d4d4d1' : '#333';
-  let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" data-pad-left="${PAD.left}" data-col-w="${colW}" data-plot-bottom="${PAD.top + plotH}" data-dot-r="${dotR}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;" onmousemove="chartLabelAreaMove(event)" onmouseleave="chartMouseleave(event)">`;
+  let svg = `<svg width="${W}" height="${H}" data-cols="${cols.length}" data-pad-left="${PAD.left}" data-col-w="${colW}" data-plot-bottom="${PAD.top + plotH}" data-dot-r="${dotR}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block;" role="group" aria-labelledby="chart-heading" aria-describedby="chart-instructions">`;
 
+  // Grid, ticks and axis title are visual scaffolding; the labels and dots
+  // below carry the same information to assistive technology.
+  svg += '<g aria-hidden="true">';
   ySteps.forEach(v => {
     const y = PAD.top + plotH - (v-yMin)/(yMax-yMin)*plotH;
     svg += `<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+plotW}" y2="${y}" stroke="${gridC}" stroke-width="1"/>`;
@@ -1784,11 +2128,29 @@ function buildChart(data, animate) {
   const yTitleX = Math.max(tickSize * 0.6, PAD.left - 12 - 2.9 * tickSize);
   svg += `<text x="${yTitleX}" y="${PAD.top+plotH/2}" text-anchor="middle" font-size="${tickSize}" fill="${tickC}" font-family="Inter,sans-serif" transform="rotate(-90,${yTitleX},${PAD.top+plotH/2})">${yLabel}</text>`;
   svg += `<line x1="${PAD.left}" y1="${PAD.top+plotH}" x2="${PAD.left+plotW}" y2="${PAD.top+plotH}" stroke="${axisC}" stroke-width="1"/>`;
+  svg += '</g>';
+
+  // Per-column decision counts, for each label's accessible name.
+  const colCounts = cols.map(() => ({}));
+  filtered.forEach(r => {
+    const c = colCounts[cols.indexOf(displayName(r.college_name))];
+    c[r.decision] = (c[r.decision] || 0) + 1;
+  });
+  // Exactly one label is in the Tab order (roving tabindex); arrow keys move
+  // between the rest. It stays on the same college across rebuilds.
+  let roving = cols.findIndex(c => canonKey(c) === _chartRovingKey);
+  if (roving < 0) roving = 0;
+  _chartRovingKey = canonKey(cols[roving]);
 
   cols.forEach((col, i) => {
     const x = PAD.left + i*colW + colW/2, y = PAD.top + plotH + 22;
     const short = shortenForChart(col);
-    svg += `<text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" style="cursor:pointer;" onmouseover="setWaveCol(${i})" onmouseout="clearWave()" onclick="openCollegeDetail('${col.replace(/'/g,"\\'")}')"><title>${col}</title>${short}</text>`;
+    const counts = colCounts[i];
+    const total = Object.values(counts).reduce((s, v) => s + v, 0);
+    const summary = total
+      ? `${total} shown: ` + DECISION_ORDER.filter(d => counts[d]).map(d => `${counts[d]} ${d.toLowerCase()}`).join(', ')
+      : `no ${isGpa ? 'weighted GPA' : 'SAT'} values to plot`;
+    svg += `<g><title>${escHtml(col)}</title><text id="col-lbl-${i}" x="${x}" y="${y}" text-anchor="end" font-size="${baseLblSize}" fill="${lblC}" font-family="Inter,sans-serif" transform="rotate(-38,${x},${y})" role="button" tabindex="${i === roving ? 0 : -1}" data-col="${i}" data-focus-key="col:${escHtml(canonKey(col))}" aria-label="${escHtml(short === col ? col : short + ' (' + col + ')')}, ${summary}. Open details">${escHtml(short)}</text></g>`;
   });
 
   filtered.forEach((r, ri) => {
@@ -1799,32 +2161,157 @@ function buildChart(data, animate) {
     const x = (bx + seededJitter(seed+'x', 5)).toFixed(2);
     const y = by.toFixed(2);
     const col = DOT_COLORS[r.decision] || '#888';
+    const stroke = (_isDark ? DOT_COLORS : DOT_STROKE)[r.decision] || '#666';
     const dimmed = (activeFilter && r.decision !== activeFilter) || (slmFilter && !slmMatches(r));
+    const key = dotKey(r, ri);
+    const label = `${r.decision || 'No decision'}, ${isGpa ? 'weighted GPA' : 'SAT'} ${r[yKey]}${dimmed ? ', not highlighted' : ''}`;
     svg += dotSvg(r.decision, x, y, dotR,
-      `class="chart-dot" data-cidx="${i}" data-key="${dotKey(r, ri)}" data-cx="${x}" data-cy="${y}" ` +
-      `fill="${col}cc" stroke="${col}" stroke-width="1.5" opacity="${dimmed?0.1:1}" style="cursor:pointer;" ` +
-      `onmouseover="setSpotCol(${i})" onmouseout="clearSpot()" onclick="handleDotClick(event,${data.indexOf(r)})"`);
+      `class="chart-dot" data-cidx="${i}" data-idx="${data.indexOf(r)}" data-key="${escHtml(key)}" data-focus-key="dot:${escHtml(key)}" data-cx="${x}" data-cy="${y}" ` +
+      `fill="${col}cc" stroke="${stroke}" stroke-width="1.5" opacity="${dimmed?0.1:1}" ` +
+      `role="button" tabindex="-1" aria-label="${escHtml(label)}"`);
   });
   svg += '</svg>';
 
   el.innerHTML = svg;
+  if (!filtered.length) {
+    // Colleges matched, but none of their rows has a value for this metric.
+    const note = document.createElement('p');
+    note.className = 'scope-note';
+    note.style.padding = '0 0 8px';
+    note.textContent = `None of the submissions for these colleges reported ${isGpa ? 'a weighted GPA' : 'an SAT score'}, so there are no dots to plot.`;
+    el.prepend(note);
+  }
 
   if (_prevDots && _prevDots.map.size) flipDots(el, _prevDots);
 
   const used = DECISION_ORDER.filter(d => filtered.find(r=>r.decision===d));
   // Legend swatches mirror the plotted shape, so the key works without colour.
-  document.getElementById('legend').innerHTML = used.map(d => {
+  legendEl.innerHTML = used.map(d => {
     const c = DOT_COLORS[d];
+    const s = (_isDark ? DOT_COLORS : DOT_STROKE)[d];
     const swatch = `<svg class="legend-dot" width="13" height="13" viewBox="0 0 13 13" aria-hidden="true">
-      ${dotSvg(d, 6.5, 6.5, 4.6, `fill="${c}cc" stroke="${c}" stroke-width="1.3"`)}
+      ${dotSvg(d, 6.5, 6.5, 4.6, `fill="${c}cc" stroke="${s}" stroke-width="1.3"`)}
     </svg>`;
-    return `<span class="legend-item${activeFilter&&activeFilter!==d?' dimmed':''}" onclick="toggleFilter('${d}')">
+    return `<button type="button" class="legend-item${activeFilter&&activeFilter!==d?' dimmed':''}" data-decision="${d}" aria-pressed="${activeFilter===d?'true':'false'}">
       ${swatch}${d}
-    </span>`;
+    </button>`;
   }).join('');
 
+  renderChartTable(cols, filtered, displayName);
   updateEntriesHeader(filtered, data);
   updateScrollHint();
+
+  if (refocusKey) {
+    const again = el.querySelector(`[data-focus-key="${CSS.escape(refocusKey)}"]`) || el.querySelector('text[tabindex="0"]');
+    if (again) focusChartItem(again);
+  } else if (refocusLegend) {
+    const again = legendEl.querySelector(`[data-decision="${refocusLegend}"]`);
+    (again || document.getElementById('college-search')).focus();
+  }
+}
+
+// Empty chart: say which of the page's controls caused it and offer the reset
+// that fixes it, instead of a blank box.
+function renderChartEmpty(el, data) {
+  const box = document.createElement('div');
+  box.className = 'chart-empty';
+  const p = document.createElement('p');
+  const actions = document.createElement('div');
+  actions.className = 'chart-empty-actions';
+  const add = (label, action) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chart-reset'; b.dataset.action = action; b.textContent = label;
+    actions.appendChild(b);
+  };
+  const cat = activeCollegeFilter;
+  const rawSearch = (document.getElementById('college-search').value || '').trim();
+  if (!allData.some(r => r.grad_year == 2026)) {
+    p.textContent = 'No Class of 2026 submissions yet.';
+  } else if (!data.length) {
+    p.textContent = `No submissions in the ${cat} category yet. Other categories may have results.`;
+    add('Show all schools', 'schools-all');
+  } else if (searchFilter || minSubs > 1) {
+    const why = [];
+    if (searchFilter) why.push(`match “${rawSearch || searchFilter}”`);
+    if (minSubs > 1) why.push(`have ${minSubs} or more submissions`);
+    p.textContent = `No colleges${cat !== 'All' ? ' in ' + cat : ''} ${why.join(' and ')}.`;
+    if (searchFilter) add('Clear search', 'clear-search');
+    if (minSubs > 1) add('Show colleges with 1+ submissions', 'min-reset');
+  } else {
+    p.textContent = 'No colleges to chart in this view.';
+  }
+  box.append(p, actions);
+  el.appendChild(box);
+}
+
+// Text alternative to the chart: the same colleges and the same plotted
+// decisions, counted. No values beyond what the dots already show.
+function renderChartTable(cols, filtered, displayName) {
+  const host = document.getElementById('chart-table');
+  if (!host) return;
+  host.textContent = '';
+  if (!cols.length) {
+    const p = document.createElement('p');
+    p.className = 'scope-note';
+    p.textContent = 'No colleges in the chart right now.';
+    host.appendChild(p);
+    return;
+  }
+  const metric = activeChartType === 'gpa' ? 'weighted GPA' : 'SAT';
+  const table = document.createElement('table');
+  table.className = 'chart-table';
+  const cap = document.createElement('caption');
+  cap.textContent = `Decisions plotted in the chart (${metric}), by college. Same colleges and order as the chart.`;
+  table.appendChild(cap);
+  const thead = table.createTHead().insertRow();
+  ['College', 'Shown', ...DECISION_ORDER].forEach(h => {
+    const th = document.createElement('th'); th.scope = 'col'; th.textContent = h; thead.appendChild(th);
+  });
+  const tbody = table.createTBody();
+  cols.forEach(col => {
+    const rows = filtered.filter(r => displayName(r.college_name) === col);
+    const tr = tbody.insertRow();
+    const th = document.createElement('th');
+    th.scope = 'row';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.openCollege = col;
+    b.dataset.focusKey = 'tbl:' + canonKey(col);
+    b.textContent = col;
+    th.appendChild(b);
+    tr.appendChild(th);
+    tr.insertCell().textContent = rows.length;
+    DECISION_ORDER.forEach(d => { tr.insertCell().textContent = rows.filter(r => r.decision === d).length; });
+  });
+  host.appendChild(table);
+}
+
+// "Chart filters on: …" line with one reset, so it's clear why the chart and
+// the statistics below can show different sets.
+function updateChartActive() {
+  const el = document.getElementById('chart-active');
+  if (!el) return;
+  const raw = (document.getElementById('college-search').value || '').trim();
+  const parts = [];
+  if (searchFilter) parts.push(`search “${raw || searchFilter}”`);
+  if (minSubs > 1) parts.push(`${minSubs}+ submissions`);
+  if (activeFilter) parts.push(`${activeFilter} highlighted`);
+  el.textContent = '';
+  el.hidden = !parts.length;
+  if (!parts.length) return;
+  el.append(`Chart filters on: ${parts.join(' · ')} `);
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chart-reset'; b.dataset.action = 'chart-reset';
+  b.textContent = 'Reset chart filters';
+  el.appendChild(b);
+}
+
+function focusChartItem(node) {
+  if (node.matches('text[data-col]')) {
+    document.querySelectorAll('#chart-main text[data-col]').forEach(t => t.setAttribute('tabindex', t === node ? '0' : '-1'));
+    _chartRovingKey = canonKey(_chartCols[+node.dataset.col]);
+  }
+  node.focus();
 }
 
 function updateScrollHint() {
@@ -1845,7 +2332,7 @@ function scrollChart(dir) {
   const wrap = document.getElementById('chart-scroll-wrap');
   if (!wrap) return;
   const step = Math.max(160, wrap.clientWidth * 0.65);
-  wrap.scrollBy({ left: dir * step, behavior: 'smooth' });
+  wrap.scrollBy({ left: dir * step, behavior: REDUCED_MOTION ? 'auto' : 'smooth' });
 }
 
 let _lastWaveIdx = -2, _waveRaf = 0, _lastWaveDotCol = -2;
@@ -1922,9 +2409,8 @@ function clearWave() {
 }
 // Keep the wave alive while cursor is in the label-area strip, but kill it
 // as soon as the cursor moves up into the plot area (axis line crossing)
-function chartLabelAreaMove(e) {
+function chartLabelAreaMove(e, svg) {
   if (_waveMode === 'none') return;
-  const svg = e.currentTarget;
   const pb = parseFloat(svg.dataset.plotBottom);
   const rect = svg.getBoundingClientRect();
   const y = e.clientY - rect.top;
@@ -1980,74 +2466,99 @@ function unpinDot() {
   _lastWaveIdx = -2; _waveMode = 'none';
   chartWave(-1);
 }
-function handleDotClick(evt, idx) {
-  evt.stopPropagation();
-  if (_tooltipDot) _tooltipDot.classList.remove('pinned');
-  _tooltipDot = evt.currentTarget;
+// `point` is where to anchor the details pane: the pointer for a click or tap,
+// the dot itself when it was reached with the keyboard.
+function handleDotClick(dot, idx, point) {
+  if (_tooltipDot && _tooltipDot !== dot) _tooltipDot.classList.remove('pinned');
+  _tooltipDot = dot;
   _tooltipDot.classList.add('pinned');
-  showTooltip(evt, scatterData[idx]);
+  showTooltip(scatterData[idx], point || dotAnchor(dot));
   chartSpot(parseInt(_tooltipDot.dataset.cidx));
 }
+function dotAnchor(dot) {
+  const rect = dot.getBoundingClientRect();
+  return { x: rect.right, y: rect.top };
+}
 function positionTooltipNear(x, y) {
+  // Keep the whole pane on screen, and flip it to the left of the dot rather
+  // than covering the dot when there's no room on the right.
   const tip = document.getElementById('dot-tooltip');
-  tip.style.left = Math.min(x + 16, window.innerWidth - tip.offsetWidth - 10) + 'px';
-  tip.style.top = Math.max(y - 10, 10) + 'px';
+  const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let left = x + 16;
+  if (left + w > vw - 10) left = Math.max(10, x - 16 - w);
+  let top = Math.max(y - 10, 10);
+  if (top + h > vh - 10) top = Math.max(10, vh - h - 10);
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
 }
 function repositionTooltip() {
   if (!_tooltipDot) return;
   const tip = document.getElementById('dot-tooltip');
   if (tip.style.display === 'none' || !tip.style.display) return;
   if (!_tooltipDot.isConnected) { unpinDot(); return; }
-  const rect = _tooltipDot.getBoundingClientRect();
-  positionTooltipNear(rect.right, rect.top);
+  const a = dotAnchor(_tooltipDot);
+  positionTooltipNear(a.x, a.y);
 }
-function showTooltip(evt, r) {
+// Built from DOM nodes and textContent, so college names and majors are shown
+// literally and can never become markup. Same fields and layout as before.
+function showTooltip(r, pos) {
   const key = r.session_id || `${r.gpa}|${r.sat}|${r.act}`;
   const sibs = scatterData.filter(x => (x.session_id||`${x.gpa}|${x.sat}|${x.act}`) === key);
   const tip = document.getElementById('dot-tooltip');
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const pair = (label, value) => [el('span', 'tip-label', label), ' ', el('span', 'tip-num', String(value))];
+  const row = parts => { const d = el('div'); d.append(...parts); return d; };
 
   const stats = [];
   if (r.gpa) {
-    let s = `<span class="tip-label">UW GPA</span> <span class="tip-num">${r.gpa}</span>`;
-    if (r.gpa_weighted) s += ` · <span class="tip-label">W</span> <span class="tip-num">${r.gpa_weighted}</span>`;
-    stats.push(s);
+    const parts = pair('UW GPA', r.gpa);
+    if (r.gpa_weighted) parts.push(' · ', ...pair('W', r.gpa_weighted));
+    stats.push(parts);
   }
   const tests = [];
-  if (r.sat) tests.push(`<span class="tip-label">SAT</span> <span class="tip-num">${r.sat}</span>`);
-  if (r.act) tests.push(`<span class="tip-label">ACT</span> <span class="tip-num">${r.act}</span>`);
-  if (tests.length) stats.push(tests.join(' · '));
-  if (rankBand(r.class_rank)) stats.push(`<span class="tip-label">Rank</span> <span class="tip-num">${rankBand(r.class_rank)}</span>`);
-  if (r.essay_rating) stats.push(`<span class="tip-label">Essay</span> <span class="tip-num">${r.essay_rating}/5</span>`);
+  if (r.sat) tests.push(pair('SAT', r.sat));
+  if (r.act) tests.push(pair('ACT', r.act));
+  if (tests.length) stats.push(tests.reduce((a, t, i) => i ? a.concat(' · ', ...t) : a.concat(...t), []));
+  if (rankBand(r.class_rank)) stats.push(pair('Rank', rankBand(r.class_rank)));
+  if (r.essay_rating) stats.push(pair('Essay', `${r.essay_rating}/5`));
 
-  const profile = [];
-  if (r.major) profile.push(`<div><span class="tip-label">Major</span> ${r.major}</div>`);
-
-  const decisions = sibs.map(s => {
+  tip.textContent = '';
+  stats.forEach(s => tip.appendChild(row(s)));
+  if (r.major) {
+    const sec = el('div');
+    sec.style.cssText = 'border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;';
+    sec.appendChild(row([el('span', 'tip-label', 'Major'), ' ' + r.major]));
+    tip.appendChild(sec);
+  }
+  const decs = el('div');
+  decs.style.cssText = 'border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;line-height:1.7;';
+  sibs.forEach(s => {
     const extras = [];
     if (s.decision_type) extras.push(s.decision_type);
     if (s.school_type && s.school_type !== 'University') extras.push(s.school_type);
     if (s.enrolling === 'yes') extras.push('🎓 Enrolling');
     if (s.scholarship === 'yes') extras.push('💰 Scholarship');
-    const extrasStr = extras.length ? ` <span style="opacity:0.7;font-size:calc(10.5px * var(--fs));">(${extras.join(' · ')})</span>` : '';
     const isClicked = s.college_name === r.college_name && s.decision === r.decision && s.decision_type === r.decision_type;
-    const style = isClicked
-      ? `color:${DOT_COLORS[s.decision]||'#aaa'};font-weight:600;background:rgba(255,255,255,0.08);padding:3px 6px;border-radius:4px;margin:1px 0;`
-      : `color:${DOT_COLORS[s.decision]||'#aaa'};padding:0 6px;`;
-    return `<div style="${style}">${s.college_name} — ${s.decision}${extrasStr}</div>`;
-  }).join('');
-
-  let html = stats.map(s => `<div>${s}</div>`).join('');
-  if (profile.length) html += `<div style="border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;">${profile.join('')}</div>`;
-  html += `<div style="border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;line-height:1.7;">${decisions}</div>`;
-
-  tip.innerHTML = html;
+    const d = el('div', null, `${s.college_name} — ${s.decision}`);
+    // The pane is always dark, so decisions use the light text shades.
+    d.style.cssText = isClicked
+      ? `color:${DECISION_TEXT_DARK[s.decision]||'#ccc'};font-weight:600;background:rgba(255,255,255,0.08);padding:3px 6px;border-radius:4px;margin:1px 0;`
+      : `color:${DECISION_TEXT_DARK[s.decision]||'#ccc'};padding:0 6px;`;
+    if (extras.length) {
+      const x = el('span', null, `(${extras.join(' · ')})`);
+      x.style.cssText = 'opacity:0.8;font-size:calc(10.5px * var(--fs));';
+      d.append(' ', x);
+    }
+    decs.appendChild(d);
+  });
+  tip.appendChild(decs);
   tip.style.display = 'block';
-  positionTooltipNear(evt.clientX, evt.clientY);
+  positionTooltipNear(pos.x, pos.y);
 }
 document.addEventListener('click', e => {
   if (_tooltipDot && !e.target.closest('.chart-dot')) unpinDot();
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && _tooltipDot) unpinDot(); });
 window.addEventListener('scroll', repositionTooltip, { passive: true });
 window.addEventListener('resize', repositionTooltip, { passive: true });
 document.addEventListener('DOMContentLoaded', () => {
@@ -2056,13 +2567,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── College modal ──────────────────────────────────────────────────────────
-function openCollegeDetail(name) {
+function openCollegeDetail(name, opts) {
   // name is the merged display name from the chart's canonical grouping —
   // pull in every spelling variant, not just rows with this exact string.
   const key = canonKey(name);
   const rows = scatterData.filter(r => canonKey(r.college_name) === key);
   if (!rows.length) return;
-  trackEvent('college_click', name);
+  if (!(opts && opts.track === false)) trackEvent('college_click', name);
   const total = rows.length, accepted = rows.filter(r=>r.decision==='Accepted').length;
   const rate = Math.round(accepted/total*100);
   const gpas = rows.filter(r=>r.gpa).map(r=>parseFloat(r.gpa));
@@ -2074,12 +2585,12 @@ function openCollegeDetail(name) {
   const bars = decCounts.map(({d,n})=>`
     <div class="dec-bar">
       <div class="dec-bar-label">${d}</div>
-      <div class="dec-bar-track"><div class="dec-bar-fill" style="width:${Math.round(n/total*100)}%;background:${DOT_COLORS[d]};"></div></div>
+      <div class="dec-bar-track" aria-hidden="true"><div class="dec-bar-fill" style="width:${Math.round(n/total*100)}%;background:${DOT_COLORS[d]};"></div></div>
       <div class="dec-bar-count">${n}</div>
     </div>`).join('');
   document.getElementById('college-modal-content').innerHTML = `
-    <h2>${escHtml(name)}</h2>
-    <p class="modal-sub">${total} submission${total!==1?'s':''} from Live Oak${extRate?` · ~${extRate}% national acceptance rate`:''}</p>
+    <h2 id="college-modal-title" tabindex="-1">${escHtml(name)}</h2>
+    <p class="modal-sub">${total} submission${total!==1?'s':''} from Live Oak${extRate?` · ~${extRate}% overall admission rate (unverified estimate)`:''} · <a href="/methodology.html">How these numbers work</a></p>
     <div class="modal-stats-grid">
       <div class="modal-stat"><div class="mn">${total}</div><div class="ml">Applied</div></div>
       <div class="modal-stat"><div class="mn">${accepted}</div><div class="ml">Accepted</div></div>
@@ -2087,7 +2598,7 @@ function openCollegeDetail(name) {
     </div>
     <div class="modal-section"><h3>Decisions</h3>${bars}</div>
     <div class="modal-section"><h3>GPA range (unweighted)</h3>
-      <div style="display:flex;gap:16px;font-size:calc(13px * var(--fs));color:var(--text-3);">
+      <div style="display:flex;flex-wrap:wrap;gap:16px;font-size:calc(13px * var(--fs));color:var(--text-3);">
         <span>Min <strong style="color:var(--text);font-family:var(--mono)">${gpaMin}</strong></span>
         <span>Avg <strong style="color:var(--text);font-family:var(--mono)">${gpaAvg}</strong></span>
         <span>Max <strong style="color:var(--text);font-family:var(--mono)">${gpaMax}</strong></span>
@@ -2095,24 +2606,45 @@ function openCollegeDetail(name) {
     </div>`;
   _openCollegeName = name;
   if (!_suppressUrlWrite) writeUrlState(true);
-  openModal('college-modal');
+  openModal('college-modal', { returnKey: 'col:' + key });
 }
 
 function openCompare() {
   const colleges = [...new Set(scatterData.map(r=>r.college_name).filter(Boolean))].sort();
-  if (colleges.length < 2) { alert('Need at least 2 colleges with submissions to compare.'); return; }
-  const opts = colleges.map(c=>`<option value="${c}">${c}</option>`).join('');
-  const optsB = colleges.slice(1).map(c=>`<option value="${c}">${c}</option>`).join('') + colleges.slice(0,1).map(c=>`<option value="${c}">${c}</option>`).join('');
-  const optsC = '<option value="">— none —</option>' + colleges.slice(2).map(c=>`<option value="${c}">${c}</option>`).join('') + colleges.slice(0,2).map(c=>`<option value="${c}">${c}</option>`).join('');
-  document.getElementById('compare-modal-content').innerHTML = `
-    <h2 style="margin-bottom:4px;">Compare colleges</h2>
-    <p class="modal-sub">Pick up to three colleges to compare side by side.</p>
-    <div class="compare-pick">
-      <select id="cmp-a" onchange="renderCompare()">${opts}</select>
-      <select id="cmp-b" onchange="renderCompare()">${optsB}</select>
-      <select id="cmp-c" onchange="renderCompare()">${optsC}</select>
-    </div>
-    <div id="cmp-result"></div>`;
+  const host = document.getElementById('compare-modal-content');
+  host.innerHTML = `
+    <h2 id="compare-modal-title" style="margin-bottom:4px;">Compare colleges</h2>
+    <p class="modal-sub">Pick up to three colleges to compare side by side.</p>`;
+  if (colleges.length < 2) {
+    const p = document.createElement('p');
+    p.className = 'scope-note';
+    p.textContent = 'Need at least 2 colleges with submissions in this view to compare.';
+    host.appendChild(p);
+    openModal('compare-modal');
+    return;
+  }
+  // Same three default picks as before: A starts at the first college, B at
+  // the second, C empty.
+  const picker = (id, label, list, withNone) => {
+    const lab = document.createElement('label');
+    lab.append(label);
+    const sel = document.createElement('select');
+    sel.id = id;
+    if (withNone) sel.add(new Option('— none —', ''));
+    list.forEach(c => sel.add(new Option(c, c)));
+    lab.appendChild(sel);
+    return lab;
+  };
+  const pick = document.createElement('div');
+  pick.className = 'compare-pick';
+  pick.append(
+    picker('cmp-a', 'First college', colleges),
+    picker('cmp-b', 'Second college', colleges.slice(1).concat(colleges.slice(0, 1))),
+    picker('cmp-c', 'Third college (optional)', colleges.slice(2).concat(colleges.slice(0, 2)), true));
+  const result = document.createElement('div');
+  result.id = 'cmp-result';
+  result.setAttribute('aria-live', 'polite');
+  host.append(pick, result);
   openModal('compare-modal');
   renderCompare();
 }
@@ -2126,7 +2658,7 @@ function renderCompare() {
     document.getElementById('cmp-result').innerHTML = '<p style="font-size:calc(13px * var(--fs));color:var(--text-muted);">Pick at least two different colleges.</p>';
     return;
   }
-  document.getElementById('cmp-result').innerHTML = `<div class="cmp-grid" style="grid-template-columns:repeat(${unique.length},1fr);">${unique.map(colStats).join('')}</div>`;
+  document.getElementById('cmp-result').innerHTML = `<div class="cmp-grid" style="--cmp-cols:${unique.length};">${unique.map(colStats).join('')}</div>`;
 }
 function colStats(name) {
   const rows = scatterData.filter(r=>r.college_name===name);
@@ -2149,8 +2681,8 @@ function colStats(name) {
     const n = rows.filter(r=>r.decision===d).length;
     const pct = Math.round(n/total*100);
     return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:calc(12px * var(--fs));">
-      <span style="color:${DOT_COLORS[d]};min-width:74px;">${d}</span>
-      <div style="flex:1;height:4px;background:#f0f0ee;border-radius:2px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${DOT_COLORS[d]};"></div></div>
+      <span style="color:${decisionText(d)};min-width:74px;">${d}</span>
+      <div class="cmp-bar-track" aria-hidden="true"><div style="width:${pct}%;height:100%;background:${DOT_COLORS[d]};"></div></div>
       <span style="font-family:var(--mono);color:var(--text-3);min-width:22px;text-align:right;">${n}</span>
     </div>`;
   }).join('');
@@ -2162,11 +2694,11 @@ function colStats(name) {
     return `<div style="font-size:calc(12px * var(--fs));color:var(--text-3);line-height:1.6;">${t}: <strong style="color:var(--text);font-family:var(--mono);">${a_t}/${r_t.length}</strong> <span style="color:var(--text-muted);">(${Math.round(a_t/r_t.length*100)}%)</span></div>`;
   }).filter(Boolean).join('');
   return `<div class="cmp-col">
-    <h3 style="margin-bottom:14px;">${name}</h3>
-    <div style="text-align:center;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #f0f0ee;">
+    <h3 style="margin-bottom:14px;">${escHtml(name)}</h3>
+    <div class="cmp-divider" style="text-align:center;padding-bottom:14px;margin-bottom:14px;border-top:none;border-bottom:1px solid var(--border);">
       <div style="font-size:calc(30px * var(--fs));font-weight:600;color:${accColor};font-family:var(--mono);line-height:1;">${accRate}%</div>
       <div style="font-size:calc(12px * var(--fs));color:var(--text-3);margin-top:5px;">${acc} of ${total} accepted</div>
-      ${natRate ? `<div style="font-size:calc(11px * var(--fs));color:var(--text-muted);margin-top:2px;">~${natRate}% national</div>` : ''}
+      ${natRate ? `<div style="font-size:calc(11px * var(--fs));color:var(--text-muted);margin-top:2px;">~${natRate}% overall (unverified estimate)</div>` : ''}
     </div>
     <div style="font-size:calc(11px * var(--fs));font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Accepted students</div>
     <div style="font-size:calc(13px * var(--fs));color:var(--text-2);line-height:1.8;margin-bottom:14px;">
@@ -2180,7 +2712,7 @@ function colStats(name) {
       <div style="font-size:calc(11px * var(--fs));font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">By app type</div>
       <div style="margin-bottom:14px;">${appRows}</div>
     ` : ''}
-    ${(enrolled || scholarship) ? `<div style="font-size:calc(12px * var(--fs));color:var(--text-2);line-height:1.7;border-top:1px solid #f0f0ee;padding-top:10px;">
+    ${(enrolled || scholarship) ? `<div class="cmp-divider" style="font-size:calc(12px * var(--fs));color:var(--text-2);line-height:1.7;padding-top:10px;">
       ${enrolled ? `<div style="color:var(--green-text);">🎓 ${enrolled} enrolled</div>` : ''}
       ${scholarship ? `<div>💰 ${scholarship} got scholarship</div>` : ''}
     </div>` : ''}
@@ -2191,45 +2723,106 @@ function colStats(name) {
 // a modal dropped focus back to <body> instead of wherever you opened it
 // from. Both are single-instance globals because this app never stacks
 // more than one modal at a time.
-let _modalReturnFocus = null;
 let _modalKeydownHandler = null;
 function _focusableIn(modal) {
   return [...modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
     .filter(el => el.offsetParent !== null);
 }
-function openModal(id) {
+function openModal(id, opts) {
   const overlay = document.getElementById(id);
   const modal = overlay.querySelector('.modal');
-  modal.setAttribute('role', 'dialog');
-  modal.setAttribute('aria-modal', 'true');
+  // Re-opening an open dialog (e.g. Back/Forward to another college) only
+  // refreshes it: no second focus-trap listener, and the original trigger
+  // stays the place focus returns to.
+  if (overlay.classList.contains('open')) { focusModalStart(modal); return; }
+  // Only one dialog at a time.
+  if (_openModalId && _openModalId !== id) closeModal(_openModalId, { restoreFocus: false });
+  const trigger = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+  _modalReturn = {
+    el: trigger,
+    key: (opts && opts.returnKey) || (trigger && trigger.dataset && trigger.dataset.focusKey) || null,
+    fallback: (opts && opts.fallback) || null,
+  };
+  unpinDot();
   overlay.classList.add('open');
-  _modalReturnFocus = document.activeElement;
-  const list = _focusableIn(modal);
-  if (list.length) list[0].focus();
-  else { modal.setAttribute('tabindex', '-1'); modal.focus(); }
+  _openModalId = id;
+  setBackgroundInert(true, overlay);
+  lockScroll(true);
+  focusModalStart(modal);
   _modalKeydownHandler = (e) => {
     if (e.key !== 'Tab') return;
     const focusables = _focusableIn(modal);
     if (!focusables.length) { e.preventDefault(); return; }
     const idx = focusables.indexOf(document.activeElement);
     if (e.shiftKey && idx <= 0) { e.preventDefault(); focusables[focusables.length - 1].focus(); }
-    else if (!e.shiftKey && idx === focusables.length - 1) { e.preventDefault(); focusables[0].focus(); }
+    else if (!e.shiftKey && (idx === focusables.length - 1 || idx === -1)) { e.preventDefault(); focusables[0].focus(); }
   };
   modal.addEventListener('keydown', _modalKeydownHandler);
 }
-function closeModal(id) {
+// Focus the dialog's heading so its title is read first, then Tab reaches
+// the controls inside.
+function focusModalStart(modal) {
+  const h = modal.querySelector('h2');
+  if (h) { h.setAttribute('tabindex', '-1'); h.focus(); }
+  else { modal.setAttribute('tabindex', '-1'); modal.focus(); }
+  modal.scrollTop = 0;
+}
+// While a dialog is open everything behind it is inert: no Tab stops, no
+// clicks, nothing for a screen reader's virtual cursor to wander into.
+function setBackgroundInert(on, except) {
+  const nodes = [...document.body.children].filter(n =>
+    n !== except && n.tagName !== 'SCRIPT' && n.id !== 'celebration-overlay' && n.id !== 'dot-tooltip');
+  nodes.forEach(n => { if (on) n.setAttribute('inert', ''); else n.removeAttribute('inert'); });
+}
+// Stop the page behind a dialog from scrolling, and always restore exactly
+// what was there before (no leftover overflow:hidden after closing).
+let _scrollLock = null;
+function lockScroll(on) {
+  const b = document.body;
+  if (on && !_scrollLock) {
+    const gap = window.innerWidth - document.documentElement.clientWidth;
+    _scrollLock = { overflow: b.style.overflow, paddingRight: b.style.paddingRight };
+    b.style.overflow = 'hidden';
+    if (gap > 0) b.style.paddingRight = gap + 'px';
+  } else if (!on && _scrollLock) {
+    b.style.overflow = _scrollLock.overflow;
+    b.style.paddingRight = _scrollLock.paddingRight;
+    _scrollLock = null;
+  }
+}
+function closeModal(id, opts) {
   const overlay = document.getElementById(id);
+  // Closing a dialog that isn't open is a no-op. Previously it still ran the
+  // cleanup, which (via Escape) detached the stats notice's focus trap and
+  // threw focus behind it while the notice stayed on screen.
+  if (!overlay || !overlay.classList.contains('open')) return;
   overlay.classList.remove('open');
   const modal = overlay.querySelector('.modal');
   if (_modalKeydownHandler) { modal.removeEventListener('keydown', _modalKeydownHandler); _modalKeydownHandler = null; }
-  if (_modalReturnFocus && document.contains(_modalReturnFocus)) _modalReturnFocus.focus();
-  _modalReturnFocus = null;
+  _openModalId = null;
+  setBackgroundInert(false);
+  lockScroll(false);
+  const ret = _modalReturn;
+  _modalReturn = null;
+  if (!(opts && opts.restoreFocus === false)) restoreFocusAfterModal(ret);
   if (id === 'college-modal' && _openCollegeName) {
     _openCollegeName = null;
     if (!_suppressUrlWrite) writeUrlState(true);
   }
 }
-document.addEventListener('keydown', e => { if (e.key==='Escape') { closeModal('college-modal'); closeModal('compare-modal'); } });
+// Back to the control that opened the dialog. If a re-render replaced that
+// control (the chart rebuilds on resize), find its replacement by key; if it
+// is gone entirely, land on the page heading rather than on <body>.
+function restoreFocusAfterModal(ret) {
+  let target = ret && ret.el && ret.el.isConnected && !ret.el.closest('[inert]') ? ret.el : null;
+  if (!target && ret && ret.key) target = document.querySelector(`[data-focus-key="${CSS.escape(ret.key)}"]`);
+  if (!target && ret && ret.fallback) {
+    target = document.getElementById(ret.fallback);
+    if (target) target.setAttribute('tabindex', '-1');
+  }
+  if (!target && currentPage === 'results') target = document.getElementById('results-title');
+  if (target) target.focus();
+}
 
 // ── Students Like Me ───────────────────────────────────────────────────────
 // Three independent filters (GPA, SAT, major), each in its own tab. Any mix
@@ -2237,14 +2830,16 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') { closeModal('
 let slmTabActive = 'gpa';
 const normMajor = m => String(m || '').toLowerCase().replace(/[^a-z]+/g, ' ').trim();
 
-function slmTab(kind) {
+function slmTab(kind, focus) {
   slmTabActive = kind;
   ['gpa','sat','major'].forEach(k => {
     const on = k === kind;
     const tab = document.getElementById('slm-tab-' + k);
     tab.classList.toggle('active', on);
     tab.setAttribute('aria-selected', on ? 'true' : 'false');
+    tab.setAttribute('tabindex', on ? '0' : '-1');
     document.getElementById('slm-sec-' + k).hidden = !on;
+    if (on && focus) tab.focus();
   });
   if (kind === 'major') populateMajorOptions();
 }
@@ -2333,14 +2928,14 @@ function slmParts() {
 function renderSlmChips() {
   const parts = slmParts();
   document.getElementById('slm-active').innerHTML = parts.length
-    ? parts.map(p => `<span class="slm-chip">${escHtml(p.text)}<button aria-label="Remove ${escHtml(p.text)} filter" onclick="removeSlm('${p.kind}')">×</button></span>`).join('') +
-      (parts.length > 1 ? '<button class="slm-clear" onclick="clearSlm()">Clear all</button>' : '')
+    ? parts.map(p => `<span class="slm-chip">${escHtml(p.text)}<button type="button" aria-label="Remove ${escHtml(p.text)} filter" data-slm-remove="${p.kind}">×</button></span>`).join('') +
+      (parts.length > 1 ? '<button type="button" class="slm-clear" data-action="slm-clear">Clear all</button>' : '')
     : '';
   ['gpa','sat','major'].forEach(k => {
     const tab = document.getElementById('slm-tab-' + k);
     const on = !!(slmFilter && slmFilter[k]);
-    if (on && !tab.querySelector('.slm-dot')) tab.insertAdjacentHTML('beforeend', '<span class="slm-dot" aria-hidden="true"></span>');
-    if (!on) tab.querySelector('.slm-dot')?.remove();
+    if (on && !tab.querySelector('.slm-dot')) tab.insertAdjacentHTML('beforeend', '<span class="slm-dot" aria-hidden="true"></span><span class="sr-only slm-on"> (filter on)</span>');
+    if (!on) { tab.querySelector('.slm-dot')?.remove(); tab.querySelector('.slm-on')?.remove(); }
   });
 }
 function refreshSlm() {
@@ -2378,16 +2973,17 @@ function updateEntriesHeader(filtered, allYearData) {
   const hdr = document.getElementById('entries-header');
   const sessions = new Set(allYearData.map(r=>r.session_id));
   const total = sessions.size;
-  if (!total) { hdr.innerHTML = ''; return; }
   let title = 'All submissions', sub = '';
-  if (slmFilter) {
+  if (!total) {
+    title = 'Submissions';
+  } else if (slmFilter) {
     const matched = new Set(allYearData.filter(r=>slmMatches(r)).map(r=>r.session_id)).size;
     title = `${matched} student${matched!==1?'s':''} matching your filters`;
     sub = escHtml(slmParts().map(p => p.text).join(' · '));
   } else {
     sub = `${total} student${total!==1?'s':''} · Class of 2026${activeCollegeFilter!=='All'?' · '+activeCollegeFilter:''}`;
   }
-  hdr.innerHTML = `<div class="entries-title">${title}</div>${sub?`<div class="entries-sub">${sub}</div>`:''}`;
+  hdr.innerHTML = `<h2 class="entries-title" id="entries-heading">${title}</h2>${sub?`<div class="entries-sub">${sub}</div>`:''}`;
 }
 function renderEntries(data) {
   const el = document.getElementById('entries');
@@ -2397,9 +2993,15 @@ function renderEntries(data) {
     displayData = data.filter(r => matched.has(r.session_id));
   }
   if (!displayData.length) {
+    // Three different situations, three different messages: filters that
+    // match nobody, a school category with no submissions, and a site with no
+    // submissions at all.
+    const anyThisYear = allData.some(r => r.grad_year == 2026);
     el.innerHTML = slmFilter
-      ? `<div class="empty-state"><div class="empty-icon">🔍</div><h3>No matches found</h3><p>No submissions match these filters yet. Try widening the range or removing a filter.</p><button onclick="clearSlm()">Clear filter</button></div>`
-      : `<div class="empty-state"><div class="empty-icon">🎓</div><h3>No results yet for 2026</h3><p>Be the first from Live Oak to share your college decisions.</p><button onclick="showPage('submit')">Add your results</button></div>`;
+      ? `<div class="empty-state" role="listitem"><div class="empty-icon" aria-hidden="true">🔍</div><h3>No matches found</h3><p>No submissions match these filters yet. Try widening the range or removing a filter.</p><button type="button" data-action="slm-clear">Clear filter</button></div>`
+      : (anyThisYear && activeCollegeFilter !== 'All')
+      ? `<div class="empty-state" role="listitem"><div class="empty-icon" aria-hidden="true">🏫</div><h3>No ${escHtml(activeCollegeFilter)} submissions yet</h3><p>Nobody has reported a decision from this category so far. Other categories have results.</p><button type="button" data-action="schools-all">Show all schools</button></div>`
+      : `<div class="empty-state" role="listitem"><div class="empty-icon" aria-hidden="true">🎓</div><h3>No results yet for 2026</h3><p>Be the first from Live Oak to share your college decisions.</p><button type="button" data-action="go-submit">Add your results</button></div>`;
     return;
   }
   const groups = [], seen = new Map();
@@ -2411,15 +3013,17 @@ function renderEntries(data) {
       school_type: r.school_type, enrolling: r.enrolling, scholarship: r.scholarship, sport: r.sport,
     });
   });
+  // Every API string is escaped; the visible text is unchanged.
+  const e = v => escHtml(v == null ? '' : v);
   el.innerHTML = groups.map(g => {
     const stPills = [
-      `<span class="epill epill-gray">UW ${g.gpa}</span>`,
-      g.gpa_weighted?`<span class="epill epill-gray">W ${g.gpa_weighted}</span>`:'',
-      g.sat?`<span class="epill epill-gray">SAT ${g.sat}</span>`:'',
-      g.act?`<span class="epill epill-gray">ACT ${g.act}</span>`:'',
-      rankBand(g.class_rank)?`<span class="epill epill-gray">Rank ${rankBand(g.class_rank)}</span>`:'',
-      g.essay_rating?`<span class="epill epill-gray">Essay ${g.essay_rating}/5</span>`:'',
-      g.major?`<span class="epill epill-gray" style="font-family:inherit">${g.major}</span>`:'',
+      `<span class="epill epill-gray">UW ${e(g.gpa)}</span>`,
+      g.gpa_weighted?`<span class="epill epill-gray">W ${e(g.gpa_weighted)}</span>`:'',
+      g.sat?`<span class="epill epill-gray">SAT ${e(g.sat)}</span>`:'',
+      g.act?`<span class="epill epill-gray">ACT ${e(g.act)}</span>`:'',
+      rankBand(g.class_rank)?`<span class="epill epill-gray">Rank ${e(rankBand(g.class_rank))}</span>`:'',
+      g.essay_rating?`<span class="epill epill-gray">Essay ${e(g.essay_rating)}/5</span>`:'',
+      g.major?`<span class="epill epill-gray" style="font-family:inherit">${e(g.major)}</span>`:'',
     ].filter(Boolean).join('');
     const dPills = g.colleges.map(c => {
       const extras = [];
@@ -2427,10 +3031,10 @@ function renderEntries(data) {
       if (c.school_type && c.school_type !== 'University') extras.push(c.school_type);
       if (c.enrolling === 'yes') extras.push('🎓');
       if (c.scholarship === 'yes') extras.push('💰');
-      const extrasStr = extras.length ? ` <span style="opacity:0.6;font-weight:400">${extras.join(' · ')}</span>` : '';
-      return `<span class="dpill-entry ${PILL_CLASS[c.decision]||'epill-gray'}" style="font-family:inherit">${c.name} — ${c.decision}${extrasStr}</span>`;
+      const extrasStr = extras.length ? ` <span style="font-weight:400">${e(extras.join(' · '))}</span>` : '';
+      return `<span class="dpill-entry ${PILL_CLASS[c.decision]||'epill-gray'}" style="font-family:inherit">${e(c.name)} — ${e(c.decision)}${extrasStr}</span>`;
     }).join('');
-    return `<div class="entry-card">
+    return `<div class="entry-card" role="listitem">
       <div class="entry-top">${stPills}</div>
       <div class="entry-decisions">${dPills}</div>
     </div>`;
@@ -2478,6 +3082,17 @@ function renderStatsInline(data) {
   const el = document.getElementById('stats-inline');
   if (!el) return;
 
+  // Heading and scope line: these cards always describe the whole selected
+  // school category, whatever the chart's search/minimum or Students-like-me say.
+  const head = document.getElementById('stats-section-head');
+  if (head) {
+    head.hidden = !data.length;
+    document.getElementById('stats-heading').textContent =
+      `Statistics: ${activeCollegeFilter === 'All' ? 'all schools' : activeCollegeFilter}`;
+    document.getElementById('stats-scope-note').textContent =
+      `Every Class of 2026 submission${activeCollegeFilter === 'All' ? '' : ' in this school category'}. Search, the chart's minimum, decision highlights and Students like me don't change these numbers.`;
+  }
+
   if (!data.length) {
     el.innerHTML = '';
     return;
@@ -2493,7 +3108,7 @@ function renderStatsInline(data) {
     return `<div class="sp-dec-row">
       <div class="sp-dec-dot" style="background:${DOT_COLORS[d]||'#ccc'}"></div>
       <div class="sp-dec-name">${d}</div>
-      <div style="flex:1;height:7px;background:#f0f0ee;border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${DOT_COLORS[d]||'#ccc'};border-radius:3px;"></div></div>
+      <div class="sp-bar-track" aria-hidden="true"><div style="width:${pct}%;height:100%;background:${DOT_COLORS[d]||'#ccc'};border-radius:3px;"></div></div>
       <div class="sp-dec-count">${decCount[d]}</div>
       <div class="sp-dec-pct">${pct}%</div>
     </div>`;
@@ -2520,7 +3135,7 @@ function renderStatsInline(data) {
     const acc = colAcc.get(name)||0;
     const pct = Math.round(acc/apps*100);
     return `<div class="sp-bar-row">
-      <div class="sp-bar-label" title="${name}">${name}</div>
+      <div class="sp-bar-label" title="${escHtml(name)}">${escHtml(name)}</div>
       <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(apps/maxApp*100)}%;background:${_statsDark?'#3987e5':'#2a78d6'};opacity:0.8"></div></div>
       <div class="sp-bar-val">${apps}</div>
       <div style="font-size:calc(13px * var(--fs));color:${pct>=50?'var(--green-text)':pct>=30?'var(--amber-text)':'var(--red-text)'};min-width:42px;text-align:right;font-family:var(--mono)">${pct}%✓</div>
@@ -2668,7 +3283,7 @@ function renderStatsInline(data) {
     const natRate = getAcceptRate(name);
     const tone = natRate <= 20 ? 'var(--red-text)' : natRate <= 50 ? 'var(--amber-text)' : 'var(--text-muted)';
     return `<div class="sp-bar-row">
-      <div class="sp-bar-label" title="${name}">${name}</div>
+      <div class="sp-bar-label" title="${escHtml(name)}">${escHtml(name)}</div>
       <div style="font-size:calc(13px * var(--fs));color:${tone};font-family:var(--mono);min-width:74px;text-align:right;">${natRate}% admit</div>
       <div style="font-size:calc(13px * var(--fs));color:var(--green-text);font-family:var(--mono);min-width:52px;text-align:right;">${acc}/${apps} in</div>
     </div>`;
@@ -2685,7 +3300,7 @@ function renderStatsInline(data) {
   const maxMaj = Math.max(1, topMajors[0]?.[1]||1);
   const majorsHTML = topMajors.length ? topMajors.map(([m,n]) =>
     `<div class="sp-bar-row">
-      <div class="sp-bar-label" title="${m}">${m}</div>
+      <div class="sp-bar-label" title="${escHtml(m)}">${escHtml(m)}</div>
       <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.round(n/maxMaj*100)}%;background:#0d9488;opacity:0.7"></div></div>
       <div class="sp-bar-val">${n}</div>
     </div>`).join('') : '<span style="font-size:calc(13px * var(--fs));color:var(--text-muted);">No major data yet</span>';
@@ -2737,7 +3352,7 @@ function renderStatsInline(data) {
   const enrollHTML = enrollList.length ? enrollList.map(([name,n]) => {
     const pct = enrollTotal ? Math.round(n/enrollTotal*100) : 0;
     return `<div class="sp-bar-row">
-      <div class="sp-bar-label" title="${name}">${name}</div>
+      <div class="sp-bar-label" title="${escHtml(name)}">${escHtml(name)}</div>
       <div class="sp-bar-track"><div class="sp-bar-fill" style="width:${pct}%;background:${_statsDark?'#3987e5':'#2a78d6'};opacity:0.8"></div></div>
       <div class="sp-bar-val">${n}</div>
     </div>`;
@@ -2794,19 +3409,20 @@ function renderStatsInline(data) {
       </div>` : ''}
       <div class="sp-card sp-card-wide">
         <h3>Most Applied Schools</h3>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 24px;">
+        <div class="sp-cols">
           ${collegesHTML || '<span style="font-size:calc(13px * var(--fs));color:var(--text-muted);">No data yet</span>'}
         </div>
       </div>
       <div class="sp-card sp-card-wide">
         <h3>Hardest Schools — Live Oak students who got in</h3>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 24px;">
+        <div class="scope-note" style="margin:-8px 0 10px;">Ordered by approximate overall admission rates, which are unverified estimates. <a href="/methodology.html#admission-rates" style="color:inherit;">About these rates</a></div>
+        <div class="sp-cols">
           ${hardestHTML}
         </div>
       </div>
       <div class="sp-card sp-card-wide">
         <h3>Popular Majors</h3>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 24px;">
+        <div class="sp-cols sp-cols-narrow">
           ${majorsHTML}
         </div>
       </div>
@@ -3022,9 +3638,15 @@ async function deleteSubmission() {
 }
 
 // ── Chatbot ────────────────────────────────────────────────────────────────
-function toggleChat() {
+function toggleChat(force) {
   const panel = document.getElementById('chat-panel');
-  panel.classList.toggle('open');
+  const fab = document.getElementById('chat-fab');
+  const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+  const hadFocus = panel.contains(document.activeElement);
+  panel.classList.toggle('open', open);
+  fab.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) document.getElementById('chat-input').focus();
+  else if (hadFocus) fab.focus();
 }
 // Questions go to /api/questions and show up on the admin page.
 async function sendChat() {
@@ -3053,7 +3675,7 @@ async function sendChat() {
   } catch (e) { errMsg = "Couldn't reach the server. Check your connection."; }
   input.disabled = false; if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send'; }
   if (ok) {
-    addMsg('chat-msg-bot', "Got it. Your question was sent to the site's admins. ✅");
+    addMsg('chat-msg-bot', "Sent. The site admins will see your question on their admin page. They can't reply in this box.");
   } else {
     addMsg('chat-msg-bot', errMsg + ' Your question was not sent.');
     input.value = text;
@@ -3064,16 +3686,20 @@ async function sendChat() {
 // ── Theme ──────────────────────────────────────────────────────────────────
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+  const label = document.getElementById('theme-toggle-text');
+  if (label) label.textContent = theme === 'dark' ? 'Light' : 'Dark';
   const btn = document.getElementById('theme-toggle');
-  if (btn) btn.textContent = theme === 'dark' ? 'Light' : 'Dark';
+  if (btn) btn.title = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
 }
 function toggleTheme() {
   const cur = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
   const next = cur === 'dark' ? 'light' : 'dark';
   applyTheme(next);
   try { localStorage.setItem('cr_theme', next); } catch(e) {}
-  if (scatterData.length) buildChart(scatterData, false);
-  if (allData.length) renderStatsInline(allData.filter(r => r.grad_year == 2026));
+  // Same view, new colours. (This used to redraw the statistics from every
+  // 2026 row, so with "UCs" selected the heading still said UCs while the
+  // numbers below silently became all-school totals.)
+  rerenderAppearance();
 }
 // ── Text size ──────────────────────────────────────────────────────────────
 const TEXT_SIZES = [1, 1.15, 1.3, 1.5];
@@ -3082,9 +3708,11 @@ function applyTextSize(scale, rebuild) {
   textScale = TEXT_SIZES.includes(scale) ? scale : 1.15;
   document.documentElement.style.setProperty('--fs', textScale);
   const i = TEXT_SIZES.indexOf(textScale);
+  // aria-disabled rather than disabled: a disabled button drops keyboard
+  // focus to <body> the moment you reach the largest or smallest size.
   const sm = document.getElementById('text-smaller'), bg = document.getElementById('text-bigger');
-  if (sm) sm.disabled = i === 0;
-  if (bg) bg.disabled = i === TEXT_SIZES.length - 1;
+  if (sm) sm.setAttribute('aria-disabled', i === 0 ? 'true' : 'false');
+  if (bg) bg.setAttribute('aria-disabled', i === TEXT_SIZES.length - 1 ? 'true' : 'false');
   if (rebuild && scatterData.length) buildChart(scatterData, false);
 }
 function changeTextSize(dir) {
@@ -3105,8 +3733,207 @@ document.addEventListener('DOMContentLoaded', () => applyTextSize(textScale, fal
   } catch(e) { applyTheme('light'); }
 })();
 
+// ── Event wiring (results, nav, dialogs, question panel) ─────────────────────
+// Listeners instead of inline onclick="…" attributes, so these surfaces work
+// under a Content-Security-Policy without 'unsafe-inline'. The submission form
+// keeps its own inline handlers untouched (see the deferred-work notes).
+const UI_ACTIONS = {
+  'cta-share': () => { showPage('submit', { focus: true }); dismissCta(); },
+  'cta-dismiss': () => { dismissCta(); document.getElementById('results-title').focus(); },
+  'retry-load': () => loadData(),
+  'schools-all': () => setCollegeFilter('All', { track: false }),
+  'clear-search': () => {
+    const s = document.getElementById('college-search');
+    s.value = ''; filterChart(''); s.focus();
+  },
+  'min-reset': () => { onMinSubsChange(1); document.getElementById('minsub-slider').focus(); },
+  'chart-reset': () => { resetChartFilters(); document.getElementById('college-search').focus(); },
+  'slm-clear': () => { clearSlm(); document.getElementById('slm-tab-' + slmTabActive).focus(); },
+  'go-submit': () => showPage('submit', { focus: true }),
+};
+
+function bindUi() {
+  const $ = id => document.getElementById(id);
+
+  // Nav links are real links (new tab, copy link and the like still work);
+  // a plain click switches views in place exactly as before.
+  document.querySelectorAll('.nav-link[data-page]').forEach(a => a.addEventListener('click', e => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    showPage(a.dataset.page, { focus: true });
+  }));
+  $('text-smaller').addEventListener('click', () => changeTextSize(-1));
+  $('text-bigger').addEventListener('click', () => changeTextSize(1));
+  $('theme-toggle').addEventListener('click', toggleTheme);
+
+  document.addEventListener('click', e => {
+    const a = e.target.closest('[data-action]');
+    if (a && UI_ACTIONS[a.dataset.action]) UI_ACTIONS[a.dataset.action](a);
+  });
+
+  // Category filters
+  $('college-filter-bar').addEventListener('click', e => {
+    const b = e.target.closest('[data-schools]');
+    if (b) setCollegeFilter(b.dataset.schools);
+  });
+  // Chart toolbar, minimum slider, legend
+  document.querySelectorAll('[data-metric]').forEach(b => b.addEventListener('click', () => switchChart(b.dataset.metric)));
+  $('compare-open').addEventListener('click', openCompare);
+  $('college-search').addEventListener('input', e => filterChart(e.target.value));
+  const slider = $('minsub-slider');
+  slider.addEventListener('input', e => onMinSubsInput(e.target.value));
+  slider.addEventListener('change', e => onMinSubsChange(e.target.value));
+  $('legend').addEventListener('click', e => {
+    const b = e.target.closest('[data-decision]');
+    if (b) toggleFilter(b.dataset.decision);
+  });
+  document.querySelectorAll('[data-scroll]').forEach(b => b.addEventListener('click', () => scrollChart(+b.dataset.scroll)));
+  $('chart-table').addEventListener('click', e => {
+    const b = e.target.closest('[data-open-college]');
+    if (b) openCollegeDetail(b.dataset.openCollege, { track: false });
+  });
+  bindChartInteractions($('chart-main'));
+
+  // Students like me
+  const tabs = ['gpa', 'sat', 'major'];
+  document.querySelector('.slm-tabs').addEventListener('click', e => {
+    const t = e.target.closest('[data-slm-tab]');
+    if (t) slmTab(t.dataset.slmTab);
+  });
+  document.querySelector('.slm-tabs').addEventListener('keydown', e => {
+    const i = tabs.indexOf(slmTabActive);
+    const next = { ArrowRight: (i + 1) % 3, ArrowLeft: (i + 2) % 3, Home: 0, End: 2 }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    slmTab(tabs[next], true);
+  });
+  document.querySelectorAll('[data-slm-apply]').forEach(b => b.addEventListener('click', () => applySlm(b.dataset.slmApply)));
+  document.querySelectorAll('[data-slm-enter]').forEach(inp => inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') applySlm(inp.dataset.slmEnter);
+  }));
+  $('slm-active').addEventListener('click', e => {
+    const b = e.target.closest('[data-slm-remove]');
+    if (!b) return;
+    removeSlm(b.dataset.slmRemove);
+    const left = $('slm-active').querySelector('button');
+    (left || $('slm-tab-' + slmTabActive)).focus();
+  });
+
+  // Dialogs
+  document.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', () => closeModal(b.dataset.closeModal)));
+  document.querySelectorAll('.modal-overlay[data-dismissable]').forEach(o => o.addEventListener('click', e => {
+    if (e.target === o) closeModal(o.id);
+  }));
+  $('sd-ack').addEventListener('click', acknowledgeStatsDisclaimer);
+  $('compare-modal').addEventListener('change', e => { if (e.target.matches('.compare-pick select')) renderCompare(); });
+
+  // Question panel
+  $('chat-fab').addEventListener('click', () => toggleChat());
+  $('chat-close').addEventListener('click', () => toggleChat(false));
+  $('chat-send').addEventListener('click', sendChat);
+  $('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+
+  // One Escape handler, in priority order: the open dialog (except the stats
+  // notice, which is closed only by "Got it"), then the question panel, then
+  // a dot's details pane.
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (_openModalId) {
+      const o = document.getElementById(_openModalId);
+      if (o && o.dataset.dismissable) { e.preventDefault(); closeModal(_openModalId); }
+      return;
+    }
+    const panel = $('chat-panel');
+    if (panel.classList.contains('open') && (panel.contains(document.activeElement) || document.activeElement === $('chat-fab'))) {
+      toggleChat(false); $('chat-fab').focus(); return;
+    }
+    if (_tooltipDot) unpinDot();
+  });
+
+  // Keep anchor jumps and focused controls clear of the sticky nav, whose
+  // height changes with text size and when it wraps on phones.
+  const nav = document.querySelector('nav');
+  const setNavH = () => document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
+  setNavH();
+  if (window.ResizeObserver) new ResizeObserver(setNavH).observe(nav);
+}
+
+// Chart: pointer behaviour is the same as before (hover wave / spotlight,
+// click a name for details, click a dot for its pane). Keyboard: one Tab stop
+// on the college names, arrows between them, Enter for details, Down/Up
+// into a college's dots, Escape to hide a dot's pane and return to its name.
+function bindChartInteractions(chartMain) {
+  const labelOf = t => t && t.closest && t.closest('text[data-col]');
+  const dotOf = t => t && t.closest && t.closest('.chart-dot');
+  const labels = () => [...chartMain.querySelectorAll('text[data-col]')];
+  const dotsIn = col => [...chartMain.querySelectorAll(`.chart-dot[data-cidx="${col}"]`)]
+    .sort((a, b) => dotPos(a).cy - dotPos(b).cy);
+
+  chartMain.addEventListener('mouseover', e => {
+    const l = labelOf(e.target); if (l) return setWaveCol(+l.dataset.col);
+    const d = dotOf(e.target); if (d) setSpotCol(+d.dataset.cidx);
+  });
+  chartMain.addEventListener('mouseout', e => {
+    if (labelOf(e.target)) return clearWave();
+    if (dotOf(e.target)) clearSpot();
+  });
+  chartMain.addEventListener('mousemove', e => {
+    const svg = chartMain.querySelector('svg');
+    if (svg && svg.contains(e.target)) chartLabelAreaMove(e, svg);
+  });
+  chartMain.addEventListener('mouseleave', () => chartMouseleave());
+  chartMain.addEventListener('click', e => {
+    const l = labelOf(e.target);
+    if (l) { focusChartItem(l); return openCollegeDetail(_chartCols[+l.dataset.col]); }
+    const d = dotOf(e.target);
+    if (d) { e.stopPropagation(); handleDotClick(d, +d.dataset.idx, { x: e.clientX, y: e.clientY }); }
+  });
+  chartMain.addEventListener('focusin', e => {
+    const l = labelOf(e.target);
+    if (l) { if (_tooltipDot) unpinDot(); setSpotCol(+l.dataset.col); return; }
+    const d = dotOf(e.target);
+    if (d) handleDotClick(d, +d.dataset.idx);
+  });
+  chartMain.addEventListener('focusout', e => {
+    if (e.relatedTarget && chartMain.contains(e.relatedTarget)) return;
+    if (_tooltipDot && dotOf(e.target)) unpinDot();
+    clearWave();
+  });
+  chartMain.addEventListener('keydown', e => {
+    const l = labelOf(e.target), d = dotOf(e.target);
+    if (!l && !d) return;
+    const all = labels();
+    const col = l ? +l.dataset.col : +d.dataset.cidx;
+    const moveTo = i => { if (all[i]) focusChartItem(all[i]); };
+    let handled = true;
+    if (l) {
+      if (e.key === 'ArrowRight') moveTo(Math.min(all.length - 1, col + 1));
+      else if (e.key === 'ArrowLeft') moveTo(Math.max(0, col - 1));
+      else if (e.key === 'Home') moveTo(0);
+      else if (e.key === 'End') moveTo(all.length - 1);
+      else if (e.key === 'Enter' || e.key === ' ') openCollegeDetail(_chartCols[col]);
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        const ds = dotsIn(col);
+        if (ds.length) (e.key === 'ArrowDown' ? ds[0] : ds[ds.length - 1]).focus();
+      } else handled = false;
+    } else {
+      const ds = dotsIn(col), i = ds.indexOf(d);
+      if (e.key === 'ArrowDown') { if (ds[i + 1]) ds[i + 1].focus(); }
+      else if (e.key === 'ArrowUp') { if (ds[i - 1]) ds[i - 1].focus(); }
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        const next = all[col + (e.key === 'ArrowRight' ? 1 : -1)];
+        if (next) focusChartItem(next);
+      } else if (e.key === 'Escape') { e.stopPropagation(); unpinDot(); focusChartItem(all[col]); }
+      else if (e.key === 'Enter' || e.key === ' ') handleDotClick(d, +d.dataset.idx);
+      else handled = false;
+    }
+    if (handled) e.preventDefault();
+  });
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
 window.addEventListener('resize', () => { if (scatterData.length) { buildChart(scatterData, false); } });
+document.addEventListener('DOMContentLoaded', bindUi);
 document.addEventListener('DOMContentLoaded', async () => {
   // Restore whatever view the URL describes before the first render, so a
   // shared link or a refresh lands on the same tab/filter/search/college —
@@ -3122,7 +3949,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('page-results').classList.remove('active');
     document.getElementById('page-submit').classList.add('active');
     document.getElementById('nav-results').classList.remove('active');
+    document.getElementById('nav-results').removeAttribute('aria-current');
     document.getElementById('nav-submit').classList.add('active');
+    document.getElementById('nav-submit').setAttribute('aria-current', 'page');
+    setDocTitle('submit');
     currentPage = 'submit';
     loadExistingSubmission();
   }
@@ -3211,7 +4041,7 @@ function initStatsDisclaimerGate() {
   statsGateObserver = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (!e.isIntersecting) return;
-      openModal('stats-disclaimer-modal');
+      openModal('stats-disclaimer-modal', { fallback: 'stats-heading' });
       statsGateObserver.unobserve(e.target);
     });
   }, { threshold: 0, rootMargin: '0px 0px -60% 0px' });

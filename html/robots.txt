@@ -1,0 +1,13 @@
+# College Results (admissions.francke.com)
+#
+# These rules only tell well-behaved crawlers what they may fetch. They are
+# not access control: every page on this site is public, and anything listed
+# or not listed here can still be opened directly by anyone.
+#
+# The site has never blocked crawlers, and that policy is unchanged here.
+# Whether pages built from student submissions should be indexed at all is an
+# open question for the operator and the district (see the review packet).
+User-agent: *
+Allow: /
+
+Sitemap: https://admissions.francke.com/sitemap.xml

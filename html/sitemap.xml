@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Public pages only. No filtered or per-college result views, no admin or
+     draft pages. Listing a page here does not change whether it is indexed. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://admissions.francke.com/</loc></url>
+  <url><loc>https://admissions.francke.com/about.html</loc></url>
+  <url><loc>https://admissions.francke.com/methodology.html</loc></url>
+  <url><loc>https://admissions.francke.com/privacy.html</loc></url>
+  <url><loc>https://admissions.francke.com/accessibility.html</loc></url>
+</urlset>
