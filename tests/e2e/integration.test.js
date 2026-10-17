@@ -212,7 +212,7 @@ describe('edge cases', () => {
     expect(check.body[0].college_name).toBe("St. Mary's University — O'Brien Campus");
   });
 
-  test('extracurriculars are not stored', async () => {
+  test('extracurriculars are stored (collected again since 2026-10-17)', async () => {
     const res = await req('POST', '/api/submissions', {
       session_id: 'edge-long',
       colleges: [{ college_name: 'Test U', extracurriculars: 'Varsity soccer captain' }],
@@ -220,7 +220,7 @@ describe('edge cases', () => {
     expect(res.status).toBe(200);
 
     const check = await req('GET', '/api/submissions/edge-long');
-    expect(check.body[0].extracurriculars).toBeNull();
+    expect(check.body[0].extracurriculars).toBe('Varsity soccer captain');
   });
 
   test('markup is stripped from text fields', async () => {

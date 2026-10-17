@@ -13,10 +13,11 @@ let h, browser;
 before(async () => { h = await start(); browser = await chromium.launch({ channel: 'chrome', headless: true }); });
 after(async () => { await browser?.close(); await h?.stop(); });
 
-// Captured from the audited version (commit 919242b) with the same steps.
+// Captured from the audited version (commit 919242b) with the same steps,
+// plus the extracurriculars field restored on 2026-10-17 (same position as before Sep 28).
 const EXPECTED_ROW = {
   gpa: 3.6, grad_year: 2026, gpa_weighted: 4.1, sat: 1250, act: null, class_rank: 40,
-  major: 'Biology', sport: null, first_gen: 'yes', essay_rating: '3',
+  major: 'Biology', extracurriculars: 'Synthetic robotics club\nChoir', sport: null, first_gen: 'yes', essay_rating: '3',
 };
 const EXPECTED_COLLEGES = [
   { decision_type: 'RD', school_type: 'University', enrolling: 'yes', scholarship: null, college_name: 'UC Davis', decision: 'Accepted' },
@@ -33,6 +34,7 @@ async function driveForm(p) {
   // The suggestion list stays over the next field until 350ms after blur
   // (existing behaviour, listed as deferred), so leave the field like a user would.
   await p.keyboard.press('Tab'); await p.waitForTimeout(400);
+  await p.fill('#f-ecs', 'Synthetic robotics club\nChoir');
   await p.check('#f-first-gen');
   await p.fill('#cn-0', 'UC Davis');
   await p.keyboard.press('Tab'); await p.waitForTimeout(400);
@@ -77,7 +79,7 @@ test('submit payload, endpoints and storage keys are unchanged', async () => {
   assert.deepEqual(Object.keys(posted), ['session_id', 'colleges']);
   assert.equal(posted.colleges.length, 2);
   posted.colleges.forEach((row, i) => {
-    assert.deepEqual(Object.keys(row), ['gpa', 'grad_year', 'gpa_weighted', 'sat', 'act', 'class_rank', 'major', 'sport',
+    assert.deepEqual(Object.keys(row), ['gpa', 'grad_year', 'gpa_weighted', 'sat', 'act', 'class_rank', 'major', 'extracurriculars', 'sport',
       'first_gen', 'essay_rating', 'decision_type', 'school_type', 'enrolling', 'scholarship', 'college_name', 'decision', 'session_id']);
     assert.deepEqual(row, { ...EXPECTED_ROW, ...EXPECTED_COLLEGES[i], session_id: SID });
   });
@@ -88,6 +90,7 @@ test('submit payload, endpoints and storage keys are unchanged', async () => {
   await p.click('#nav-submit');
   await p.waitForFunction(() => document.getElementById('submit-btn').textContent === 'Update Submission');
   assert.equal(await p.inputValue('#cn-1'), 'Gavilan');
+  assert.equal(await p.inputValue('#f-ecs'), 'Synthetic robotics club\nChoir', 'saved ECs load back into the form');
   p.once('dialog', d => d.accept());
   await p.click('.delete-btn');
   await p.waitForFunction(() => localStorage.getItem('cr_submitted') === null);

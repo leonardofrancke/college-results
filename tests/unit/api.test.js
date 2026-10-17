@@ -147,7 +147,7 @@ describe('POST /api/submissions', () => {
     expect(row.gpa_weighted).toBe(4.2);
     expect(row.class_rank).toBe('Top 10%');
     expect(row.major).toBe('Computer Science');
-    expect(row.extracurriculars).toBeNull(); // no longer collected
+    expect(row.extracurriculars).toBe('Robotics, Math Team');
     expect(row.sport).toBe('yes');
     expect(row.first_gen).toBe('no');
     expect(row.decision).toBe('Accepted');
@@ -453,6 +453,19 @@ describe('public feed privacy', () => {
       .send({ username: 'admin', password: 'correct-horse-battery' });
     const admin = await request(app).get('/api/admin/submissions').set('x-admin-token', token);
     expect(admin.body[0].extracurriculars).toBe(ec);
+  });
+
+  test('new submissions save extracurriculars as typed; omitting the field keeps them', async () => {
+    const ec = 'Robotics <captain>\nSoccer "JV" & choir';
+    await post('ec', [{ college_name: 'X U', extracurriculars: ec }]);
+    let own = await request(app).get('/api/submissions/ec');
+    expect(own.body[0].extracurriculars).toBe(ec);
+    await post('ec', [{ college_name: 'X U' }]);
+    own = await request(app).get('/api/submissions/ec');
+    expect(own.body[0].extracurriculars).toBe(ec);
+    await post('ec', [{ college_name: 'X U', extracurriculars: '' }]);
+    own = await request(app).get('/api/submissions/ec');
+    expect(own.body[0].extracurriculars).toBeNull();
   });
 
   test('shows exact class rank, never the raw browser ID or timestamps', async () => {

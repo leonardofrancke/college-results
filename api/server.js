@@ -260,18 +260,23 @@ function createApp(dbPath) {
                  class_rank, major, extracurriculars, sport, first_gen, decision,
                  decision_type, essay_rating, school_type, enrolling, scholarship, updated_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,
-                (SELECT extracurriculars FROM submissions WHERE session_id = ? AND college_name = ?),
+                CASE WHEN ? THEN ? ELSE (SELECT extracurriculars FROM submissions WHERE session_id = ? AND college_name = ?) END,
                 ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             `);
-            // extracurriculars is no longer collected (see the public feed note),
-            // but whatever an older submission saved is kept, not overwritten.
+            // Extracurriculars are collected again (restored 2026-10-17) and
+            // stored exactly as typed; pages escape them when showing them. A
+            // client that doesn't send the field (an older cached page) keeps
+            // whatever was saved before instead of wiping it.
+            const hasEcs = college && Object.prototype.hasOwnProperty.call(college, 'extracurriculars');
+            const ecs = typeof college.extracurriculars === 'string' && college.extracurriculars.trim()
+              ? college.extracurriculars.trim() : null;
             stmt.run([
               session_id, college.college_name,
               cleanNum(college.grad_year, 2000, 2100, true),
               cleanNum(college.gpa, 0, 5), cleanNum(college.gpa_weighted, 0, 6),
               cleanNum(college.sat, 400, 1600, true), cleanNum(college.act, 1, 36, true),
               cleanText(college.class_rank, 20),
-              cleanText(college.major, 80), session_id, college.college_name,
+              cleanText(college.major, 80), hasEcs ? 1 : 0, ecs, session_id, college.college_name,
               cleanFlag(college.sport), cleanFlag(college.first_gen),
               cleanText(college.decision, 20), cleanText(college.decision_type, 30),
               cleanNum(college.essay_rating, 1, 5, true),
