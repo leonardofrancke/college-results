@@ -193,66 +193,30 @@ function createApp(dbPath) {
     ? crypto.createHmac('sha256', salts.GROUP_SALT).update(String(sid)).digest('hex').slice(0, 16)
     : null;
 
-  // Exact class rank identifies a student outright — everyone knows who is #1,
-  // and most reported ranks belong to a single person. The feed carries a
-  // fixed-width 7-rank range instead (e.g. "8-14"), never the raw number.
-  const RANK_BUCKET = 7;
-  const rankBand = rank => {
-    const n = parseInt(rank);
-    if (!n || n < 1) return null;
-    const band = Math.ceil(n / RANK_BUCKET);
-    const lo = (band - 1) * RANK_BUCKET + 1, hi = band * RANK_BUCKET;
-    return `${lo}-${hi}`;
-  };
-
   // Text columns are re-cleaned on the way out so rows saved before input
   // cleaning existed can't inject markup either.
   const TEXT_COLS = ['college_name', 'major', 'decision', 'decision_type', 'school_type', 'class_rank'];
   const cleanRow = r => {
     const out = { ...r };
     TEXT_COLS.forEach(c => { out[c] = cleanText(r[c], 120); });
+    out.extracurriculars = cleanText(r.extracurriculars, 1000);
     return out;
   };
 
-  // Same grouping as canonKey() in html/index.html, so "Gavilan" and
-  // "Gavilan College" count as one school. Keep the two in sync.
-  const canonKey = name => String(name || '').toLowerCase()
-    .replace(/csumb/g, 'cal state monterey bay')
-    .replace(/\b(university|college|the|of|at|state|cal)\b/g, '')
-    .replace(/gavill?an/g, 'gavilan')
-    .replace(/[^a-z]/g, '');
-
-  // A college only one student applied to shows that student's whole profile
-  // to anyone who clicks it, so the public feed only includes colleges at
-  // least this many different students applied to.
-  const MIN_STUDENTS_PER_COLLEGE = 2;
-
-  // The public feed also leaves out:
-  //  - free-text extracurriculars (a line like "varsity soccer captain" names
-  //    a student at a single school)
-  //  - submission timestamps (can be matched to when someone was seen submitting)
-  //  - first-generation and recruited-athlete flags (sensitive; admins still
-  //    see them via /api/admin/submissions)
+  // Operator decision (2026-10-17): the public feed shows everything students
+  // submitted again: every college (including ones only one student applied
+  // to), extracurriculars, first-generation and recruited-athlete flags, and
+  // exact class rank. These had been hidden since Aug 24 / Sep 28; the privacy
+  // policy was updated to match. Still left out: submission timestamps, and
+  // the raw browser ID (it is the edit/delete credential, so the feed carries
+  // a one-way digest that groups a student's colleges but can't be replayed).
   app.get('/api/submissions', (req, res) => {
     db.all('SELECT * FROM submissions ORDER BY created_at DESC', (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
-      rows = rows || [];
-      const students = new Map();
-      rows.forEach(r => {
-        const k = canonKey(r.college_name);
-        if (!students.has(k)) students.set(k, new Set());
-        students.get(k).add(r.session_id);
-      });
-      res.json(rows
-        .filter(r => students.get(canonKey(r.college_name)).size >= MIN_STUDENTS_PER_COLLEGE)
-        .map(r => {
-          const { extracurriculars, created_at, updated_at, first_gen, sport, ...rest } = cleanRow(r);
-          return {
-            ...rest,
-            session_id: groupId(r.session_id),
-            class_rank: rankBand(r.class_rank)
-          };
-        }));
+      res.json((rows || []).map(r => {
+        const { created_at, updated_at, ...rest } = cleanRow(r);
+        return { ...rest, session_id: groupId(r.session_id) };
+      }));
     });
   });
 

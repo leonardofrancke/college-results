@@ -342,7 +342,8 @@ describe('admin tokens and session deletion', () => {
     const del = await request(app).delete(`/api/admin/sessions/${digest}`).set('x-admin-token', token);
     expect(del.body.deleted).toBe(2);
     const after = await request(app).get('/api/submissions');
-    expect(after.body).toHaveLength(0);
+    expect(after.body).toHaveLength(2);
+    expect(after.body.map(r => r.session_id)).not.toContain(digest);
   });
 });
 
@@ -429,28 +430,29 @@ describe('admin login recovery', () => {
 describe('public feed privacy', () => {
   const post = (session_id, colleges) => request(app).post('/api/submissions').send({ session_id, colleges });
 
-  test('hides colleges only one student applied to', async () => {
+  // Operator decision 2026-10-17: everything a student submits is public
+  // again. Only timestamps and the raw browser ID stay out of the feed.
+  test('shows colleges only one student applied to', async () => {
     await post('a', [{ college_name: 'UC Davis' }, { college_name: 'Tiny College' }]);
     await post('b', [{ college_name: 'uc davis' }]);
     const feed = await request(app).get('/api/submissions');
-    expect(feed.body.map(r => r.college_name).sort()).toEqual(['UC Davis', 'uc davis']);
+    expect(feed.body.map(r => r.college_name).sort()).toEqual(['Tiny College', 'UC Davis', 'uc davis']);
   });
 
-  test('spelling variants count as the same college', async () => {
-    await post('a', [{ college_name: 'Gavilan' }]);
-    await post('b', [{ college_name: 'Gavilan College' }]);
+  test('shows exact class rank, never the raw browser ID or timestamps', async () => {
+    await post('a', [{ college_name: 'MIT', class_rank: 15 }]);
     const feed = await request(app).get('/api/submissions');
-    expect(feed.body).toHaveLength(2);
+    expect(feed.body[0].class_rank).toBe('15');
+    expect(feed.body[0].session_id).not.toBe('a');
+    expect(feed.body[0]).not.toHaveProperty('created_at');
+    expect(feed.body[0]).not.toHaveProperty('updated_at');
   });
 
-  test('omits first-gen and recruited flags, admin feed keeps them', async () => {
+  test('shows first-gen and recruited flags; admin feed keeps them too', async () => {
     await post('a', [{ college_name: 'MIT', first_gen: 'yes', sport: 'yes' }]);
     await post('b', [{ college_name: 'MIT' }]);
     const feed = await request(app).get('/api/submissions');
-    feed.body.forEach(r => {
-      expect(r).not.toHaveProperty('first_gen');
-      expect(r).not.toHaveProperty('sport');
-    });
+    expect(feed.body.some(r => r.first_gen === 'yes' && r.sport === 'yes')).toBe(true);
 
     await request(app).post('/api/admin/setup').set('x-admin-secret', 'test-secret')
       .send({ username: 'admin', password: 'correct-horse-battery' });

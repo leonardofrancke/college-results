@@ -438,3 +438,27 @@ describe('URL state and Back/Forward', () => {
     await p2.context().close();
   });
 });
+
+describe('restored public fields (operator decision 2026-10-17)', () => {
+  test('cards and dot details show exact rank, first-gen, recruited and extracurriculars', async () => {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    await ctx.addInitScript(() => localStorage.setItem('cr_stats_disclaimer_ack', '1'));
+    const p = await ctx.newPage();
+    const row = { id: 1, session_id: 'g1', college_name: 'Synthetic State', grad_year: 2026, gpa: 3.5, gpa_weighted: 4.0,
+      class_rank: '12', major: 'Biology', decision: 'Accepted', decision_type: 'RD', school_type: 'University',
+      first_gen: 'yes', sport: 'yes', extracurriculars: 'Synthetic robotics club <b>lead</b>' };
+    await p.route('**/api/submissions', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([row]) }));
+    await p.goto(h.baseUrl + '/');
+    await p.waitForSelector('#chart-main svg');
+    const card = await p.textContent('#entries');
+    assert.ok(card.includes('Rank 12'));
+    assert.ok(card.includes('First-gen'));
+    assert.ok(card.includes('🏅'));
+    assert.ok(card.includes('Synthetic robotics club <b>lead</b>'), 'EC text shown literally');
+    assert.equal(await p.$$eval('#entries b', n => n.length), 0);
+    await p.click('#chart-main .chart-dot');
+    const tip = await p.textContent('#dot-tooltip');
+    for (const t of ['Rank 12', 'First-generation student', '🏅 Recruited', 'Extracurriculars']) assert.ok(tip.includes(t), t);
+    await ctx.close();
+  });
+});

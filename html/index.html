@@ -1212,22 +1212,6 @@ const DECISION_TEXT = {Accepted:'#1a7a4a',Waitlisted:'#8a5a00',Rejected:'#b42a29
 const DECISION_TEXT_DARK = {Accepted:'#4ade80',Waitlisted:'#fbbf24',Rejected:'#f87171',Pending:'#f9a8d4'};
 const decisionText = d => (document.documentElement.dataset.theme === 'dark' ? DECISION_TEXT_DARK : DECISION_TEXT)[d] || 'inherit';
 
-// Exact class rank identifies people — everyone knows who is #1, and most
-// reported ranks belong to a single student. Show a fixed-width 7-rank range
-// instead (e.g. "8-14"), never the raw number.
-const RANK_BUCKET = 7;
-function rankBand(rank) {
-  if (rank == null || rank === '') return null;
-  // The public feed already sends a range string; pass it straight through.
-  // Numeric input is still handled so the page degrades safely against an
-  // older API response.
-  if (typeof rank === 'string' && /^\d+-\d+$/.test(rank.trim())) return rank.trim();
-  const n = parseInt(rank);
-  if (!n || n < 1) return null;
-  const band = Math.ceil(n / RANK_BUCKET);
-  const lo = (band - 1) * RANK_BUCKET + 1, hi = band * RANK_BUCKET;
-  return `${lo}-${hi}`;
-}
 const PILL_CLASS = {Accepted:'dp-acc',Rejected:'dp-den',Waitlisted:'dp-wl',Pending:'dp-pnd'};
 
 // Decisions were distinguished by colour alone, and green-vs-red is the exact
@@ -2520,15 +2504,16 @@ function showTooltip(r, pos) {
   if (r.sat) tests.push(pair('SAT', r.sat));
   if (r.act) tests.push(pair('ACT', r.act));
   if (tests.length) stats.push(tests.reduce((a, t, i) => i ? a.concat(' · ', ...t) : a.concat(...t), []));
-  if (rankBand(r.class_rank)) stats.push(pair('Rank', rankBand(r.class_rank)));
+  if (r.class_rank) stats.push(pair('Rank', r.class_rank));
   if (r.essay_rating) stats.push(pair('Essay', `${r.essay_rating}/5`));
 
   tip.textContent = '';
   stats.forEach(s => tip.appendChild(row(s)));
-  if (r.major) {
+  if (r.major || r.first_gen === 'yes') {
     const sec = el('div');
     sec.style.cssText = 'border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;';
-    sec.appendChild(row([el('span', 'tip-label', 'Major'), ' ' + r.major]));
+    if (r.major) sec.appendChild(row([el('span', 'tip-label', 'Major'), ' ' + r.major]));
+    if (r.first_gen === 'yes') { const fg = el('div', null, 'First-generation student'); fg.style.color = '#9be3b8'; sec.appendChild(fg); }
     tip.appendChild(sec);
   }
   const decs = el('div');
@@ -2539,6 +2524,7 @@ function showTooltip(r, pos) {
     if (s.school_type && s.school_type !== 'University') extras.push(s.school_type);
     if (s.enrolling === 'yes') extras.push('🎓 Enrolling');
     if (s.scholarship === 'yes') extras.push('💰 Scholarship');
+    if (s.sport === 'yes') extras.push('🏅 Recruited');
     const isClicked = s.college_name === r.college_name && s.decision === r.decision && s.decision_type === r.decision_type;
     const d = el('div', null, `${s.college_name} — ${s.decision}`);
     // The pane is always dark, so decisions use the light text shades.
@@ -2553,6 +2539,14 @@ function showTooltip(r, pos) {
     decs.appendChild(d);
   });
   tip.appendChild(decs);
+  if (r.extracurriculars) {
+    const ec = el('div');
+    ec.style.cssText = 'border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;font-size:calc(11px * var(--fs));color:#ccc;line-height:1.5;';
+    const lbl = el('span', 'tip-label', 'Extracurriculars');
+    lbl.style.display = 'block';
+    ec.append(lbl, r.extracurriculars);
+    tip.appendChild(ec);
+  }
   tip.style.display = 'block';
   positionTooltipNear(pos.x, pos.y);
 }
@@ -3021,9 +3015,10 @@ function renderEntries(data) {
       g.gpa_weighted?`<span class="epill epill-gray">W ${e(g.gpa_weighted)}</span>`:'',
       g.sat?`<span class="epill epill-gray">SAT ${e(g.sat)}</span>`:'',
       g.act?`<span class="epill epill-gray">ACT ${e(g.act)}</span>`:'',
-      rankBand(g.class_rank)?`<span class="epill epill-gray">Rank ${e(rankBand(g.class_rank))}</span>`:'',
+      g.class_rank?`<span class="epill epill-gray">Rank ${e(g.class_rank)}</span>`:'',
       g.essay_rating?`<span class="epill epill-gray">Essay ${e(g.essay_rating)}/5</span>`:'',
       g.major?`<span class="epill epill-gray" style="font-family:inherit">${e(g.major)}</span>`:'',
+      g.first_gen==='yes'?`<span class="epill epill-gray" style="font-family:inherit">First-gen</span>`:'',
     ].filter(Boolean).join('');
     const dPills = g.colleges.map(c => {
       const extras = [];
@@ -3031,11 +3026,13 @@ function renderEntries(data) {
       if (c.school_type && c.school_type !== 'University') extras.push(c.school_type);
       if (c.enrolling === 'yes') extras.push('🎓');
       if (c.scholarship === 'yes') extras.push('💰');
+      if (c.sport === 'yes') extras.push('🏅');
       const extrasStr = extras.length ? ` <span style="font-weight:400">${e(extras.join(' · '))}</span>` : '';
       return `<span class="dpill-entry ${PILL_CLASS[c.decision]||'epill-gray'}" style="font-family:inherit">${e(c.name)} — ${e(c.decision)}${extrasStr}</span>`;
     }).join('');
     return `<div class="entry-card" role="listitem">
       <div class="entry-top">${stPills}</div>
+      ${g.extracurriculars?`<div class="entry-ecs"><span>Extracurriculars</span><br>${e(g.extracurriculars)}</div>`:''}
       <div class="entry-decisions">${dPills}</div>
     </div>`;
   }).join('');

@@ -235,11 +235,11 @@ describe('edge cases', () => {
     expect(row.major).not.toMatch(/[<>"]/);
   });
 
-  test('public feed omits extracurriculars and timestamps', async () => {
+  test('public feed includes extracurriculars but omits timestamps', async () => {
     const feed = await req('GET', '/api/submissions');
     expect(feed.body.length).toBeGreaterThan(0);
     feed.body.forEach(r => {
-      expect(r).not.toHaveProperty('extracurriculars');
+      expect(r).toHaveProperty('extracurriculars');
       expect(r).not.toHaveProperty('created_at');
       expect(r).not.toHaveProperty('updated_at');
     });
