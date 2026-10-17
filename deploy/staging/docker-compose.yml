@@ -1,6 +1,9 @@
 version: '3.8'
 services:
   leo-app-staging:
+    # Pinned image, no build section: `up --build` won't rebuild it. After
+    # Dockerfile/nginx.conf/supervisord.conf changes run `make image` and
+    # replace this tag with the one it prints.
     image: leo-app:v3-fc94b62
     container_name: leo-app-staging
     restart: unless-stopped

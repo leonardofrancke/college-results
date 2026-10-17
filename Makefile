@@ -3,7 +3,16 @@ STAGING_DIR  = /var/local/docker/leo-app/staging
 DEV_DIR      = /var/local/docker/leo-app/dev
 RSYNC_OPTS   = -av --exclude='db/' --exclude='node_modules/' --exclude='.git/' --exclude='deploy/'
 
-.PHONY: deploy-prod deploy-staging up-prod up-staging install
+.PHONY: deploy-prod deploy-staging up-prod up-staging install image
+
+# Staging and dev run a pinned image (deploy/*/docker-compose.yml has `image:`
+# and no `build:`), so `docker compose up --build` there does NOT rebuild it.
+# After changing Dockerfile, nginx.conf or supervisord.conf: `make image`,
+# put the printed tag in that compose file's `image:` line, then `make up-staging`.
+IMAGE_TAG ?= $(shell git rev-parse --short HEAD)
+image: ## Build and tag leo-app:$(IMAGE_TAG) from this checkout
+	sudo docker build -t leo-app:$(IMAGE_TAG) .
+	@echo "Built leo-app:$(IMAGE_TAG). Set image: leo-app:$(IMAGE_TAG) in deploy/staging (or dev)/docker-compose.yml."
 
 deploy-prod: ## Rsync source to prod and restart container
 	rsync $(RSYNC_OPTS) . $(PROD_DIR)/

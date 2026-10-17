@@ -368,7 +368,7 @@ describe('layout', () => {
     });
   }
 
-  test('reflow at 200% and 400% zoom equivalents (640 and 320 CSS px of a 1280px window)', async () => {
+  test('reflow at 640 and 320 CSS px (approximates 200%/400% zoom of a 1280px window; not real zoom)', async () => {
     for (const w of [640, 320]) {
       const p = await page({ viewport: { width: w, height: Math.round(900 * w / 1280) } });
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 0, `overflow at ${w}`);
@@ -419,6 +419,18 @@ describe('URL state and Back/Forward', () => {
     await p.waitForFunction(() => document.querySelector('[data-schools="UCs"]').getAttribute('aria-pressed') === 'true');
     await p.goForward();
     await p.waitForFunction(() => document.querySelector('[data-schools="CSUs"]').getAttribute('aria-pressed') === 'true');
+    // Leaving an empty category with Back must restore the previous one
+    // (Trade has no submissions in the synthetic data).
+    await p.click('[data-schools="UCs"]');
+    await p.click('[data-schools="Trade"]');
+    assert.match(await p.textContent('#chart-main .chart-empty p'), /No submissions in the Trade category/);
+    await p.goBack();
+    await p.waitForFunction(() => document.querySelector('[data-schools="UCs"]').getAttribute('aria-pressed') === 'true');
+    assert.equal(new URL(p.url()).searchParams.get('schools'), 'UCs');
+    assert.equal(await p.getAttribute('[data-schools="Trade"]', 'aria-pressed'), 'false');
+    assert.ok(await p.$('#chart-main svg'), 'UC chart shown again');
+    assert.equal(await p.textContent('#stats-heading'), 'Statistics: UCs');
+    assert.match(await p.textContent('#page-meta'), /· UCs$/);
     const p2 = await page({ path: '/?college=UC%20Davis' });
     await p2.waitForSelector('#college-modal.open');
     assert.equal(await p2.textContent('#college-modal-title'), 'UC Davis');

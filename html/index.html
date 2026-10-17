@@ -3974,7 +3974,10 @@ window.addEventListener('popstate', () => {
     syncControlsToState();
     closeModal('college-modal');
     if (state.page !== currentPage) showPage(state.page, {fromPopstate: true});
-    if (currentPage === 'results' && scatterData.length) renderResults();
+    // Re-render whenever data has loaded, even if the view being left was an
+    // empty category (scatterData is [] then, which used to skip the render
+    // and leave e.g. Trade on screen under a ?schools=UCs URL).
+    if (currentPage === 'results' && _dataLoadedAt) renderResults();
     if (state.college) openCollegeDetail(state.college);
   } finally {
     _suppressUrlWrite = false;
