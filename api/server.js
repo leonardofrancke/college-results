@@ -194,12 +194,13 @@ function createApp(dbPath) {
     : null;
 
   // Text columns are re-cleaned on the way out so rows saved before input
-  // cleaning existed can't inject markup either.
+  // cleaning existed can't inject markup either. Extracurriculars are the
+  // exception: they're returned exactly as the student typed them (line breaks
+  // and all), and every page that shows them escapes them instead.
   const TEXT_COLS = ['college_name', 'major', 'decision', 'decision_type', 'school_type', 'class_rank'];
   const cleanRow = r => {
     const out = { ...r };
     TEXT_COLS.forEach(c => { out[c] = cleanText(r[c], 120); });
-    out.extracurriculars = cleanText(r.extracurriculars, 1000);
     return out;
   };
 
@@ -443,14 +444,12 @@ function createApp(dbPath) {
   });
 
   // ── Admin: all submissions ─────────────────────────────────────────────
-  // Everything the public feed hides, except the raw browser ID and the
-  // extracurriculars text.
+  // Every stored field, including submission times, except the raw browser ID.
   app.get('/api/admin/submissions', requireAdmin, (req, res) => {
     db.all('SELECT * FROM submissions ORDER BY created_at DESC', (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json((rows || []).map(r => {
-        const { extracurriculars, ...rest } = cleanRow(r);
-        return { ...rest, session_id: groupId(r.session_id) };
+        return { ...cleanRow(r), session_id: groupId(r.session_id) };
       }));
     });
   });

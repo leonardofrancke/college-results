@@ -364,7 +364,7 @@
   .entry-top { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
   .epill { font-size: calc(12px * var(--fs)); padding: 3px 8px; border-radius: 4px; font-family: var(--mono); font-weight: 400; }
   .epill-gray { background: #f2f2f0; color: #444; }
-  .entry-ecs { font-size: calc(13px * var(--fs)); color: #555; margin-bottom: 8px; line-height: 1.5; }
+  .entry-ecs { font-size: calc(13px * var(--fs)); color: #555; margin-bottom: 8px; line-height: 1.5; white-space: pre-line; }
   .entry-ecs span { font-size: calc(11px * var(--fs)); text-transform: uppercase; letter-spacing: 0.05em; color: #888; font-weight: 600; font-family: inherit; }
   .entry-decisions { display: flex; flex-wrap: wrap; gap: 5px; }
   .dpill-entry { font-size: calc(12px * var(--fs)); padding: 3px 9px; border-radius: 4px; font-weight: 500; }
@@ -2541,7 +2541,7 @@ function showTooltip(r, pos) {
   tip.appendChild(decs);
   if (r.extracurriculars) {
     const ec = el('div');
-    ec.style.cssText = 'border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;font-size:calc(11px * var(--fs));color:#ccc;line-height:1.5;';
+    ec.style.cssText = 'border-top:1px solid rgba(255,255,255,0.12);margin-top:8px;padding-top:8px;font-size:calc(11px * var(--fs));color:#ccc;line-height:1.5;white-space:pre-line;';
     const lbl = el('span', 'tip-label', 'Extracurriculars');
     lbl.style.display = 'block';
     ec.append(lbl, r.extracurriculars);

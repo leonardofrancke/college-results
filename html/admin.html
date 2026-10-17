@@ -419,7 +419,7 @@ async function loadSubmissions() {
     return;
   }
 
-  let html = '<table><thead><tr><th>Session</th><th>GPA</th><th>SAT / ACT</th><th>Year</th><th>Flags</th><th>Colleges</th><th>Submitted</th><th></th></tr></thead><tbody>';
+  let html = '<table><thead><tr><th>Session</th><th>GPA</th><th>SAT / ACT</th><th>Year</th><th>Flags</th><th>Extracurriculars</th><th>Colleges</th><th>Submitted</th><th></th></tr></thead><tbody>';
   students.forEach(({meta:m, colleges}) => {
     const sid = m.session_id || '';
     const flags = [
@@ -439,6 +439,7 @@ async function loadSubmissions() {
       '<td>'+tests+'</td>' +
       '<td>'+(m.grad_year||'&mdash;')+'</td>' +
       '<td>'+flags+'</td>' +
+      '<td style="white-space:pre-line;max-width:260px;font-size:0.8rem;">'+(m.extracurriculars ? esc(m.extracurriculars) : '&mdash;')+'</td>' +
       '<td><div class="college-list">'+colleges_html+'</div></td>' +
       '<td>'+fmt(m.created_at)+'</td>' +
       `<td><button class="btn-danger" onclick="deleteSession('${sid}', this)">Delete</button></td>` +

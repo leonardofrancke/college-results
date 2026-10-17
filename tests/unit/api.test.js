@@ -439,6 +439,22 @@ describe('public feed privacy', () => {
     expect(feed.body.map(r => r.college_name).sort()).toEqual(['Tiny College', 'UC Davis', 'uc davis']);
   });
 
+  test('extracurriculars come back exactly as stored, in both feeds', async () => {
+    // Stored the way pre-Sep-28 submissions were: raw, unsanitized text.
+    const ec = 'Robotics <captain>\nSoccer "JV" & choir — 2 yrs';
+    await new Promise((res, rej) => app._db.run(
+      'INSERT INTO submissions (session_id, college_name, grad_year, extracurriculars) VALUES (?, ?, 2026, ?)',
+      ['legacy', 'Old U', ec], e => e ? rej(e) : res()));
+    const feed = await request(app).get('/api/submissions');
+    expect(feed.body[0].extracurriculars).toBe(ec);
+    await request(app).post('/api/admin/setup').set('x-admin-secret', 'test-secret')
+      .send({ username: 'admin', password: 'correct-horse-battery' });
+    const { body: { token } } = await request(app).post('/api/admin/login')
+      .send({ username: 'admin', password: 'correct-horse-battery' });
+    const admin = await request(app).get('/api/admin/submissions').set('x-admin-token', token);
+    expect(admin.body[0].extracurriculars).toBe(ec);
+  });
+
   test('shows exact class rank, never the raw browser ID or timestamps', async () => {
     await post('a', [{ college_name: 'MIT', class_rank: 15 }]);
     const feed = await request(app).get('/api/submissions');
@@ -462,7 +478,7 @@ describe('public feed privacy', () => {
     expect(admin.status).toBe(200);
     expect(admin.body).toHaveLength(2);
     expect(admin.body.some(r => r.first_gen === 'yes' && r.sport === 'yes')).toBe(true);
-    expect(admin.body[0]).not.toHaveProperty('extracurriculars');
+    expect(admin.body[0]).toHaveProperty('extracurriculars');
     expect(admin.body.map(r => r.session_id)).not.toContain('a');
 
     const anon = await request(app).get('/api/admin/submissions');

@@ -446,7 +446,7 @@ describe('restored public fields (operator decision 2026-10-17)', () => {
     const p = await ctx.newPage();
     const row = { id: 1, session_id: 'g1', college_name: 'Synthetic State', grad_year: 2026, gpa: 3.5, gpa_weighted: 4.0,
       class_rank: '12', major: 'Biology', decision: 'Accepted', decision_type: 'RD', school_type: 'University',
-      first_gen: 'yes', sport: 'yes', extracurriculars: 'Synthetic robotics club <b>lead</b>' };
+      first_gen: 'yes', sport: 'yes', extracurriculars: 'Synthetic robotics club <b>lead</b>\nChoir' };
     await p.route('**/api/submissions', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([row]) }));
     await p.goto(h.baseUrl + '/');
     await p.waitForSelector('#chart-main svg');
@@ -456,6 +456,7 @@ describe('restored public fields (operator decision 2026-10-17)', () => {
     assert.ok(card.includes('🏅'));
     assert.ok(card.includes('Synthetic robotics club <b>lead</b>'), 'EC text shown literally');
     assert.equal(await p.$$eval('#entries b', n => n.length), 0);
+    assert.match(await p.$eval('.entry-ecs', e => e.innerText), /lead<\/b>\nChoir/, 'line break kept');
     await p.click('#chart-main .chart-dot');
     const tip = await p.textContent('#dot-tooltip');
     for (const t of ['Rank 12', 'First-generation student', '🏅 Recruited', 'Extracurriculars']) assert.ok(tip.includes(t), t);
