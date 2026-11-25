@@ -1755,14 +1755,18 @@ function renderEntries(rows) {
   // Every API string is escaped and shown exactly as typed.
   const e = v => escHtml(v == null ? '' : v);
   const gpa2 = v => isNaN(parseFloat(v)) ? e(v) || '<i>–</i>' : parseFloat(v).toFixed(2);
+  // Every row shows the value the list is sorted by.
+  const sk = stu.sort, by = { weighted: 'Weighted', sat: 'SAT', act: 'ACT', applied: 'Applied to', yes: "Yes's" }[sk];
   el.innerHTML = groups.slice(0, shown).map((g, i) => {
+    const real = g.colleges.filter(c => !isNoCollege(c)), yes = real.filter(c => c.decision === 'Accepted').length;
+    const sortVal = { weighted: g.gpa_weighted ? gpa2(g.gpa_weighted) : '<i>–</i>', sat: e(g.sat) || '<i>–</i>', act: e(g.act) || '<i>–</i>', applied: real.length, yes }[sk];
     const bits = [g.act ? `ACT ${e(g.act)}` : '', g.class_rank ? `Rank ${e(g.class_rank)}` : '', g.essay_rating ? `Essay ${e(g.essay_rating)}/5` : '', g.first_gen === 'yes' ? 'First-gen' : ''].filter(Boolean).map(x => `<span>${x}</span>`).join('');
     const decs = g.colleges.map(c => `<li class="${c.enrolling === 'yes' ? 'is-going' : ''}">${decisionIcon(c.decision).outerHTML}<span>${isNoCollege(c) ? e(c.college_name) : `<button type="button" class="e-col" data-open-college="${e(c.college_name)}">${e(c.college_name)}</button>`}<span class="sr-only">: ${e(c.decision)}</span>${decisionExtras(c).length ? ` <small>${e(decisionExtras(c).join(', '))}</small>` : ''}</span></li>`).join('');
     if (detail === 1) {
-      const key = studentKey(g), real = g.colleges.filter(c => !isNoCollege(c)), yes = real.filter(c => c.decision === 'Accepted').length;
+      const key = studentKey(g);
       const going = real.find(c => c.enrolling === 'yes'), open = openStudents.has(key);
       return `<article class="entry-card is-simple" role="listitem" tabindex="-1" data-entry="${i}">
-        <div class="e-num"><span class="e-l">GPA</span><b>${gpa2(g.gpa)}</b></div>
+        ${by ? `<div class="e-num is-sorted"><span class="e-l">${by}</span><b>${sortVal}</b><small>GPA ${gpa2(g.gpa)}</small></div>` : `<div class="e-num"><span class="e-l">GPA</span><b>${gpa2(g.gpa)}</b></div>`}
         <div class="e-major">${g.major ? e(g.major) : '<i>No major given</i>'}</div>
         <div class="e-main"><p>${going ? `Going to <button type="button" class="e-col" data-open-college="${e(going.college_name)}">${e(going.college_name)}</button>` : "<i>Didn't say where they're going</i>"}</p>
         ${real.length > 1 ? `<button type="button" class="btn-link e-open" data-open-student="${i}" aria-expanded="${open}">${yes} of ${real.length} said yes</button>` : ''}
@@ -1770,11 +1774,11 @@ function renderEntries(rows) {
       </article>`;
     }
     return `<article class="entry-card" role="listitem" tabindex="-1" data-entry="${i}">
-      <div class="e-num"><span class="e-l">GPA</span><b>${gpa2(g.gpa)}</b></div>
-      <div class="e-num"><span class="e-l">Weighted</span>${g.gpa_weighted ? gpa2(g.gpa_weighted) : '<i>–</i>'}</div>
-      <div class="e-num"><span class="e-l">SAT</span>${e(g.sat) || '<i>–</i>'}</div>
+      <div class="e-num${sk === 'gpa' ? ' is-sorted' : ''}"><span class="e-l">GPA</span><b>${gpa2(g.gpa)}</b></div>
+      <div class="e-num${sk === 'weighted' ? ' is-sorted' : ''}"><span class="e-l">Weighted</span>${g.gpa_weighted ? gpa2(g.gpa_weighted) : '<i>–</i>'}</div>
+      <div class="e-num${sk === 'sat' ? ' is-sorted' : ''}"><span class="e-l">SAT</span>${e(g.sat) || '<i>–</i>'}</div>
       <div class="e-major">${g.major ? e(g.major) : '<i>No major given</i>'}${bits ? `<div class="e-bits">${bits}</div>` : ''}</div>
-      <div class="e-main"><ul class="entry-decisions">${decs}</ul>
+      <div class="e-main">${sk === 'act' ? `<p class="e-sortval">ACT <b>${sortVal}</b></p>` : sk === 'applied' || sk === 'yes' ? `<p class="e-sortval"><b>${yes}</b> ${yes === 1 ? 'yes' : "yes's"} from <b>${real.length}</b> college${real.length !== 1 ? 's' : ''}</p>` : ''}<ul class="entry-decisions">${decs}</ul>
       ${g.extracurriculars ? `<details class="entry-ecs"><summary>Extracurriculars</summary><p>${e(g.extracurriculars)}</p></details>` : ''}</div>
     </article>`;
   }).join('');

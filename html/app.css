@@ -204,6 +204,10 @@ html[data-detail="1"] .c-star:not(.c-caret) { visibility: hidden; }
 .unit-row { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr) 2rem; gap: 0 .8rem; align-items: center; font-size: .95rem; }
 .unit-row b { text-align: right; }
 [data-detail="1"] .entry-card { grid-template-columns: 4rem 15rem minmax(0, 1fr); gap: .2rem 1.4rem; }
+.is-simple .e-l { display: block; }
+.is-simple .e-num small { display: block; font-size: .8rem; color: var(--text-muted); }
+.e-num.is-sorted, .e-num.is-sorted b, .e-sortval b { color: var(--accent); }
+.e-sortval { font-size: .9rem; color: var(--text-2); margin-bottom: .25rem; }
 .is-simple .e-major { font-size: 1rem; }
 .is-simple .e-main p { font-size: 1rem; }
 .is-simple .e-main i { font-style: normal; color: var(--text-muted); }

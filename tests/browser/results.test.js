@@ -382,6 +382,29 @@ describe('detail level (zoom)', () => {
 });
 
 describe('sorting and finding', () => {
+  test('every row shows the value it is sorted by, at every level', async () => {
+    for (const level of ['1', '2']) {
+      const p = await page({ detail: level, path: '/?view=students' });
+      for (const [k, label] of [['weighted', 'Weighted'], ['sat', 'SAT'], ['act', 'ACT'], ['applied', 'Applied to'], ['yes', "Yes's"]]) {
+        await p.selectOption('#stu-sort', k);
+        const vals = await p.$$eval('.entry-card', (cards, k) => cards.map(c => {
+          // The value sits after its label ("Weighted 4.46"), in a sorted cell or a line above the decisions.
+          const t = c.querySelector('.e-sortval') || c.querySelector('.e-num.is-sorted');
+          if (!t) return null;
+          const v = t.querySelector('b') ? t.querySelector('b').textContent : t.textContent.replace(/^\D+/, '');
+          const m = k === 'yes' ? t.textContent.match(/(\d+) yes/) : k === 'applied' ? (t.textContent.match(/from (\d+)/) || v.match(/^(\d+)/)) : v.match(/^[\d.]+/);
+          return m ? parseFloat(m[1] || m[2] || m[0]) : NaN;
+        }), k);
+        assert.ok(vals.every(v => v !== null), `${label} shown in every row at level ${level}`);
+        const known = vals.filter(v => !isNaN(v));
+        assert.deepEqual(known, [...known].sort((a, b) => b - a), `${label} sorted at level ${level}: ${vals}`);
+        if (level === '1') assert.equal(await p.textContent('.entry-card .e-l'), label);
+      }
+      await p.context().close();
+    }
+  });
+
+
   const col = (p, n) => p.$$eval(`.entry-card > :nth-child(${n})`, c => c.map(x => parseFloat(x.textContent.replace(/[^\d.]/g, ''))));
   test('students sort by each column, both ways, with blanks last; the URL keeps it', async () => {
     const p = await page({ path: '/?view=students' });
