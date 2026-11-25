@@ -20,7 +20,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/schibsted-grotesk-latin-4c8b93f4.woff2" as="font" type="font/woff2" crossorigin>
 <link href="/fonts/fonts.css?v=30ee7434" rel="stylesheet">
-<link href="/app.css?v=1cb3d65b" rel="stylesheet">
+<link href="/app.css?v=27f35ddf" rel="stylesheet">
 <script src="/boot.js?v=8156a371"></script>
 </head>
 <body>
@@ -119,7 +119,7 @@
       <div class="levels" id="detail" role="group" aria-label="How much to show" aria-describedby="detail-caption">
         <button type="button" class="level" data-detail-set="1" aria-pressed="true"><svg viewBox="-8 -8 16 16" aria-hidden="true"><circle cx="0" cy="0" r="4.6"/></svg><span>Simple</span></button><button type="button" class="level" data-detail-set="2" aria-pressed="false"><svg viewBox="-8 -8 16 16" aria-hidden="true"><circle cx="-3.4" cy="-3.4" r="2.4"/><circle cx="3.4" cy="-3.4" r="2.4"/><circle cx="-3.4" cy="3.4" r="2.4"/><circle cx="3.4" cy="3.4" r="2.4"/></svg><span>Detailed</span></button><button type="button" class="level" data-detail-set="3" aria-pressed="false"><svg viewBox="-8 -8 16 16" aria-hidden="true"><circle cx="-4.6" cy="-4.6" r="1.75"/><circle cx="0.0" cy="-4.6" r="1.75"/><circle cx="4.6" cy="-4.6" r="1.75"/><circle cx="-4.6" cy="0.0" r="1.75"/><circle cx="0.0" cy="0.0" r="1.75"/><circle cx="4.6" cy="0.0" r="1.75"/><circle cx="-4.6" cy="4.6" r="1.75"/><circle cx="0.0" cy="4.6" r="1.75"/><circle cx="4.6" cy="4.6" r="1.75"/></svg><span>Everything</span></button>
       </div>
-      <p class="level-caption" id="detail-caption">Kinds of school. Tap one to see its colleges.</p>
+      <p class="level-caption" id="detail-caption">Kinds of school. Tap one to open it.</p>
       <div class="tip" id="detail-tip" role="region" aria-labelledby="detail-tip-title">
         <p><b id="detail-tip-title">See as much as you want.</b> This starts simple. Switch to <b>Detailed</b> for every college, sorting and filters, or <b>Everything</b> for every tool. You can come back anytime.</p>
         <button type="button" class="btn-main" id="detail-tip-ok">Got it</button>
@@ -156,7 +156,7 @@
             </div>
             <label class="pick" for="chart-sort"><span>Sort</span><select class="field-box" id="chart-sort"><option value="apps">Most applied to</option><option value="name">Name, A to Z</option><option value="high">Highest GPA or SAT</option><option value="low">Lowest GPA or SAT</option><option value="going">Most going</option><option value="nos">Most no's</option><option value="near">Closest to you</option></select></label>
             <button type="button" class="chip" id="saved-filter" aria-pressed="false" hidden><svg aria-hidden="true"><use href="#i-star"/></svg>Saved<span class="n" aria-hidden="true"></span></button>
-            <div id="legend" role="group" aria-label="Show colleges with one decision"></div>
+            <div id="legend" role="group" aria-label="Show only colleges with"></div>
           </div>
           <p class="sr-only" id="chart-instructions">College names are buttons. Use Up and Down arrow keys to move between colleges, Enter to open a college's details, S to save it, and Right arrow to step through that college's decisions. Escape hides a decision's details.</p>
           <div class="chart-axis-title" aria-hidden="true" id="chart-axis-title">Unweighted GPA</div>
@@ -359,7 +359,7 @@
   </div>
 </footer>
 
-<script src="/app.js?v=490b4bd0"></script>
+<script src="/app.js?v=4a7de7a7"></script>
 
 <!-- Celebration overlay -->
 <div id="celebration-overlay" aria-hidden="true">

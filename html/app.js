@@ -316,7 +316,7 @@ const openTypes = new Set();  // school types unfolded at the simple level
 const openStudents = new Set();
 const DETAIL_NAMES = { 1: 'Simple', 2: 'Detailed', 3: 'Everything' };
 const DETAIL_CAPTIONS = {
-  colleges: { 1: 'Kinds of school. Tap one to see its colleges.', 2: 'Every college, with sorting and filters.', 3: 'Everything, including Compare and saved colleges.' },
+  colleges: { 1: 'Kinds of school. Tap one to open it.', 2: 'Every college, with sorting and filters.', 3: 'Everything, including Compare and saved colleges.' },
   numbers: { 1: 'The main takeaways, in plain words.', 2: 'Every figure.', 3: 'Every figure, with the fine print.' },
   students: { 1: 'Where each student is going.', 2: 'Sort and search every student.', 3: 'Every detail, with filters.' },
 };
@@ -939,7 +939,11 @@ function buildChart(opts) {
   const lede = document.getElementById('lede');
   if (/placed by that student's /.test(lede.textContent)) lede.textContent = lede.textContent.replace(/placed by that student's .*$/, `placed by that student's ${m.label}.`);
 
-  document.getElementById('chart-col-count').textContent = simple ? 'Tap a row to see its colleges' : total ? `${total} college${total !== 1 ? 's' : ''}` : '';
+  document.getElementById('chart-col-count').textContent = simple ? '' : total ? `${total} college${total !== 1 ? 's' : ''}` : '';
+  document.getElementById('chart-axis-title').hidden = !cols.length;
+  document.getElementById('chart-instructions').textContent = simple
+    ? 'Each kind of school is a button that opens or closes its colleges. Use Up and Down arrow keys to move between rows, Enter on a college to open its details, and Right arrow to step through its decisions. Escape hides a decision\'s details.'
+    : `College names are buttons. Use Up and Down arrow keys to move between colleges, Enter to open a college's details${detail === 3 ? ', S to save it' : ''}, and Right arrow to step through that college's decisions. Escape hides a decision's details.`;
   document.getElementById('chart-axis-title').textContent = m.title;
   document.querySelector('#chart-sort [value="near"]').disabled = !youValue();
 
@@ -1021,7 +1025,7 @@ function buildChart(opts) {
     const type = g.kind === 'type';
     html += `<div class="c-row${type ? ' is-type' : ''}${g.open ? ' is-open' : ''}${g.kid ? ' is-kid' : ''}" data-key="${escHtml(g.key)}" data-kind="${type ? 'type' : 'college'}">
       ${type ? `<span class="c-star c-caret" aria-hidden="true"><svg><use href="#i-caret"/></svg></span>` : ''}<button type="button" class="c-star"${type ? ' hidden' : ''} data-save="${escHtml(g.key)}" tabindex="-1" aria-pressed="${saved.has(g.key)}" aria-label="Save ${escHtml(g.name)}"><svg aria-hidden="true"><use href="#i-star"/></svg></button>
-      <button type="button" class="c-name" data-col="${i}" data-focus-key="col:${escHtml(g.key)}" tabindex="${i === roving ? 0 : -1}" ${type ? `aria-expanded="${g.open}"` : ''} aria-label="${escHtml(g.name)}, ${shown.length} shown: ${summary}. ${type ? (g.open ? 'Hide colleges' : 'Show colleges') : 'Open details'}"><span>${escHtml(g.name)}</span></button>
+      <button type="button" class="c-name" data-col="${i}" data-focus-key="col:${escHtml(g.key)}" tabindex="${i === roving ? 0 : -1}" ${type ? `aria-expanded="${g.open}"` : ''} aria-label="${escHtml(g.name)}, ${shown.length} answer${shown.length !== 1 ? 's' : ''}: ${summary}. ${type ? (g.open ? 'Hide colleges' : 'Show colleges') : 'Open details'}"><span>${escHtml(g.name)}</span></button>
       <div class="c-plot"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="group" aria-label="${escHtml(g.name)} decisions">${s}</svg></div>
       <div class="c-count" aria-hidden="true"><b>${acc.length}</b> of ${shown.length}</div>
     </div>`;
@@ -1146,7 +1150,7 @@ function renderChartEmpty(el, rows) {
     p.textContent = 'No students match these filters. Try a wider range or remove one.';
     add('Clear student filters', 'slm-clear');
   } else {
-    p.textContent = `None of these submissions reported ${activeChartType === 'sat' ? 'an SAT score' : 'a ' + m.label}.`;
+    p.textContent = `None of these submissions reported ${activeChartType === 'sat' ? 'an SAT score' : (/^[aeiou]/.test(m.label) ? 'an ' : 'a ') + m.label}.`;
   }
   box.append(p, actions);
   el.appendChild(box);
@@ -1839,6 +1843,8 @@ function inTen(n, t) {
   const k = Math.round(n / t * 10);
   return k === 5 ? 'About half' : k === 10 ? 'Nearly all' : k === 0 ? 'Very few' : `About ${k} in 10`;
 }
+// "1 of 1 is", "2 of 3 are", "About half are".
+const areOf = (n, t) => `${inTen(n, t)} ${t < MIN_RATE_N && n === 1 ? 'is' : 'are'}`;
 function renderFacts(allRows) {
   const host = document.getElementById('facts'), data = allRows.filter(r => !isNoCollege(r));
   host.hidden = !data.length;
@@ -1851,12 +1857,12 @@ function renderFacts(allRows) {
     const by = DEST_ORDER.map(d => [d, uniq(going.filter(r => destOf(r) === d))]).filter(x => x[1]).sort((a, b) => b[1] - a[1]);
     const t = by.reduce((s, x) => s + x[1], 0), [top, n] = by[0];
     const noun = { 'Community college': 'community college', CSU: 'a CSU', UC: 'a UC', 'Private 4-year': 'a private college', 'Public (out of state)': 'a public college in another state', 'Trade school': 'a trade school' };
-    out.push(fact(`${inTen(n, t)} are going to ${noun[top]}.`, `<div class="unit-rows">${by.map(([d, k]) => `<div class="unit-row"><span>${TYPE_NAMES[d]}</span>${dots(k, 0)}<b>${k}</b></div>`).join('')}</div>`));
+    out.push(fact(`${areOf(n, t)} going to ${noun[top]}.`, `<div class="unit-rows">${by.map(([d, k]) => `<div class="unit-row"><span>${TYPE_NAMES[d]}</span>${dots(k, 0)}<b>${k}</b></div>`).join('')}</div>`));
     const placed = going.filter(r => destOf(r) !== 'Trade school'), home = uniq(placed.filter(isInState)), all = uniq(placed);
-    if (all) out.push(fact(`${inTen(home, all)} are staying in California.`, dots(home, all - home) + `<p>${home} of ${all} students</p>`));
+    if (all) out.push(fact(`${areOf(home, all)} staying in California.`, dots(home, all - home) + `<p>${home} of ${all} student${all !== 1 ? 's' : ''}</p>`));
   }
   const four = data.filter(r => isFourYear(r) && r.decision !== 'Pending'), yes = four.filter(r => r.decision === 'Accepted').length;
-  if (four.length) out.push(fact(`Four-year colleges said yes ${yes} of ${four.length} times.`, `<div class="unit" aria-hidden="true">${[...four].sort((a, b) => DECISION_ORDER.indexOf(a.decision) - DECISION_ORDER.indexOf(b.decision)).map(r => decisionIcon(r.decision).outerHTML).join('')}</div><p>Community colleges are left out, since they accept everyone.</p>`));
+  if (four.length) out.push(fact(`Four-year colleges said yes ${yes} of ${four.length} time${four.length !== 1 ? 's' : ''}.`, `<div class="unit" aria-hidden="true">${[...four].sort((a, b) => DECISION_ORDER.indexOf(a.decision) - DECISION_ORDER.indexOf(b.decision)).map(r => decisionIcon(r.decision).outerHTML).join('')}</div><p>Community colleges are left out, since they accept everyone.</p>`));
   const majors = new Map(), seen = new Set();
   data.forEach(r => {
     const k = studentKey(r), m = normMajor(r.major);

@@ -140,7 +140,7 @@ describe('keyboard, names and states', () => {
     assert.notEqual(first, second);
     assert.equal(await p.$$eval('#chart-main [tabindex="0"]', n => n.length), 1);
     const label = await p.evaluate(() => document.activeElement.getAttribute('aria-label'));
-    assert.match(label, /shown: .*Open details$/);
+    assert.match(label, /\d+ answers?: .*Open details$/);
     await p.keyboard.press('Enter');
     await p.waitForSelector('#college-modal.open');
     const dlg = await p.$eval('#college-modal .modal', m => ({ role: m.getAttribute('role'), modal: m.getAttribute('aria-modal'), name: document.getElementById(m.getAttribute('aria-labelledby')).textContent }));
