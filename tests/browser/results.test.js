@@ -26,13 +26,13 @@ async function page(opts = {}) {
   p.errors = [];
   p.on('pageerror', e => p.errors.push(e.message));
   await p.goto(h.baseUrl + (opts.path || '/'));
-  if (opts.wait !== false) await p.waitForSelector('#chart-main svg, #chart-main .chart-empty');
+  if (opts.wait !== false) await p.waitForSelector('#chart-main svg, #chart-main .chart-empty', { state: 'attached' });
   return p;
 }
-const statsText = p => p.$eval('#stats-inline', el => el.innerText);
+const statsText = p => p.$eval('#stats-inline', el => el.textContent);
 const active = p => p.evaluate(() => {
   const a = document.activeElement;
-  return a ? (a.id || a.dataset.focusKey || a.dataset.schools || a.textContent.trim().slice(0, 40)) : null;
+  return a ? (a.id || a.dataset.focusKey || a.dataset.schools || a.dataset.decision || a.textContent.trim().slice(0, 40)) : null;
 });
 
 describe('theme and text size keep the current view (audit F19)', () => {
@@ -53,7 +53,7 @@ describe('theme and text size keep the current view (audit F19)', () => {
   });
 
   test('every filter survives theme and text-size changes, including the URL', async () => {
-    const p = await page({ path: '/?schools=CSUs&chart=sat&q=state&stats=grades&decision=Accepted' });
+    const p = await page({ path: '/?schools=CSUs&chart=sat&q=state&sort=going&decision=Accepted' });
     await p.fill('#slm-gpa', '3.4');
     await p.waitForSelector('.slm-chip');
     const snap = async () => ({
@@ -61,17 +61,17 @@ describe('theme and text size keep the current view (audit F19)', () => {
       pressed: await p.$eval('[data-schools][aria-pressed="true"]', b => b.dataset.schools),
       metric: await p.$eval('[data-metric][aria-pressed="true"]', b => b.dataset.metric),
       search: await p.inputValue('#college-search'),
-      tab: await p.$eval('[data-stats][aria-selected="true"]', b => b.dataset.stats),
+      sort: await p.inputValue('#chart-sort'),
       legend: await p.$$eval('#legend [aria-pressed="true"]', b => b.map(x => x.dataset.decision)),
       chips: await p.$$eval('.slm-chip', c => c.map(x => x.textContent)),
       cols: await p.$$eval('#chart-main .c-name[data-col]', t => t.map(x => x.textContent)),
       stats: await statsText(p),
-      entries: await p.$eval('#entries', e => e.innerText),
+      entries: await p.$eval('#entries', e => e.textContent),
     });
     const before = await snap();
     assert.equal(before.pressed, 'CSUs');
     assert.equal(before.metric, 'sat');
-    assert.equal(before.tab, 'grades');
+    assert.equal(before.sort, 'going');
     assert.ok(!/3\.4/.test(before.url), 'a student\'s own GPA never goes in the URL');
     assert.deepEqual(before.legend, ['Accepted']);
     assert.equal(before.chips.length, 1);
@@ -105,8 +105,8 @@ describe('keyboard, names and states', () => {
     await p.keyboard.press('Enter');
     assert.equal(await active(p), 'main-content');
     const nav = await p.$$eval('nav a.nav-link', a => a.map(x => [x.getAttribute('href'), x.getAttribute('aria-current')]));
-    assert.deepEqual(nav, [['/', 'page'], ['/?page=submit', null]]);
-    assert.deepEqual(await p.$$eval('h1', h => h.filter(x => x.offsetParent).map(x => x.textContent)), ['Where Live Oak got in']);
+    assert.deepEqual(nav, [['/', 'page'], ['/?view=numbers', null], ['/?view=students', null], ['/?page=submit', null]]);
+    assert.deepEqual(await p.$$eval('h1', h => h.filter(x => x.offsetParent).map(x => x.textContent)), ['Live Oak college results, Class of 2026']);
     await p.focus('#nav-submit');
     await p.keyboard.press('Enter');
     await p.waitForSelector('#page-submit.active');
@@ -192,17 +192,167 @@ describe('keyboard, names and states', () => {
     await p.context().close();
   });
 
-  test('statistics tabs support arrow keys with roving focus and one visible panel', async () => {
+  test('Colleges, Numbers and Students are links with one visible view, and Back works', async () => {
     const p = await page();
-    await p.focus('#stats-tab-destinations');
+    const visible = () => p.$$eval('[data-in]', n => n.filter(x => x.offsetParent).map(x => x.dataset.in));
+    assert.deepEqual(await visible(), ['colleges']);
+    await p.click('.nav-link[data-view="numbers"]');
+    assert.deepEqual(await visible(), ['numbers']);
+    assert.equal(await p.getAttribute('.nav-link[data-view="numbers"]', 'aria-current'), 'page');
+    assert.equal(await p.getAttribute('#nav-results', 'aria-current'), null);
+    assert.equal(await active(p), 'results-title');
+    await p.click('.nav-link[data-view="students"]');
+    assert.equal(new URL(p.url()).search, '?view=students');
+    assert.ok(await p.isVisible('#college-filter-bar'), 'school category stays available in every view');
+    await p.goBack();
+    assert.deepEqual(await visible(), ['numbers']);
+    await p.click('#nav-submit');
+    await p.waitForSelector('#page-submit.active');
+    assert.equal(await p.$$eval('.nav-link[aria-current]', n => n.map(x => x.id).join()), 'nav-submit');
+    await p.click('.nav-link[data-view="students"]');
+    await p.waitForSelector('#page-results.active');
+    assert.deepEqual(await visible(), ['students']);
+    assert.equal(new URL(p.url()).search, '?view=students');
+    assert.deepEqual(p.errors, []);
+    await p.context().close();
+  });
+
+  test('"You" on the axis is a slider: arrow keys and dragging set the same filter', async () => {
+    const p = await page();
+    assert.equal(await p.getAttribute('.c-you', 'aria-valuetext'), 'Not set');
+    await p.focus('.c-you');
     await p.keyboard.press('ArrowRight');
-    assert.equal(await active(p), 'stats-tab-grades');
-    assert.equal(await p.getAttribute('#stats-tab-grades', 'aria-selected'), 'true');
-    assert.equal(await p.getAttribute('#stats-tab-destinations', 'tabindex'), '-1');
-    await p.keyboard.press('End');
-    assert.equal(await active(p), 'stats-tab-timing');
-    assert.deepEqual(await p.$$eval('.stat-panel', n => n.filter(x => !x.hidden).map(x => x.id)), ['stats-panel-timing']);
-    assert.equal(new URL(p.url()).searchParams.get('stats'), 'timing');
+    assert.equal(await p.inputValue('#slm-gpa'), '3.20');
+    await p.keyboard.press('ArrowRight');
+    assert.equal(await p.inputValue('#slm-gpa'), '3.25');
+    assert.equal(await active(p), 'you', 'focus stays on the slider');
+    const b = await p.locator('.c-you').boundingBox();
+    await p.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+    await p.mouse.down();
+    await p.mouse.move(b.x + b.width / 2 - 120, b.y + b.height / 2, { steps: 5 });
+    await p.mouse.up();
+    const v = +(await p.inputValue('#slm-gpa'));
+    assert.ok(v < 3.25 && v > 1, 'dragged to ' + v);
+    assert.equal(await p.$$eval('.slm-chip', c => c.length), 1);
+    assert.deepEqual(p.errors, []);
+    await p.context().close();
+  });
+});
+
+describe('sorting and finding', () => {
+  const col = (p, n) => p.$$eval(`.entry-card > :nth-child(${n})`, c => c.map(x => parseFloat(x.textContent.replace(/[^\d.]/g, ''))));
+  test('students sort by each column, both ways, with blanks last; the URL keeps it', async () => {
+    const p = await page({ path: '/?view=students' });
+    await p.click('#entries-more'); await p.click('#entries-more');
+    await p.click('[data-sort="gpa"]');
+    let v = await col(p, 1);
+    assert.deepEqual(v, [...v].sort((a, b) => b - a));
+    assert.match(await p.getAttribute('[data-sort="gpa"]', 'aria-label'), /^GPA, sort by GPA, highest first$/);
+    await p.click('[data-sort="gpa"]');
+    v = await col(p, 1);
+    assert.deepEqual(v, [...v].sort((a, b) => a - b));
+    assert.equal(new URL(p.url()).search, '?view=students&by=gpa&dir=asc');
+    await p.reload();
+    await p.waitForSelector('.entry-card');
+    assert.deepEqual(await col(p, 1), v.slice(0, 10));
+    for (const dir of ['desc', 'asc']) {
+      await p.selectOption('#stu-sort', 'shared');
+      await p.click('[data-sort="sat"]');
+      if (dir === 'asc') await p.click('[data-sort="sat"]');
+      for (let i = 0; i < 5 && await p.isVisible('#entries-more'); i++) await p.click('#entries-more');
+      const all = await col(p, 3), known = all.filter(x => !isNaN(x));
+      assert.ok(known.length && known.length < all.length, 'fixture has students with and without an SAT');
+      assert.ok(all.slice(known.length).every(isNaN), 'students without an SAT come last, ' + dir);
+      assert.deepEqual(known, [...known].sort((a, b) => dir === 'desc' ? b - a : a - b));
+    }
+    assert.equal(await p.$$eval('#stu-sort option', o => o.filter(x => /rank/i.test(x.textContent)).length), 0, 'class rank is not sortable');
+    await p.context().close();
+  });
+
+  test('students filter by college, outcome and text, together, and clear', async () => {
+    const p = await page({ path: '/?view=students' });
+    const total = await p.textContent('#entries-sub');
+    await p.selectOption('#stu-college', { label: (await p.$$eval('#stu-college option', o => o.map(x => x.textContent))).find(t => /^UC Davis/.test(t)) });
+    for (let i = 0; i < 5 && await p.isVisible('#entries-more'); i++) await p.click('#entries-more');
+    assert.ok(await p.$$eval('.entry-card', c => c.length && c.every(x => /UC Davis/.test(x.textContent))));
+    await p.click('[data-flag="no"]');
+    assert.ok(await p.$$eval('.entry-card', c => c.length && c.every(x => x.querySelector('.d-Rejected'))));
+    await p.fill('#stu-find', 'zz-nothing');
+    assert.match(await p.textContent('#entries'), /No students match/);
+    await p.click('#entries [data-action="stu-clear"]');
+    assert.equal(await p.textContent('#entries-sub'), total);
+    assert.equal(new URL(p.url()).search, '?view=students');
+    await p.fill('#stu-find', 'nursing');
+    assert.ok(await p.$$eval('.entry-card', c => c.length && c.every(x => /nursing/i.test(x.textContent))));
+    await p.context().close();
+  });
+
+  test('extracurriculars cannot be searched', async () => {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    const p = await ctx.newPage();
+    await p.route('**/api/submissions', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify([{ id: 1, session_id: 'a', college_name: 'UC Davis', grad_year: 2026, gpa: 3, gpa_weighted: 3, decision: 'Accepted', extracurriculars: 'Synthetic juggling' }]) }));
+    await p.goto(h.baseUrl + '/?view=students');
+    await p.waitForSelector('.entry-card');
+    await p.fill('#stu-find', 'juggling');
+    assert.match(await p.textContent('#entries'), /No students match/);
+    await ctx.close();
+  });
+
+  test('the chart sorts by name, typical GPA and number going', async () => {
+    const p = await page();
+    const names = () => p.$$eval('#chart-main .c-name[data-col]', n => n.map(x => x.textContent));
+    await p.selectOption('#chart-sort', 'name');
+    const n = await names();
+    assert.deepEqual(n, [...n].sort((a, b) => a.localeCompare(b)));
+    assert.equal(new URL(p.url()).searchParams.get('sort'), 'name');
+    const typical = () => p.$$eval('#chart-main .c-row[data-key]', r => r.map(x => { const v = [...x.querySelectorAll('.chart-dot')].map(d => +d.dataset.v).sort((a, b) => a - b); return (v[Math.floor((v.length - 1) / 2)] + v[Math.ceil((v.length - 1) / 2)]) / 2; }));
+    await p.selectOption('#chart-sort', 'high');
+    let t = await typical();
+    assert.deepEqual(t, [...t].sort((a, b) => b - a));
+    await p.selectOption('#chart-sort', 'low');
+    t = await typical();
+    assert.deepEqual(t, [...t].sort((a, b) => a - b));
+    await p.context().close();
+  });
+
+  test('saved colleges stay in this browser, filter the chart and start a comparison', async () => {
+    const p = await page();
+    const sent = [];
+    p.on('request', r => sent.push(r.url()));
+    assert.equal(await p.isVisible('#saved-filter'), false);
+    await p.focus('#chart-main .c-name[tabindex="0"]');
+    await p.keyboard.press('s');
+    await p.keyboard.press('ArrowDown'); await p.keyboard.press('ArrowDown');
+    await p.keyboard.press('s');
+    await p.click('#saved-filter');
+    const mine = await p.$$eval('#chart-main .c-name[data-col]', n => n.map(x => x.textContent));
+    assert.equal(mine.length, 2);
+    assert.deepEqual(sent, []);
+    assert.ok(!/saved/.test(p.url()));
+    await p.click('#compare-open');
+    assert.deepEqual([await p.inputValue('#cmp-a'), await p.inputValue('#cmp-b')].sort(), [...mine].sort());
+    await p.keyboard.press('Escape');
+    await p.reload();
+    await p.waitForSelector('#chart-main svg');
+    assert.equal(await p.$$eval('.c-star[aria-pressed="true"]', n => n.length), 2);
+    await p.context().close();
+  });
+
+  test('college details lead to that college\'s students; numbers link to colleges and majors', async () => {
+    const p = await page();
+    await p.click('#chart-main .c-name[data-col]');
+    await p.waitForSelector('#college-modal.open');
+    const name = await p.textContent('#college-modal-title');
+    await p.click('[data-students-at]');
+    assert.equal(await p.inputValue('#stu-college'), name);
+    assert.equal(await p.$('#college-modal.open'), null);
+    await p.click('.nav-link[data-view="numbers"]');
+    await p.click('#stats-inline [data-open-college]');
+    await p.waitForSelector('#college-modal.open');
+    await p.keyboard.press('Escape');
+    await p.click('#stats-inline [data-major]');
+    assert.equal(await p.$$eval('.slm-chip', c => c.length), 1);
+    assert.deepEqual(p.errors, []);
     await p.context().close();
   });
 });
@@ -261,7 +411,6 @@ describe('one set of filters for the whole page', () => {
 describe('counts before percentages', () => {
   test('no percentage is shown for a group smaller than five', async () => {
     const p = await page();
-    await p.click('[data-stats="timing"]');
     const all = (await p.$$eval('.stat-panel', n => n.map(x => x.textContent).join('\n'))) + await p.textContent('#summary');
     const small = [...all.matchAll(/(\d+) of (\d+) \((\d+)%\)/g)].filter(m => +m[2] < 5);
     assert.deepEqual(small, []);
@@ -300,7 +449,7 @@ describe('college names', () => {
 
 describe('student list', () => {
   test('pages in tens and moves focus to the first new student', async () => {
-    const p = await page();
+    const p = await page({ path: '/?view=students' });
     assert.equal(await p.$$eval('.entry-card', n => n.length), 10);
     await p.click('#entries-more');
     assert.equal(await p.$$eval('.entry-card', n => n.length), 20);
@@ -336,7 +485,9 @@ describe('first paint', () => {
 describe('statistics notice (acknowledgement preserved)', () => {
   test('appears on reaching the statistics, ignores Escape and backdrop, Got it persists', async () => {
     const p = await page({ showNotice: true });
-    await p.$eval('#stats-inline', el => el.scrollIntoView());
+    await p.waitForTimeout(200);
+    assert.equal(await p.$('#stats-disclaimer-modal.open'), null, 'not shown before the statistics');
+    await p.click('.nav-link[data-view="numbers"]');
     await p.waitForSelector('#stats-disclaimer-modal.open');
     assert.equal(await active(p), 'sd-title');
     assert.equal(await p.$eval('#stats-disclaimer-modal .modal', m => document.getElementById(m.getAttribute('aria-labelledby')).textContent), 'A quick note on these numbers');
@@ -349,10 +500,9 @@ describe('statistics notice (acknowledgement preserved)', () => {
     await p.keyboard.press('Enter');
     await p.waitForSelector('#stats-disclaimer-modal:not(.open)', { state: 'attached' });
     assert.equal(await p.evaluate(() => localStorage.getItem('cr_stats_disclaimer_ack')), '1');
-    assert.equal(await active(p), 'stats-heading');
+    assert.equal(await active(p), 'results-title', 'focus goes back to where it was');
     await p.reload();
-    await p.waitForSelector('#chart-main svg');
-    await p.$eval('#stats-inline', el => el.scrollIntoView());
+    await p.waitForSelector('#stats-inline .stat-block');
     await p.waitForTimeout(300);
     assert.equal(await p.$('#stats-disclaimer-modal.open'), null, 'acknowledged notice stays dismissed');
     await p.context().close();
@@ -378,6 +528,7 @@ describe('scope, empty states, errors', () => {
     await p.click('[data-schools="Ivies"]');
     assert.match(await p.textContent('#chart-main .chart-empty p'), /No submissions in the Ivies category yet/);
     assert.match(await p.textContent('#entries'), /No Ivies submissions yet/);
+    await p.click('.nav-link[data-view="students"]');
     await p.click('#entries [data-action="schools-all"]');
     assert.equal(await p.getAttribute('[data-schools="All"]', 'aria-pressed'), 'true');
     await p.context().close();
@@ -587,7 +738,7 @@ describe('restored public fields (operator decision 2026-10-17)', () => {
     assert.ok(card.includes('Recruited'));
     assert.ok(card.includes('Synthetic robotics club <b>lead</b>'), 'EC text shown literally');
     assert.ok(!(await p.$$eval('#entries b', n => n.map(x => x.textContent))).includes('lead'), 'no markup created from student text');
-    assert.match(await p.$eval('.entry-ecs p', e => e.innerText), /lead<\/b>\nChoir/, 'line break kept');
+    assert.match(await p.$eval('.entry-ecs p', e => e.textContent), /lead<\/b>\nChoir/, 'line break kept');
     await p.click('#chart-main .chart-dot');
     const tip = await p.textContent('#dot-tooltip');
     for (const t of ['Rank 12', 'First-generation student', 'Recruited', 'Extracurriculars']) assert.ok(tip.includes(t), t);

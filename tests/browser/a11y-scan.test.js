@@ -29,7 +29,12 @@ for (const theme of ['light', 'dark']) {
     await p.goto(h.baseUrl + '/?schools=All');
     await p.waitForSelector('#chart-main svg');
     const v = await scan(p, [['nav'], ['#page-results'], ['footer']]);
-    for (const t of ['grades', 'colleges', 'timing']) { await p.click(`[data-stats="${t}"]`); v.push(...await scan(p, [['#stats-section']])); }
+    for (const t of ['numbers', 'students']) { await p.click(`.nav-link[data-view="${t}"]`); await p.waitForTimeout(100); v.push(...await scan(p, [['nav'], ['#page-results']])); }
+    await p.click('[data-sort="gpa"]'); await p.click('[data-flag="first"]');
+    v.push(...await scan(p, [['#page-results']]));
+    await p.click('[data-flag="first"]');
+    await p.click('#nav-results');
+    await p.click('.c-star[data-save]');
     await p.fill('#slm-gpa', '3.4');
     await p.waitForSelector('.slm-chip');
     await p.click('#legend [data-decision]');

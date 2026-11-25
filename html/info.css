@@ -1,20 +1,20 @@
 /* Shared styles for the plain informational pages (about, methodology,
-   accessibility, terms draft, 404). No scripts. Archivo comes from /fonts/fonts.css, linked by each page. */
+   accessibility, terms draft, 404). No scripts. Schibsted Grotesk comes from /fonts/fonts.css, linked by each page. */
 :root {
-  --bg: #ffffff; --surface: #f1f4fb; --border: #dfe4f1;
-  --text: #0e1430; --text-2: #343c5e; --text-muted: #5b6383; --accent: #1b2bbf; --band: #1b2bbf;
-  --warn-bg: #fff7e6; --warn-border: #e0b44c; --warn-text: #5c3d00; --focus: #1b2bbf;
+  --bg: #ffffff; --surface: #eef2f2; --border: #e1e9e9;
+  --text: #10292c; --text-2: #2f4a4d; --text-muted: #536b6e; --accent: #0c5f68; --band: #0c5f68;
+  --warn-bg: #fff7e6; --warn-border: #e0b44c; --warn-text: #5c3d00; --focus: #0c5f68;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #0b0f22; --surface: #171d38; --border: #262d4d;
-          --text: #eef0fb; --text-2: #c6cbe4; --text-muted: #9aa1c4; --accent: #a3b0ff; --band: #18206b;
-          --warn-bg: #2b2210; --warn-border: #8a6a1e; --warn-text: #f3d48a; --focus: #b9c3ff; }
+  :root { --bg: #0b1517; --surface: #122023; --border: #22363a;
+          --text: #eaf4f4; --text-2: #c3d5d6; --text-muted: #94abad; --accent: #6fd0d6; --band: #122023;
+          --warn-bg: #2b2210; --warn-border: #8a6a1e; --warn-text: #f3d48a; --focus: #8fe0e5; }
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 100%; }
-body { background: var(--bg); color: var(--text-2); font: 1.0625rem/1.6 'Archivo', 'Helvetica Neue', Arial, sans-serif; border-top: 12px solid var(--band); overflow-wrap: anywhere; }
+body { background: var(--bg); color: var(--text-2); font: 1.0625rem/1.6 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif; border-top: 12px solid var(--band); overflow-wrap: anywhere; }
 main { max-width: 46rem; margin: 0 auto; padding: 3rem 1rem 5rem; }
-h1 { font-weight: 750; font-stretch: 116%; letter-spacing: -0.025em; font-size: 2.4rem; line-height: 1.08; color: var(--text); margin-bottom: 0.4rem; }
+h1 { font-weight: 750; letter-spacing: -0.025em; font-size: 2.4rem; line-height: 1.08; color: var(--text); margin-bottom: 0.4rem; }
 h2 { font-size: 1.2rem; line-height: 1.25; color: var(--text); margin: 2rem 0 0.5rem; }
 h3 { font-size: 1rem; color: var(--text); margin: 1.25rem 0 0.4rem; }
 p, ul, ol, table { margin-bottom: 0.75rem; }
