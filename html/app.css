@@ -573,7 +573,8 @@ footer strong, footer a { color: var(--text); }
   .college-row-name { flex: 1 1 calc(100% - 3.4rem); order: 0; }
   .college-row-remove { order: 1; }
   .college-row-decision { flex: 1 1 40%; order: 2; }
-  .college-row > div:last-child { order: 3; }
+  .college-row > div:last-child { order: 3; min-width: 0; margin-left: 0 !important; }
+  .college-row > div:last-child select { flex: 1 1 8rem !important; width: 0 !important; }
   /* Dialogs and mark details rise from the bottom, within thumb reach. */
   .modal-overlay { align-items: flex-end; padding: 0; }
   .modal { max-width: none; border-radius: 16px 16px 0 0; padding: 1.3rem 1rem calc(1.3rem + env(safe-area-inset-bottom)); max-height: 88dvh; animation: sheetIn .3s var(--ease-sheet); }
