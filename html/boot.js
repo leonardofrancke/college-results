@@ -5,6 +5,8 @@
   var t = get('cr_theme'), fs = parseFloat(get('cr_textsize'));
   if (t !== 'dark' && t !== 'light') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   d.dataset.theme = t;
+  var bar = document.querySelectorAll('meta[name="theme-color"]');
+  for (var i = 0; i < bar.length; i++) { bar[i].removeAttribute('media'); bar[i].content = t === 'dark' ? '#122023' : '#ffffff'; }
   d.style.setProperty('--fs', [1, 1.15, 1.3, 1.5].indexOf(fs) >= 0 ? fs : 1.15);
   if (get('cr_submitted') === '1') d.classList.add('no-cta');
 })();

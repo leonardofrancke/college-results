@@ -74,8 +74,8 @@ const LAC_SET = new Set([
   'Whitman','Bucknell','Lafayette','Dickinson','Skidmore','Trinity','Connecticut College',
   'Pomona','Claremont McKenna','Scripps','Pitzer','Harvey Mudd','Occidental',
 ]);
-const UC_RE = /^UC |^University of California/i;
-const CSU_RE = /\bCSUMB\b|Cal State|California State|San Jose State|San Francisco State|Fresno State|Sacramento State|Chico State|Humboldt State|Sonoma State|Cal Maritime|Cal Poly/i;
+const UC_RE = /^UC |^University of California|^(UCLA|UCSD|UCSB|UCSC|UCI|UCR|UCM|UCD)\b|^Berkeley$/i;
+const CSU_RE = /^CSU\b|\b(CSUMB|SJSU|SDSU|SFSU|CSULB|CSUN|CSUF)\b|San Diego State|Cal State|California State|San Jose State|San Francisco State|Fresno State|Sacramento State|Chico State|Humboldt State|Sonoma State|Cal Maritime|Cal Poly/i;
 const PUBLIC_SET = new Set([
   'UC Berkeley','UCLA','UCSD','UC Santa Barbara','UC Davis','UC Irvine','UC Santa Cruz','UC Riverside','UC Merced',
   'Cal Poly SLO','Cal Poly Pomona','Cal State Long Beach','San Jose State','San Francisco State','Fresno State',
@@ -98,7 +98,7 @@ const PUBLIC_SET = new Set([
 const JUCO_RE = /^mission$|gavil+an|gavillan|evergreen valley|de anza|west valley|mission college|foothill|san jose city|miramar|american river|lemoore|victor valley|hartnell|cabrillo|canada college|ohlone|chabot|las positas|community college|\bjc\b/i;
 
 // Public 4-years students actually applied to that the whitelist misses.
-const PUBLIC_EXTRA_RE = /nevada|reno|csumb|monterey bay|boise state|southern oregon|ohio state|texas at dallas|arizona state|grand canyon/i;
+const PUBLIC_EXTRA_RE = /nevada|reno|csumb|monterey bay|boise state|southern oregon|ohio state|texas at dallas|arizona state/i;
 
 // Collapses "Gavilan college" / "Gavilan" / "Gavillan" and
 // "CSUMB" / "Cal State Monterey Bay" onto one key.
@@ -111,9 +111,15 @@ function escHtml(v) {
 // "State" is dropped only as part of "Cal State", never on its own: it used to
 // be, which would have counted "Arizona State" and "University of Arizona" (or
 // the two San Francisco schools) as one college.
+const COLLEGE_ALIASES = {
+  csumb: 'cal state monterey bay', csulb: 'cal state long beach', csun: 'cal state northridge', csuf: 'cal state fullerton',
+  sjsu: 'san jose state', sdsu: 'san diego state', sfsu: 'san francisco state',
+  ucsd: 'uc san diego', ucsb: 'uc santa barbara', ucsc: 'uc santa cruz', uci: 'uc irvine', ucr: 'uc riverside', ucd: 'uc davis',
+};
 function canonKey(name) {
   return String(name || '').toLowerCase()
-    .replace(/\bcsumb\b/g, 'cal state monterey bay')
+    .replace(/\b[a-z]{3,5}\b/g, w => COLLEGE_ALIASES[w] || w)
+    .replace(/\bsan luis obispo\b/g, 'slo')
     .replace(/\b(cal|california) state( university)?\b,?/g, '')
     .replace(/\b(university|college|the|of|at)\b/g, '')
     .replace(/gavill?an/g, 'gavilan')
@@ -163,7 +169,8 @@ function isPublic(name) {
   if (CSU_RE.test(name)) return true;
   if (PUBLIC_EXTRA_RE.test(name)) return true;
   if (JUCO_RE.test(name)) return true;          // community colleges are public
-  return PUBLIC_SET.has(name);
+  // By merged name, so "University of Michigan" matches the list's "Michigan".
+  return (isPublic.keys ||= new Set([...PUBLIC_SET].map(canonKey))).has(canonKey(name));
 }
 function matchesCollegeFilter(row, filter) {
   const name = row.college_name;
@@ -268,17 +275,14 @@ Object.assign(COLLEGE_ACCEPT_RATES, {
 // admissions cycles that these need occasional rechecking; the ~150 schools
 // elsewhere in this table have not all been individually reverified.
 
+// Exact name, or the same college once spelling variants are merged. It used to
+// accept any partial match, which gave American River College (open admission)
+// American University's rate.
 function getAcceptRate(name) {
   if (COLLEGE_ACCEPT_RATES[name]) return COLLEGE_ACCEPT_RATES[name];
-  // "state university" was previously stripped as one joined phrase, which
-  // deletes "state" from names like "Ohio state university" — losing the word
-  // the table's "Ohio State" key actually needs to match on. "university" and
-  // "college" are stripped individually instead; "state" is left alone.
-  const norm = n => n.replace(/\b(university|college|institute of technology)\b/gi,'').replace(/\s+/g,' ').trim().toLowerCase();
-  const m = Object.keys(COLLEGE_ACCEPT_RATES).find(k => norm(k) === norm(name));
-  if (m) return COLLEGE_ACCEPT_RATES[m];
-  const p = Object.keys(COLLEGE_ACCEPT_RATES).find(k => { const kn=norm(k); return norm(name).includes(kn)||kn.includes(norm(name)); });
-  return p ? COLLEGE_ACCEPT_RATES[p] : null;
+  if (JUCO_RE.test(name)) return null;
+  getAcceptRate.byKey ||= new Map(Object.entries(COLLEGE_ACCEPT_RATES).map(([k, v]) => [canonKey(k), v]));
+  return getAcceptRate.byKey.get(canonKey(name)) || null;
 }
 
 // ── Session ────────────────────────────────────────────────────────────────
@@ -316,6 +320,7 @@ const admitted = (a, n) => n >= MIN_RATE_N ? `${a} of ${n} (${Math.round(a / n *
 const REDUCED_MOTION = window.matchMedia
   && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let currentPage = 'results';
+let _targetPage = 'results', _pageSeq = 0;   // where a page switch in progress is heading
 let _openCollegeName = null; // for URL sync only — which college's modal is open
 let _suppressUrlWrite = false; // true while popstate is restoring, so restoring doesn't itself push history
 let _loadSeq = 0, _loadState = 'idle', _dataLoadedAt = null; // results feed request state
@@ -390,7 +395,9 @@ function updateNav() {
 // ── Page transitions ───────────────────────────────────────────────────────
 function showPage(name, opts) {
   const fromPopstate = !!(opts && opts.fromPopstate);
-  if (name === currentPage) return;
+  if (name === _targetPage) return;
+  _targetPage = name;
+  const seq = ++_pageSeq;
   const oldEl = document.getElementById('page-' + currentPage);
   const newEl = document.getElementById('page-' + name);
 
@@ -400,6 +407,14 @@ function showPage(name, opts) {
   navEl.setAttribute('aria-current', 'page');
   updateNav();
   setDocTitle(name);
+
+  if (name === currentPage) {
+    // Changed their mind while the other page was still fading in: put it back.
+    document.querySelectorAll('.page').forEach(el => { el.style.cssText = ''; el.classList.toggle('active', el === newEl); });
+    syncView();
+    if (!fromPopstate) writeUrlState(false);
+    return;
+  }
 
   if (REDUCED_MOTION) {
     oldEl.classList.remove('active');
@@ -416,6 +431,7 @@ function showPage(name, opts) {
   oldEl.style.cssText = 'opacity:0;transform:translateY(-5px);transition:opacity 0.16s ease,transform 0.16s ease;pointer-events:none;';
 
   setTimeout(() => {
+    if (seq !== _pageSeq) return;
     oldEl.classList.remove('active');
     oldEl.style.cssText = '';
     newEl.style.cssText = 'opacity:0;transform:translateY(10px);transition:none;display:block;';
@@ -425,6 +441,7 @@ function showPage(name, opts) {
     newEl.style.opacity = '1';
     newEl.style.transform = 'translateY(0)';
     setTimeout(() => {
+      if (seq !== _pageSeq) return;
       newEl.style.cssText = '';
       newEl.classList.add('active');
       currentPage = name;
@@ -509,7 +526,11 @@ function setLoadState(state, err) {
   retry.textContent = 'Try again';
   wrap.append(msg, retry);
   box.appendChild(wrap);
-  if (!_dataLoadedAt) document.getElementById('page-meta').textContent = 'Results unavailable';
+  if (!_dataLoadedAt) {
+    document.getElementById('page-meta').textContent = 'Results unavailable';
+    document.getElementById('summary').textContent = 'Nothing to show until the results load.';
+    document.getElementById('chart-main').innerHTML = '<div class="chart-empty"><p>The chart will appear once the results load.</p></div>';
+  }
 }
 
 // The page shows one set of rows: Class of 2026, in the selected school
@@ -730,6 +751,34 @@ function playChart(el, prev) {
   });
 }
 
+// First paint only: marks arrive left to right along the GPA axis, then the
+// "You" handle nudges once to show it can be dragged.
+let _introDone = false;
+function playIntro(el, W) {
+  el.querySelectorAll('.chart-dot').forEach(n => n.animate(
+    [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'none' }],
+    { duration: 300, delay: n.dataset.cx / W * 420, easing: 'cubic-bezier(0.23,1,0.32,1)', fill: 'backwards' }));
+  el.querySelectorAll('.c-range').forEach(n => n.animate([{ opacity: 0 }, {}], { duration: 420, delay: 320, easing: 'ease-out', fill: 'backwards' }));
+  const you = el.querySelector('.c-you.is-idle');
+  if (you) you.animate(['-50%', 'calc(-50% + 9px)', 'calc(-50% - 5px)', '-50%'].map(x => ({ transform: `translateX(${x})` })), { duration: 620, delay: 950, easing: 'cubic-bezier(0.77,0,0.175,1)' });
+}
+
+// A read-only strip of one college's decisions, for details and Compare.
+function stripSvg(rows, W, withAxis) {
+  const m = METRICS.uw, PAD = 12, R = 5;
+  const x = v => PAD + (Math.min(m.max, Math.max(m.min, v)) - m.min) / (m.max - m.min) * (W - PAD * 2);
+  const pts = rows.map(r => ({ r, v: parseFloat(r.gpa) })).filter(p => !isNaN(p.v));
+  pts.forEach(p => { p.x = x(p.v); });
+  const ext = layoutLanes(pts, R), H = Math.max(30, Math.round(ext.above + ext.below + R * 2 + 10)), cy = H / 2 + (ext.above - ext.below) / 2;
+  let s = m.ticks.map(t => `<line class="c-grid" x1="${x(t).toFixed(1)}" x2="${x(t).toFixed(1)}" y1="0" y2="${H}"/>`).join('');
+  if (slmFilter && slmFilter.gpa) s += `<line class="c-youline" x1="${x(slmFilter.gpa.v).toFixed(1)}" x2="${x(slmFilter.gpa.v).toFixed(1)}" y1="0" y2="${H}"/>`;
+  const acc = pts.filter(p => p.r.decision === 'Accepted').map(p => p.x);
+  if (acc.length > 1) s += `<line class="c-range" x1="${Math.min(...acc).toFixed(1)}" x2="${Math.max(...acc).toFixed(1)}" y1="${cy}" y2="${cy}"/>`;
+  s += pts.map(p => dotSvg(p.r.decision, p.x.toFixed(1), (cy + p.dy).toFixed(1), R, `class="strip-dot d-${PILL_CLASS[p.r.decision] ? p.r.decision : 'none'}"`)).join('');
+  if (withAxis) s += m.ticks.map(t => `<text class="strip-tick" x="${x(t).toFixed(1)}" y="${H + 16}" text-anchor="middle">${m.fmt(t)}</text>`).join('');
+  return `<svg class="strip" width="${W}" height="${H + (withAxis ? 22 : 0)}" aria-hidden="true">${s}</svg>`;
+}
+
 // Marks that would overlap are stacked into lanes instead of being jittered,
 // so the horizontal position is always the exact value.
 function layoutLanes(points, r) {
@@ -782,6 +831,7 @@ function buildChart(opts) {
 
   document.getElementById('chart-col-count').textContent = total ? `${total} college${total !== 1 ? 's' : ''}` : '';
   document.getElementById('chart-axis-title').textContent = m.title;
+  document.querySelector('#chart-sort [value="near"]').disabled = !youValue();
 
   // A rebuild replaces every chart node: remember what had focus and put it
   // back on the same college/mark/legend button afterwards.
@@ -817,7 +867,7 @@ function buildChart(opts) {
 
   // "You": the value typed into the filters, when it's on this axis.
   const you = activeChartType === 'uw' ? slmFilter && slmFilter.gpa : activeChartType === 'sat' ? slmFilter && slmFilter.sat : null;
-  axisPlot.parentNode.classList.add('has-you');
+  axisPlot.parentNode.classList.toggle('has-you', activeChartType !== 'gpa');
 
   _axis = { x, inv: px => m.min + (px - PADX) / (W - PADX * 2) * (m.max - m.min), metric: activeChartType };
   if (activeChartType !== 'gpa') addYouHandle(axisPlot, you, m, x);
@@ -868,6 +918,8 @@ function buildChart(opts) {
   el.insertAdjacentHTML('beforeend', html);
 
   if (prev) playChart(el, prev);
+  else if (!_introDone && view === 'colleges' && !REDUCED_MOTION && !document.hidden) playIntro(el, W);
+  _introDone = true;
   syncSaved();
   renderChartTable(cols);
 
@@ -1084,8 +1136,8 @@ function showTooltip(r, pos) {
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   tip.textContent = '';
   const facts = [];
-  if (r.gpa) facts.push(`UW GPA ${r.gpa}`);
-  if (r.gpa_weighted) facts.push(`W ${r.gpa_weighted}`);
+  if (r.gpa) facts.push(`UW GPA ${(+r.gpa).toFixed(2)}`);
+  if (r.gpa_weighted) facts.push(`W ${(+r.gpa_weighted).toFixed(2)}`);
   if (r.sat) facts.push(`SAT ${r.sat}`);
   if (r.act) facts.push(`ACT ${r.act}`);
   if (r.class_rank) facts.push(`Rank ${r.class_rank}`);
@@ -1159,12 +1211,15 @@ function openCollegeDetail(name, opts) {
     <p class="modal-lead"><b>${acc.length} of ${total}</b> admitted${total >= MIN_RATE_N ? ` (${Math.round(acc.length / total * 100)}%)` : ''}.${escHtml(scopeText())}</p>
     <div class="modal-acts"><button type="button" class="btn-quiet btn-save" data-save="${escHtml(key)}" aria-pressed="${saved.has(key)}" aria-label="Save ${escHtml(shownName)}"><svg aria-hidden="true"><use href="#i-star"/></svg><span data-save-text>${saved.has(key) ? 'Saved' : 'Save'}</span></button><button type="button" class="btn-quiet" data-students-at="${escHtml(shownName)}">${total === 1 ? 'See this student' : `See these ${total} students`}</button></div>
     ${total < MIN_RATE_N ? `<p class="scope-note">Only ${total} Live Oak report${total !== 1 ? 's' : ''}. That's too few to say anything about anyone's chances.</p>` : ''}
+    <div class="modal-section"><h3>Unweighted GPA of everyone who applied</h3><div id="detail-strip"></div></div>
     <div class="modal-section"><h3>Decisions</h3>${bars}</div>
     ${facts ? `<div class="modal-section"><h3>Admitted students</h3><table class="mini-table"><thead><tr><td></td><th scope="col">Range</th><th scope="col">Average</th></tr></thead><tbody>${facts}</tbody></table></div>` : ''}
     <p class="scope-note">${extRate ? `About ${extRate}% overall admission rate (unverified estimate). ` : ''}<a href="/methodology.html">How these numbers work</a></p>`;
   _openCollegeName = shownName;
   if (!_suppressUrlWrite) writeUrlState(true);
   openModal('college-modal', { returnKey: 'col:' + key });
+  const strip = document.getElementById('detail-strip');
+  strip.innerHTML = stripSvg(rows, strip.clientWidth || 320, true);
 }
 
 function openCompare() {
@@ -1213,35 +1268,33 @@ function openCompare() {
 }
 function renderCompare() {
   const unique = [...new Set(['cmp-a', 'cmp-b', 'cmp-c'].map(id => document.getElementById(id).value).filter(Boolean))];
-  document.getElementById('cmp-result').innerHTML = unique.length < 2
-    ? '<p class="scope-note">Pick at least two different colleges.</p>'
-    : `<div class="cmp-grid" style="--cmp-cols:${unique.length};">${unique.map(colStats).join('')}</div>`;
+  const host = document.getElementById('cmp-result');
+  if (unique.length < 2) { host.innerHTML = '<p class="scope-note">Pick at least two different colleges.</p>'; return; }
+  const all = viewRows().filter(r => !isNoCollege(r));
+  const cols = unique.map(name => ({ name, rows: all.filter(r => canonKey(r.college_name) === canonKey(name)) }));
+  cols.forEach(c => { c.acc = c.rows.filter(r => r.decision === 'Accepted'); });
+  const count = (c, f) => c.rows.filter(f).length;
+  const range = (c, k, d) => { const a = rangeText(c.acc, k, d); return a ? a.range : null; };
+  const round = (c, types) => { const r = c.rows.filter(x => types.includes(x.decision_type)); return r.length ? admitted(r.filter(x => x.decision === 'Accepted').length, r.length) : null; };
+  const lines = [
+    ['Admitted', c => admitted(c.acc.length, c.rows.length)],
+    ['Waitlisted', c => count(c, r => r.decision === 'Waitlisted') || null],
+    ['Rejected', c => count(c, r => r.decision === 'Rejected') || null],
+    ['Pending', c => count(c, r => r.decision === 'Pending') || null],
+    ['GPA of those admitted', c => range(c, 'gpa', 2)],
+    ['Weighted GPA', c => range(c, 'gpa_weighted', 2)],
+    ['SAT', c => range(c, 'sat', 0)],
+    ['Early (EA or ED)', c => round(c, ['EA', 'ED'])],
+    ['Going there', c => count(c, r => r.enrolling === 'yes') || null],
+    ['Got a scholarship', c => count(c, r => r.scholarship === 'yes') || null],
+    ['Overall rate (unverified)', c => { const r = getAcceptRate(c.name); return r ? `about ${r}%` : null; }],
+  ].map(([label, f]) => [label, cols.map(f)]).filter(([, v]) => v.some(x => x !== null));
+  host.innerHTML = `<div class="cmp-strips">${cols.map((c, k) => `<div class="cmp-strip"><div class="cmp-strip-name">${escHtml(c.name)}</div><div data-strip="${k}"></div></div>`).join('')}</div>
+    <div class="cmp-scroll"><table class="cmp-table"><caption class="sr-only">Comparison of ${cols.length} colleges</caption>
+    <thead><tr><td></td>${cols.map(c => `<th scope="col" class="cmp-col">${escHtml(c.name)}</th>`).join('')}</tr></thead>
+    <tbody>${lines.map(([label, v]) => `<tr><th scope="row">${label}</th>${v.map(x => `<td>${x === null ? '<span class="none">–</span>' : x}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  host.querySelectorAll('[data-strip]').forEach((n, k) => { n.innerHTML = stripSvg(cols[k].rows, n.clientWidth || 300, k === cols.length - 1); });
 }
-function colStats(name) {
-  const rows = viewRows().filter(r => !isNoCollege(r) && canonKey(r.college_name) === canonKey(name));
-  const total = rows.length, acc = rows.filter(r => r.decision === 'Accepted');
-  const natRate = getAcceptRate(name);
-  const bars = DECISION_ORDER.map(d => ({ d, n: rows.filter(r => r.decision === d).length })).filter(x => x.n).map(({ d, n }) => `
-    <div class="bar-row"><div class="bar-label">${d}</div><div class="bar-track" aria-hidden="true"><div class="bar-fill b-${d}" style="width:${n / total * 100}%"></div></div><div class="bar-val">${n}</div></div>`).join('');
-  const facts = [['gpa', 'Unweighted GPA', 2], ['gpa_weighted', 'Weighted GPA', 2], ['sat', 'SAT', 0]].map(([k, label, dg]) => {
-    const a = rangeText(acc, k, dg);
-    return a ? `<tr><th scope="row">${label}</th><td>${a.range}</td></tr>` : '';
-  }).join('');
-  const rounds = ['EA', 'ED', 'RD', 'Rolling'].map(t => {
-    const rt = rows.filter(r => r.decision_type === t);
-    return rt.length ? `<tr><th scope="row">${t}</th><td>${admitted(rt.filter(r => r.decision === 'Accepted').length, rt.length)}</td></tr>` : '';
-  }).join('');
-  const enrolled = rows.filter(r => r.enrolling === 'yes').length, schol = rows.filter(r => r.scholarship === 'yes').length;
-  return `<div class="cmp-col">
-    <h3>${escHtml(name)}</h3>
-    <p class="modal-lead"><b>${acc.length} of ${total}</b> admitted${total >= MIN_RATE_N ? ` (${Math.round(acc.length / total * 100)}%)` : ''}</p>
-    ${bars}
-    ${facts ? `<table class="mini-table"><caption>Admitted students</caption><tbody>${facts}</tbody></table>` : ''}
-    ${rounds ? `<table class="mini-table"><caption>Admitted, by round</caption><tbody>${rounds}</tbody></table>` : ''}
-    <p class="scope-note">${[enrolled ? `${enrolled} enrolling.` : '', schol ? `${schol} got a scholarship.` : '', natRate ? `About ${natRate}% overall admission rate (unverified estimate).` : ''].filter(Boolean).join(' ')}</p>
-  </div>`;
-}
-
 // ── Modal accessibility: focus trap + focus restore ─────────────────────────
 // Tab used to escape straight into the page behind the overlay, and closing
 // a modal dropped focus back to <body> instead of wherever you opened it
@@ -1681,7 +1734,8 @@ function renderStatsInline(allRows) {
   const basis = enrolled.length ? enrolled : data.filter(isYes);
   const byDest = DEST_ORDER.map(d => ({ d, rows: basis.filter(r => destOf(r) === d) })).filter(x => x.rows.length);
   const destTotal = byDest.reduce((s, x) => s + uniq(x.rows), 0);
-  const inN = uniq(basis.filter(isInState)), outN = uniq(basis.filter(r => !isInState(r)));
+  const placed = basis.filter(r => destOf(r) !== 'Trade school');   // location not known
+  const inN = uniq(placed.filter(isInState)), outN = uniq(placed.filter(r => !isInState(r)));
   const enrollList = [...apps.values()].filter(a => a.enr > 1).sort((a, b) => b.enr - a.enr || a.name.localeCompare(b.name));
   const destinations =
     statBlock(`Type of school${enrolled.length ? '' : ' (by acceptance)'}`, byDest.map(x => barRow(x.d, uniq(x.rows) / destTotal * 100, share(uniq(x.rows), destTotal))).join('')) +
@@ -1979,6 +2033,7 @@ async function sendChat() {
 // means the device's own light/dark setting.
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => { m.content = theme === 'dark' ? '#122023' : '#ffffff'; });
   const label = document.getElementById('theme-toggle-text');
   if (label) label.textContent = theme === 'dark' ? 'Light' : 'Dark';
   const btn = document.getElementById('theme-toggle');
@@ -2019,6 +2074,7 @@ try { applyTextSize(parseFloat(localStorage.getItem('cr_textsize')) || 1.15, fal
 const UI_ACTIONS = {
   'cta-share': () => showPage('submit', { focus: true }),
   'retry-load': () => loadData(),
+  'share-view': shareView,
   'schools-all': () => setCollegeFilter('All', { track: false }),
   'clear-search': () => {
     const s = document.getElementById('college-search');
@@ -2030,6 +2086,21 @@ const UI_ACTIONS = {
   'slm-clear': () => { clearSlm(); document.getElementById('slm-gpa').focus(); },
   'go-submit': () => showPage('submit', { focus: true }),
 };
+
+// Shares the address of the current view. It never contains a student's own
+// GPA, scores or saved colleges.
+async function shareView(btn) {
+  const url = location.href;
+  if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
+    try { await navigator.share({ title: document.title, url }); } catch (e) {}
+    return;
+  }
+  const label = btn.querySelector('span');
+  try { await navigator.clipboard.writeText(url); label.textContent = 'Link copied'; }
+  catch (e) { label.textContent = 'Copy the address bar'; }
+  clearTimeout(shareView.t);
+  shareView.t = setTimeout(() => { label.textContent = 'Copy link to this view'; }, 2200);
+}
 
 function bindUi() {
   const $ = id => document.getElementById(id);
@@ -2192,9 +2263,11 @@ function bindUi() {
 // Colleges, Numbers and Students are links to ?view=…; a plain click swaps the
 // view in place.
 function setView(v, opts) {
+  if (v === view && _targetPage === 'results') { window.scrollTo(0, 0); return; }
   view = v;
+  document.getElementById('page-results').classList.add('switched');
   // showPage writes the URL itself once it has switched.
-  if (currentPage !== 'results') showPage('results');
+  if (_targetPage !== 'results') showPage('results');
   else writeUrlState(true);
   syncView();
   if (v === 'colleges' && _dataLoadedAt) buildChart();
@@ -2302,7 +2375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('nav-submit').classList.add('active');
     document.getElementById('nav-submit').setAttribute('aria-current', 'page');
     setDocTitle('submit');
-    currentPage = 'submit';
+    currentPage = _targetPage = 'submit';
     loadExistingSubmission();
   }
   updateNav();
@@ -2317,7 +2390,7 @@ window.addEventListener('popstate', () => {
     const state = readStateFromUrl();
     applyUrlState(state);
     closeModal('college-modal');
-    if (state.page !== currentPage) showPage(state.page, {fromPopstate: true});
+    if (state.page !== _targetPage) showPage(state.page, {fromPopstate: true});
     if (currentPage === 'results' && _dataLoadedAt) renderResults();
     if (state.college) openCollegeDetail(state.college);
   } finally {

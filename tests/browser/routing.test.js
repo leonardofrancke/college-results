@@ -40,7 +40,7 @@ test('unknown paths are 404 with a small page, never the app', async () => {
 
 test('app URLs, query views, pages and assets still load', async () => {
   for (const p of ['/', '/?page=submit', '/?schools=UCs&chart=sat&q=davis&min=2&decision=Accepted&college=UC%20Davis', '/index.html',
-                   '/privacy.html', '/about.html', '/methodology.html', '/accessibility.html', '/terms-draft.html', '/admin.html', '/info.css', '/app.css', '/app.js', '/boot.js', '/fonts/fonts.css']) {
+                   '/privacy.html', '/about.html', '/methodology.html', '/accessibility.html', '/terms-draft.html', '/admin.html', '/info.css', '/app.css', '/app.js', '/boot.js', '/favicon.svg', '/share.png', '/apple-touch-icon.png', '/fonts/fonts.css']) {
     assert.equal((await get(p)).status, 200, p);
   }
 });

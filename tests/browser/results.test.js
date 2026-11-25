@@ -447,6 +447,82 @@ describe('college names', () => {
   });
 });
 
+describe('audit 2026-11-25', () => {
+  const open = async rows => {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    await ctx.addInitScript(() => localStorage.setItem('cr_stats_disclaimer_ack', '1'));
+    const p = await ctx.newPage();
+    await p.route('**/api/submissions', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(rows) }));
+    await p.goto(h.baseUrl + '/');
+    await p.waitForSelector('#chart-main svg');
+    return p;
+  };
+  const row = (id, name, extra) => ({ id, session_id: 's' + id, college_name: name, grad_year: 2026, gpa: 3.5, gpa_weighted: 4, decision: 'Accepted', decision_type: 'RD', school_type: 'University', enrolling: 'yes', ...extra });
+
+  test('colleges land in the right category', async () => {
+    const p = await open([row(1, 'UCLA')]);
+    const dest = n => p.evaluate(x => destOf({ college_name: x, school_type: 'University' }), n);
+    for (const n of ['UCLA', 'UCSD', 'UC Davis', 'University of California Berkeley']) assert.equal(await dest(n), 'UC', n);
+    for (const n of ['CSUMB', 'SJSU', 'San Diego State', 'Cal Poly SLO']) assert.equal(await dest(n), 'CSU', n);
+    for (const n of ['University of Michigan', 'Michigan', 'Arizona State', 'The Ohio state university']) assert.equal(await dest(n), 'Public (out of state)', n);
+    for (const n of ['grand canyon university', 'Stanford', 'University of San Francisco']) assert.equal(await dest(n), 'Private 4-year', n);
+    for (const n of ['Mission', 'American river college', 'De Anza']) assert.equal(await dest(n), 'Community college', n);
+    assert.equal(await p.evaluate(() => isInState({ college_name: 'UCLA' })), true);
+    const key = n => p.evaluate(x => canonKey(x), n);
+    for (const [a, b] of [['SJSU', 'San Jose State'], ['UCSD', 'UC San Diego'], ['CSUMB', 'Cal State Monterey Bay'], ['Cal Poly San Luis Obispo', 'Cal Poly SLO']]) assert.equal(await key(a), await key(b), a);
+    const rate = n => p.evaluate(x => getAcceptRate(x), n);
+    assert.equal(await rate('American river college'), null, 'open-admission college has no borrowed rate');
+    assert.equal(await rate('The Ohio state university'), 61);
+    await p.context().close();
+  });
+
+  test('trade schools are left out of in or out of California', async () => {
+    const p = await open([row(1, 'UC Davis'), row(2, 'Pipe trading center', { school_type: 'Trade' })]);
+    const t = await p.$$eval('.stat-block', b => b.find(x => /California/.test(x.querySelector('h4').textContent)).textContent);
+    assert.match(t, /In California1/); assert.match(t, /Out of state0/);
+    await p.context().close();
+  });
+
+  test('quick changes of mind between pages: the last click wins', async () => {
+    const p = await page({ reducedMotion: 'no-preference' });
+    for (const [first, last, want] of [['#nav-submit', '#nav-results', ['results', 'colleges']], ['#nav-submit', '.nav-link[data-view="students"]', ['results', 'students']], ['#nav-results', '#nav-submit', ['submit', 'students']]]) {
+      await p.evaluate(([a, b]) => { document.querySelector(a).click(); document.querySelector(b).click(); }, [first, last]);
+      await p.waitForTimeout(700);
+      const got = await p.evaluate(() => [currentPage, view]);
+      assert.equal(got[0], want[0], `${first} then ${last}`);
+      assert.deepEqual(await p.$$eval('.page', n => n.filter(x => getComputedStyle(x).display !== 'none').map(x => x.id)), ['page-' + want[0]]);
+      assert.equal(await p.$$eval('.nav-link[aria-current]', n => n.length), 1);
+    }
+    await p.context().close();
+  });
+
+  test('phone: the chart table does not widen the page', async () => {
+    const p = await page({ viewport: { width: 390, height: 844 } });
+    await p.click('.chart-table-wrap summary');
+    assert.equal(await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 0);
+    await p.context().close();
+  });
+
+  test('sharing copies the view and nothing personal', async () => {
+    const p = await page();
+    await p.fill('#slm-gpa', '3.41');
+    await p.waitForSelector('.slm-chip');
+    await p.evaluate(() => { window.__c = null; Object.defineProperty(navigator, 'clipboard', { value: { writeText: async t => { window.__c = t; } }, configurable: true }); });
+    await p.click('[data-schools="UCs"]');
+    await p.click('[data-action="share-view"]');
+    const url = await p.evaluate(() => window.__c);
+    assert.match(url, /\?schools=UCs$/);
+    assert.match(await p.textContent('.share'), /Link copied/);
+    await p.context().close();
+  });
+
+  test('dropdowns keep a usable height in every browser (no native appearance)', async () => {
+    const p = await page({ path: '/?view=students' });
+    for (const id of ['stu-sort', 'stu-college', 'slm-major']) assert.equal(await p.$eval('#' + id, e => getComputedStyle(e).appearance), 'none', id);
+    await p.context().close();
+  });
+});
+
 describe('student list', () => {
   test('pages in tens and moves focus to the first new student', async () => {
     const p = await page({ path: '/?view=students' });
