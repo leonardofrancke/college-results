@@ -163,6 +163,10 @@ function isOpenAdmission(row) {
   return (row.school_type === 'Community');
 }
 
+// Community colleges admit everyone, trade schools aren't four-year, and "None"
+// isn't a college.
+const isFourYear = row => !isOpenAdmission(row) && row.school_type !== 'Trade' && !isNoCollege(row);
+
 function isPublic(name) {
   if (IVY_SET.has(name)) return false;
   if (UC_RE.test(name)) return true;
@@ -307,6 +311,14 @@ let activeChartType = 'uw', searchFilter = '', activeFilter = null, slmFilter = 
 let chartExpanded = false;   // false: colleges with one report are folded away
 let entriesShown = 0;        // how many student cards are on screen
 let view = 'colleges';        // colleges | numbers | students
+let detail = +document.documentElement.dataset.detail || 1;   // 1 simple, 2 more, 3 everything
+const openTypes = new Set();  // school types unfolded at the simple level
+const openStudents = new Set();
+const DETAIL_NAMES = { 1: 'Simple', 2: 'More', 3: 'Everything' };
+// Counts are of decisions, not people: one student can have several.
+const DECISION_NOUN = { Accepted: ['acceptance', 'acceptances'], Waitlisted: ['waitlist', 'waitlists'], Rejected: ['rejection', 'rejections'], Pending: ['pending', 'pending'] };
+const nounFor = (d, n) => DECISION_NOUN[d][n === 1 ? 0 : 1];
+const capital = s => s[0].toUpperCase() + s.slice(1);
 let chartSort = 'apps';
 let savedOnly = false;
 const STUDENT_DEFAULTS = { sort: 'shared', dir: 'desc', college: '', flags: [], q: '' };
@@ -557,7 +569,8 @@ function renderResults(opts) {
   renderField(rows);
   renderYou(rows);
   renderSlmChips();
-  buildChart({ motion: !!(opts && opts.motion) });
+  buildChart({ motion: !!(opts && opts.motion), morph: !!(opts && opts.morph) });
+  renderFacts(rows);
   renderStatsInline(rows);
   entriesShown = ENTRIES_PAGE;
   renderEntries(rows);
@@ -598,6 +611,7 @@ function setCollegeFilter(f, opts) {
 }
 
 // ── Summary sentence ───────────────────────────────────────────────────────
+const categoryLabel = c => ({ T20: 'Top 20', LACs: 'Liberal arts' })[c] || c;
 const CATEGORY_NOUN = {
   UCs: 'a UC', CSUs: 'a CSU', Public: 'a public four-year college', Private: 'a private college',
   T20: 'a top-20 college', Ivies: 'an Ivy', Community: 'a community college', Trade: 'a trade school', LACs: 'a liberal arts college',
@@ -607,13 +621,13 @@ function renderSummary(rows) {
   rows.forEach(r => {
     const k = studentKey(r);
     if (!students.has(k)) students.set(k, { gpa: parseFloat(r.gpa), ok: false });
-    if (r.decision === 'Accepted') students.get(k).ok = true;
+    if (r.decision === 'Accepted' && !isNoCollege(r)) students.get(k).ok = true;
   });
   const n = students.size, ok = [...students.values()].filter(s => s.ok).length;
   const gpas = [...students.values()].map(s => s.gpa).filter(g => !isNaN(g));
   // Per application, at colleges that can say no (open-admission colleges
   // accept everyone, which pushed this to ~99%).
-  const decided = rows.filter(r => !isOpenAdmission(r) && ['Accepted', 'Rejected', 'Waitlisted'].includes(r.decision));
+  const decided = rows.filter(r => isFourYear(r) && ['Accepted', 'Rejected', 'Waitlisted'].includes(r.decision));
   const yes = decided.filter(r => r.decision === 'Accepted').length;
 
   const el = document.getElementById('summary');
@@ -626,11 +640,14 @@ function renderSummary(rows) {
   } else {
     el.append(num('s0', n), ` student${n !== 1 ? 's' : ''}${slmFilter ? ' like you' : ''} ${all ? 'shared their results' : 'applied to ' + noun}. `,
       num('s1', ok), all ? ' got into at least one college.' : ' got into at least one.');
-    if (decided.length) el.append(' Four-year colleges said yes to ', num('s2', `${yes} of ${decided.length}`), ` decided application${decided.length !== 1 ? 's' : ''}${decided.length >= MIN_RATE_N ? ` (${Math.round(yes / decided.length * 100)}%)` : ''}.`);
+    if (decided.length) el.append(' Four-year colleges said yes ', num('s2', `${yes} of ${decided.length}`), ` time${decided.length !== 1 ? 's' : ''}${decided.length >= MIN_RATE_N ? ` (${Math.round(yes / decided.length * 100)}%)` : ''}.`);
     if (gpas.length) el.append(' Average unweighted GPA: ', num('s3', (gpas.reduce((a, b) => a + b, 0) / gpas.length).toFixed(2)), '.');
   }
+  const answers = rows.filter(r => !isNoCollege(r)).length;
+  document.getElementById('lede').textContent = !n ? el.textContent
+    : `${n} student${n !== 1 ? 's' : ''}${slmFilter ? ' like you' : ''}, ${answers} answer${answers !== 1 ? 's' : ''} from colleges. Each dot is one answer, placed by that student's GPA.`;
   document.getElementById('page-meta').textContent =
-    `Class of 2026${all ? '' : ', ' + activeCollegeFilter}${slmFilter ? ', ' + slmParts().map(p => p.text).join(', ') : ''}`;
+    `Class of 2026${all ? '' : ', ' + categoryLabel(activeCollegeFilter)}${slmFilter ? ', ' + slmParts().map(p => p.text).join(', ') : ''}`;
 }
 
 // ── Decision field ─────────────────────────────────────────────────────────
@@ -650,7 +667,7 @@ function renderField(rows) {
   const on = new Set(rows);
   [...host.children].forEach(n => n.classList.toggle('off', !on.has(n._row)));
   document.getElementById('field-key').innerHTML = DECISION_ORDER.map(d => [d, rows.filter(r => r.decision === d && !isNoCollege(r)).length]).filter(x => x[1])
-    .map(([d, n]) => `<span>${decisionIcon(d).outerHTML}<b>${n}</b> ${d.toLowerCase()}</span>`).join('');
+    .map(([d, n]) => `<span>${decisionIcon(d).outerHTML}<b>${n}</b> ${nounFor(d, n)}</span>`).join('');
 }
 
 const med = a => { const v = [...a].sort((x, y) => x - y); return v.length ? (v[Math.floor((v.length - 1) / 2)] + v[Math.ceil((v.length - 1) / 2)]) / 2 : 0; };
@@ -658,15 +675,17 @@ const gMed = g => med(g.pts.filter(p => p.match).map(p => p.v));
 const CHART_SORTS = {
   apps:   { label: 'Most applied to',  fn: (a, b) => b.n - a.n },
   name:   { label: 'Name, A to Z',     fn: () => 0 },
-  high:   { label: 'Highest typical',  fn: (a, b) => gMed(b) - gMed(a) },
-  low:    { label: 'Lowest typical',   fn: (a, b) => gMed(a) - gMed(b) },
+  high:   { label: 'Highest GPA or SAT',  fn: (a, b) => gMed(b) - gMed(a) },
+  low:    { label: 'Lowest GPA or SAT',   fn: (a, b) => gMed(a) - gMed(b) },
   going:  { label: 'Most going',       fn: (a, b) => gGoing(b) - gGoing(a) || b.n - a.n },
   nos:    { label: "Most no's",        fn: (a, b) => gNos(b) - gNos(a) || b.n - a.n },
   near:   { label: 'Closest to you',   fn: (a, b) => gNear(a) - gNear(b) },
 };
 const gGoing = g => g.pts.filter(p => p.match && p.r.enrolling === 'yes').length;
 const gNos = g => g.pts.filter(p => p.match && p.r.decision === 'Rejected').length;
-const youValue = () => activeChartType === 'uw' ? slmFilter && slmFilter.gpa && slmFilter.gpa.v : activeChartType === 'sat' ? slmFilter && slmFilter.sat && slmFilter.sat.v : null;
+const YOU = { uw: { kind: 'gpa', start: 3.2, name: 'GPA' }, gpa: { kind: 'weighted', start: 3.6, name: 'weighted GPA' }, sat: { kind: 'sat', start: 1150, name: 'SAT' } };
+const youNow = () => (slmFilter && slmFilter[YOU[activeChartType].kind]) || null;
+const youValue = () => youNow() && youNow().v;
 const gNear = g => { const y = youValue(); return y ? Math.abs(gMed(g) - y) : -g.n; };
 function setChartSort(v) { chartSort = v; chartExpanded = false; writeUrlState(true); buildChart({ motion: true }); announceChart(); }
 
@@ -719,7 +738,7 @@ function announceChart() {
     let msg = n
       ? `Chart lists ${n} college${n !== 1 ? 's' : ''}${activeCollegeFilter !== 'All' ? ' in ' + activeCollegeFilter : ''}.`
       : (document.querySelector('#chart-main .chart-empty p') || {}).textContent || 'No colleges in the chart.';
-    if (n && activeFilter) msg += ` ${activeFilter} highlighted.`;
+    if (n && activeFilter) msg += ` Showing ${DECISION_NOUN[activeFilter][1]}.`;
     if (n && chartSort !== 'apps') msg += ` Sorted by ${CHART_SORTS[chartSort].label.toLowerCase()}.`;
     el.textContent = msg;
   }, 500);
@@ -727,11 +746,36 @@ function announceChart() {
 
 // Where every row and mark is now, so the next render can glide from here.
 function captureChart(el) {
-  const rows = new Map(), dots = new Map();
+  const rows = new Map(), dots = new Map(), at = dotPlaces(el);
   el.querySelectorAll('.c-row').forEach(n => rows.set(n.dataset.key, n.offsetTop));
   el.querySelectorAll('.chart-dot').forEach(n => dots.set(n.dataset.key, [+n.dataset.cx, +n.dataset.cy]));
-  return { rows, dots };
+  return { rows, dots, at };
 }
+// Every mark's place in the whole chart, so it can travel between rows.
+function dotPlaces(el) {
+  const base = el.getBoundingClientRect(), out = new Map();
+  el.querySelectorAll('.c-row svg').forEach(svg => {
+    const r = svg.getBoundingClientRect();
+    svg.querySelectorAll('.chart-dot').forEach(n => out.set(n.dataset.key, [r.left - base.left + +n.dataset.cx, r.top - base.top + +n.dataset.cy]));
+  });
+  return out;
+}
+// When rows split apart or merge, the marks themselves fly to their new rows.
+let _morphTimer = 0;
+function morphChart(el, prev) {
+  const now = dotPlaces(el), H = el.clientHeight || 1;
+  el.classList.add('is-morphing');
+  clearTimeout(_morphTimer);
+  _morphTimer = setTimeout(() => el.classList.remove('is-morphing'), 900);
+  el.querySelectorAll('.chart-dot').forEach(n => {
+    const a = prev.at.get(n.dataset.key), b = now.get(n.dataset.key);
+    if (!a) { n.animate([{ opacity: 0 }, {}], { duration: 260, delay: 260, fill: 'backwards' }); return; }
+    const dx = a[0] - b[0], dy = a[1] - b[1];
+    if (dx || dy) n.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 560, delay: Math.min(160, b[1] / H * 160), easing: 'cubic-bezier(0.77,0,0.175,1)', fill: 'backwards' });
+  });
+  el.querySelectorAll('.c-row:not(.c-axis) > :not(.c-plot), .c-range').forEach(n => n.animate([{ opacity: 0 }, {}], { duration: 320, delay: 240, easing: 'ease-out', fill: 'backwards' }));
+}
+
 // Rows carry their marks to the new order; marks glide within a row when the
 // metric changes; new rows fade in. Interruptible: nothing is left mid-state
 // because the final position is always the un-animated one.
@@ -749,6 +793,45 @@ function playChart(el, prev) {
     const dx = was[0] - n.dataset.cx, dy = was[1] - n.dataset.cy;
     if (dx || dy) n.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], move);
   });
+}
+
+const TYPE_NAMES = { 'Community college': 'Community college', CSU: 'CSU', UC: 'UC', 'Private 4-year': 'Private', 'Public (out of state)': 'Out-of-state public', 'Trade school': 'Trade school' };
+function toggleType(key) {
+  openTypes.has(key) ? openTypes.delete(key) : openTypes.add(key);
+  buildChart({ motion: true, morph: true });
+}
+
+// ── Detail level ───────────────────────────────────────────────────────────
+// One zoom for the whole site. The marks are the same at every level; they
+// regroup. Nothing hidden may keep filtering, so anything whose control is not
+// shown at the new level is cleared.
+function setDetail(n) {
+  n = Math.min(3, Math.max(1, +n || 1));
+  if (n === detail) return;
+  detail = n;
+  document.documentElement.dataset.detail = n;
+  try { localStorage.setItem('cr_detail', String(n)); } catch (e) {}
+  if (n < 3) { savedOnly = false; stu.flags = []; }
+  if (n < 2) {
+    activeCollegeFilter = 'All'; activeChartType = 'uw'; chartSort = 'apps'; searchFilter = ''; activeFilter = null;
+    stu = { ...STUDENT_DEFAULTS, flags: [], sort: stu.sort, dir: stu.dir };
+    ['weighted', 'sat', 'major'].forEach(k => { document.getElementById('slm-' + k).value = ''; });
+    document.getElementById('college-search').value = '';
+    slmFilter = readSlm().filter;
+    openTypes.clear();
+  }
+  syncDetail();
+  syncControlsToState();
+  writeUrlState(false);
+  if (_dataLoadedAt) renderResults({ motion: true, morph: true });
+  document.getElementById('chart-status').textContent = `${DETAIL_NAMES[n]} view.`;
+}
+function syncDetail() {
+  const r = document.getElementById('detail');
+  r.value = detail;
+  r.setAttribute('aria-valuetext', DETAIL_NAMES[detail]);
+  document.getElementById('detail-name').textContent = DETAIL_NAMES[detail];
+  document.querySelectorAll('[data-detail-set]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.detailSet === detail ? 'true' : 'false'));
 }
 
 // First paint only: marks arrive left to right along the GPA axis, then the
@@ -817,6 +900,7 @@ function buildChart(opts) {
   });
   let cols = [...groups.values()].filter(g => g.n);
   cols.sort((a, b) => (CHART_SORTS[chartSort].fn(a, b)) || a.name.localeCompare(b.name));
+  const simple = detail === 1;
   if (savedOnly) cols = cols.filter(g => saved.has(g.key));
   if (searchFilter) cols = cols.filter(g => g.name.toLowerCase().includes(searchFilter) || g.pts.some(p => p.r.college_name.toLowerCase().includes(searchFilter)));
   // Highlighting a decision narrows the list to colleges that have one.
@@ -825,11 +909,20 @@ function buildChart(opts) {
   // Colleges with a single report start folded away, when there are many.
   const total = cols.length;
   const keep = chartSort === 'apps' ? Math.max(CHART_MIN_ROWS, cols.filter(g => g.n > 1).length) : 15;
-  const foldable = !searchFilter && !activeFilter && !savedOnly && total > keep + 3;
+  const foldable = !simple && !searchFilter && !activeFilter && !savedOnly && total > keep + 3;
   const more = foldable && !chartExpanded;
   if (more) cols = cols.slice(0, keep);
+  // Simple level: one row per kind of school. An open one becomes a heading and
+  // its marks move into rows for its colleges.
+  if (simple) {
+    const types = DEST_ORDER.map(t => ({ key: 't:' + t, name: TYPE_NAMES[t], kind: 'type', kids: cols.filter(g => destOf(g.pts[0].r) === t) })).filter(t => t.kids.length);
+    types.forEach(t => { t.all = t.kids.flatMap(k => k.pts); t.n = t.all.filter(p => p.match).length; t.open = openTypes.has(t.key); t.pts = t.open ? [] : t.all; });
+    types.sort((a, b) => b.n - a.n);
+    cols = types.flatMap(t => t.open ? [t, ...t.kids.map(k => ({ ...k, kid: true }))] : [t]);
+  }
+  document.getElementById('chart-heading').textContent = simple ? 'What colleges said' : 'Every decision, by college';
 
-  document.getElementById('chart-col-count').textContent = total ? `${total} college${total !== 1 ? 's' : ''}` : '';
+  document.getElementById('chart-col-count').textContent = simple ? 'Tap a row to see its colleges' : total ? `${total} college${total !== 1 ? 's' : ''}` : '';
   document.getElementById('chart-axis-title').textContent = m.title;
   document.querySelector('#chart-sort [value="near"]').disabled = !youValue();
 
@@ -861,16 +954,16 @@ function buildChart(opts) {
   const axisPlot = el.querySelector('.c-plot');
   const W = Math.max(200, Math.round(axisPlot.clientWidth) || 600);
   const narrow = el.clientWidth < 680;
-  const R = narrow ? 5 : 5.5, PADX = 14, MIN_H = narrow ? 34 : 38;
+  const R = simple ? (narrow ? 5.2 : 6.5) : narrow ? 5 : 5.5, PADX = 14, MIN_H = simple && !narrow ? 48 : narrow ? 34 : 38;
   const x = v => PADX + (Math.min(m.max, Math.max(m.min, v)) - m.min) / (m.max - m.min) * (W - PADX * 2);
   axisPlot.innerHTML = m.ticks.map(t => `<span aria-hidden="true" style="left:${x(t).toFixed(1)}px">${m.fmt(t)}</span>`).join('');
 
   // "You": the value typed into the filters, when it's on this axis.
-  const you = activeChartType === 'uw' ? slmFilter && slmFilter.gpa : activeChartType === 'sat' ? slmFilter && slmFilter.sat : null;
-  axisPlot.parentNode.classList.toggle('has-you', activeChartType !== 'gpa');
+  const you = youNow();
+  axisPlot.parentNode.classList.add('has-you');
 
   _axis = { x, inv: px => m.min + (px - PADX) / (W - PADX * 2) * (m.max - m.min), metric: activeChartType };
-  if (activeChartType !== 'gpa') addYouHandle(axisPlot, you, m, x);
+  addYouHandle(axisPlot, you, m, x);
   let roving = cols.findIndex(g => g.key === _chartRovingKey);
   if (roving < 0) roving = 0;
   _chartRovingKey = cols[roving].key;
@@ -881,16 +974,16 @@ function buildChart(opts) {
     const ext = layoutLanes(g.pts, R);
     const H = Math.max(MIN_H, Math.round(ext.above + ext.below + R * 2 + 14));
     const cy = H / 2 + (ext.above - ext.below) / 2;
-    const shown = g.pts.filter(p => p.match);
+    const shown = (g.all || g.pts).filter(p => p.match);
     const counts = {};
     shown.forEach(p => { counts[p.r.decision] = (counts[p.r.decision] || 0) + 1; });
     const acc = shown.filter(p => p.r.decision === 'Accepted');
-    const summary = DECISION_ORDER.filter(d => counts[d]).map(d => `${counts[d]} ${d.toLowerCase()}`).join(', ');
+    const summary = DECISION_ORDER.filter(d => counts[d]).map(d => `${counts[d]} ${nounFor(d, counts[d])}`).join(', ');
 
     let s = '<g aria-hidden="true">';
     if (you) s += `<rect class="c-band" x="${x(you.v - you.range).toFixed(1)}" y="0" width="${Math.max(2, x(you.v + you.range) - x(you.v - you.range)).toFixed(1)}" height="${H}"/>`;
     m.ticks.forEach(t => { const tx = x(t).toFixed(1); s += `<line class="c-grid" x1="${tx}" x2="${tx}" y1="0" y2="${H}"/>`; });
-    if (acc.length >= 2) {
+    if (acc.length >= 2 && !g.open) {
       const xs = acc.map(p => p.x), lo = Math.min(...xs), hi = Math.max(...xs);
       if (hi - lo > 1) s += `<line class="c-range" x1="${lo.toFixed(1)}" x2="${hi.toFixed(1)}" y1="${cy}" y2="${cy}"/>`;
     }
@@ -908,20 +1001,22 @@ function buildChart(opts) {
       s += dotSvg(p.r.decision, px, py, R, `class="${p.match ? 'chart-dot' : 'ghost-dot'} d-${escHtml(p.r.decision || 'none')}${off ? ' off' : ''}" data-col="${i}" data-idx="${idx}" data-key="${escHtml(key)}" data-v="${p.v}" data-cx="${px}" data-cy="${py}" ${a11y}`);
     });
 
-    html += `<div class="c-row" data-key="${escHtml(g.key)}">
-      <button type="button" class="c-star" data-save="${escHtml(g.key)}" tabindex="-1" aria-pressed="${saved.has(g.key)}" aria-label="Save ${escHtml(g.name)}"><svg aria-hidden="true"><use href="#i-star"/></svg></button>
-      <button type="button" class="c-name" data-col="${i}" data-focus-key="col:${escHtml(g.key)}" tabindex="${i === roving ? 0 : -1}" aria-label="${escHtml(g.name)}, ${shown.length} shown: ${summary}. Open details"><span>${escHtml(g.name)}</span></button>
+    const type = g.kind === 'type';
+    html += `<div class="c-row${type ? ' is-type' : ''}${g.open ? ' is-open' : ''}${g.kid ? ' is-kid' : ''}" data-key="${escHtml(g.key)}" data-kind="${type ? 'type' : 'college'}">
+      ${type ? `<span class="c-star c-caret" aria-hidden="true"><svg><use href="#i-caret"/></svg></span>` : ''}<button type="button" class="c-star"${type ? ' hidden' : ''} data-save="${escHtml(g.key)}" tabindex="-1" aria-pressed="${saved.has(g.key)}" aria-label="Save ${escHtml(g.name)}"><svg aria-hidden="true"><use href="#i-star"/></svg></button>
+      <button type="button" class="c-name" data-col="${i}" data-focus-key="col:${escHtml(g.key)}" tabindex="${i === roving ? 0 : -1}" ${type ? `aria-expanded="${g.open}"` : ''} aria-label="${escHtml(g.name)}, ${shown.length} shown: ${summary}. ${type ? (g.open ? 'Hide colleges' : 'Show colleges') : 'Open details'}"><span>${escHtml(g.name)}</span></button>
       <div class="c-plot"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="group" aria-label="${escHtml(g.name)} decisions">${s}</svg></div>
       <div class="c-count" aria-hidden="true"><b>${acc.length}</b> of ${shown.length}</div>
     </div>`;
   });
   el.insertAdjacentHTML('beforeend', html);
 
-  if (prev) playChart(el, prev);
+  if (prev && opts.morph) morphChart(el, prev);
+  else if (prev) playChart(el, prev);
   else if (!_introDone && view === 'colleges' && !REDUCED_MOTION && !document.hidden) playIntro(el, W);
   _introDone = true;
   syncSaved();
-  renderChartTable(cols);
+  renderChartTable(cols.filter(g => !g.open));
 
   if (refocusKey) {
     const again = el.querySelector(`[data-focus-key="${CSS.escape(refocusKey)}"]`) || el.querySelector('.c-name[tabindex="0"]');
@@ -935,19 +1030,25 @@ function buildChart(opts) {
 // A slider: drag it, or use the arrow keys. While dragging, rows hold still and
 // marks brighten or fade; letting go applies the filter to the whole page.
 let _dragging = false, _axis = null;
-function youInput() { return document.getElementById(activeChartType === 'sat' ? 'slm-sat' : 'slm-gpa'); }
+function youInput() { onlyOneGpa(YOU[activeChartType].kind); return document.getElementById('slm-' + YOU[activeChartType].kind); }
+// Weighted and unweighted are two ways to say the same thing, so setting one
+// replaces the other.
+function onlyOneGpa(kind) {
+  if (kind === 'gpa') document.getElementById('slm-weighted').value = '';
+  if (kind === 'weighted') document.getElementById('slm-gpa').value = '';
+}
 function addYouHandle(host, you, m, x) {
-  const sat = activeChartType === 'sat', start = sat ? 1150 : 3.2, v = you ? you.v : start;
+  const sat = activeChartType === 'sat', conf = YOU[activeChartType], v = you ? you.v : conf.start;
   const b = document.createElement('button');
   b.type = 'button';
   b.className = 'c-you' + (you ? '' : ' is-idle');
   b.setAttribute('role', 'slider');
-  b.setAttribute('aria-label', sat ? 'Your SAT score' : 'Your unweighted GPA');
+  b.setAttribute('aria-label', 'Your ' + (conf.kind === 'gpa' ? 'unweighted GPA' : conf.name));
   b.setAttribute('aria-valuemin', m.min); b.setAttribute('aria-valuemax', m.max); b.setAttribute('aria-valuenow', v);
   b.setAttribute('aria-valuetext', you ? `${v}` : 'Not set');
   b.dataset.focusKey = 'you';
   b.style.left = x(v).toFixed(1) + 'px';
-  b.textContent = you ? `You ${sat ? v : v.toFixed(2)}` : (sat ? 'Drag to your SAT' : 'Drag to your GPA');
+  b.textContent = you ? `You ${sat ? v : v.toFixed(2)}` : `Drag to your ${conf.name}`;
   host.appendChild(b);
   const fmt = n => sat ? String(Math.round(n / 10) * 10) : (Math.round(n * 20) / 20).toFixed(2);
   const clamp = n => Math.min(m.max, Math.max(m.min, n));
@@ -968,7 +1069,7 @@ function addYouHandle(host, you, m, x) {
     buildChart();
     document.body.classList.add('is-dragging');
     const paint = px => {
-      const val = +fmt(clamp(_axis.inv(px))), range = +document.getElementById(sat ? 'slm-sat-range' : 'slm-gpa-range').value;
+      const val = +fmt(clamp(_axis.inv(px))), range = +document.getElementById(`slm-${conf.kind}-range`).value;
       inp.value = fmt(val);
       const a = _axis.x(val), lo = _axis.x(val - range), hi = _axis.x(val + range);
       const h = document.querySelector('#chart-main .c-you');
@@ -992,7 +1093,7 @@ function addYouHandle(host, you, m, x) {
 // Legend swatches mirror the plotted shape, so the key works without colour.
 function renderLegend(host, used, rows) {
   host.innerHTML = used.map(d => `<button type="button" class="legend-item" data-decision="${d}" aria-pressed="${activeFilter === d ? 'true' : 'false'}">
-      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">${dotSvg(d, 7, 7, 5, `class="d-${d}"`)}</svg>${d}<span class="n" aria-hidden="true">${rows.filter(r => r.decision === d).length}</span></button>`).join('');
+      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">${dotSvg(d, 7, 7, 5, `class="d-${d}"`)}</svg><b>${rows.filter(r => r.decision === d).length}</b> ${nounFor(d, rows.filter(r => r.decision === d).length)}</button>`).join('');
   host.classList.toggle('has-active', !!activeFilter);
 }
 
@@ -1046,7 +1147,7 @@ function renderChartTable(cols) {
   cap.textContent = `Decisions plotted in the chart (${METRICS[activeChartType].label}), by college. Same colleges and order as the chart.`;
   table.appendChild(cap);
   const thead = table.createTHead().insertRow();
-  ['College', 'Shown', ...DECISION_ORDER].forEach(h => {
+  ['College', 'Shown', ...DECISION_ORDER.map(d => capital(DECISION_NOUN[d][1]))].forEach(h => {
     const th = document.createElement('th'); th.scope = 'col'; th.textContent = h; thead.appendChild(th);
   });
   const tbody = table.createTBody();
@@ -1136,8 +1237,8 @@ function showTooltip(r, pos) {
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   tip.textContent = '';
   const facts = [];
-  if (r.gpa) facts.push(`UW GPA ${(+r.gpa).toFixed(2)}`);
-  if (r.gpa_weighted) facts.push(`W ${(+r.gpa_weighted).toFixed(2)}`);
+  if (r.gpa) facts.push(`GPA ${(+r.gpa).toFixed(2)}`);
+  if (r.gpa_weighted) facts.push(`Weighted ${(+r.gpa_weighted).toFixed(2)}`);
   if (r.sat) facts.push(`SAT ${r.sat}`);
   if (r.act) facts.push(`ACT ${r.act}`);
   if (r.class_rank) facts.push(`Rank ${r.class_rank}`);
@@ -1170,8 +1271,9 @@ function decisionIcon(d) {
 }
 function decisionExtras(c) {
   const x = [];
-  if (c.decision_type) x.push(c.decision_type);
-  if (c.school_type && c.school_type !== 'University') x.push(c.school_type);
+  const round = { EA: 'Early action', ED: 'Early decision', Rolling: 'Rolling', RD: detail === 3 ? 'Regular' : '' }[c.decision_type];
+  if (round === undefined ? c.decision_type : round) x.push(round || c.decision_type);
+  if (c.school_type === 'Trade') x.push('Trade school');
   if (c.enrolling === 'yes') x.push('Enrolling');
   if (c.scholarship === 'yes') x.push('Scholarship');
   if (c.sport === 'yes') x.push('Recruited');
@@ -1201,7 +1303,7 @@ function openCollegeDetail(name, opts) {
   const total = rows.length, acc = rows.filter(r => r.decision === 'Accepted');
   const extRate = getAcceptRate(shownName);
   const bars = DECISION_ORDER.map(d => ({ d, n: rows.filter(r => r.decision === d).length })).filter(x => x.n).map(({ d, n }) => `
-    <div class="bar-row"><div class="bar-label">${d}</div><div class="bar-track" aria-hidden="true"><div class="bar-fill b-${d}" style="width:${n / total * 100}%"></div></div><div class="bar-val">${n}</div></div>`).join('');
+    <div class="bar-row"><div class="bar-label">${capital(DECISION_NOUN[d][1])}</div><div class="bar-track" aria-hidden="true"><div class="bar-fill b-${d}" style="width:${n / total * 100}%"></div></div><div class="bar-val">${n}</div></div>`).join('');
   const facts = [['gpa', 'Unweighted GPA', 2], ['gpa_weighted', 'Weighted GPA', 2], ['sat', 'SAT', 0]].map(([k, label, dg]) => {
     const a = rangeText(acc, k, dg);
     return a ? `<tr><th scope="row">${label}</th><td>${a.range}</td><td>${a.avg}</td></tr>` : '';
@@ -1278,8 +1380,8 @@ function renderCompare() {
   const round = (c, types) => { const r = c.rows.filter(x => types.includes(x.decision_type)); return r.length ? admitted(r.filter(x => x.decision === 'Accepted').length, r.length) : null; };
   const lines = [
     ['Admitted', c => admitted(c.acc.length, c.rows.length)],
-    ['Waitlisted', c => count(c, r => r.decision === 'Waitlisted') || null],
-    ['Rejected', c => count(c, r => r.decision === 'Rejected') || null],
+    ['Waitlists', c => count(c, r => r.decision === 'Waitlisted') || null],
+    ['Rejections', c => count(c, r => r.decision === 'Rejected') || null],
     ['Pending', c => count(c, r => r.decision === 'Pending') || null],
     ['GPA of those admitted', c => range(c, 'gpa', 2)],
     ['Weighted GPA', c => range(c, 'gpa_weighted', 2)],
@@ -1440,6 +1542,8 @@ function readSlm() {
     return raw === '' || bad ? null : v;
   };
   const gpa = field('slm-gpa', 1, 4, v => `Unweighted GPA is 1.0 to 4.0.${v > 4 ? ' Did you mean your weighted GPA?' : ''}`);
+  const weighted = field('slm-weighted', 1, 5, () => 'Weighted GPA is 1.0 to 5.0.');
+  if (weighted !== null) next.weighted = { v: weighted, range: parseFloat(document.getElementById('slm-weighted-range').value) };
   const sat = field('slm-sat', 400, 1600, () => 'SAT scores are 400 to 1600.');
   if (gpa !== null) next.gpa = { v: gpa, range: parseFloat(document.getElementById('slm-gpa-range').value) };
   if (sat !== null) next.sat = { v: sat, range: parseInt(document.getElementById('slm-sat-range').value) };
@@ -1467,13 +1571,14 @@ function removeSlm(kind) {
   applySlm();
 }
 function clearSlm() {
-  ['gpa', 'sat', 'major'].forEach(k => { document.getElementById('slm-' + k).value = ''; });
+  ['gpa', 'weighted', 'sat', 'major'].forEach(k => { document.getElementById('slm-' + k).value = ''; });
   applySlm();
 }
 function slmParts() {
   if (!slmFilter) return [];
   const f = slmFilter, parts = [];
   if (f.gpa) parts.push({ kind: 'gpa', text: `GPA ${Math.max(1, f.gpa.v - f.gpa.range).toFixed(2)} to ${Math.min(4, f.gpa.v + f.gpa.range).toFixed(2)}` });
+  if (f.weighted) parts.push({ kind: 'weighted', text: `Weighted ${Math.max(1, f.weighted.v - f.weighted.range).toFixed(2)} to ${Math.min(5, f.weighted.v + f.weighted.range).toFixed(2)}` });
   if (f.sat) parts.push({ kind: 'sat', text: `SAT ${Math.max(400, f.sat.v - f.sat.range)} to ${Math.min(1600, f.sat.v + f.sat.range)}` });
   if (f.major) parts.push({ kind: 'major', text: f.major.label });
   return parts;
@@ -1489,7 +1594,8 @@ function renderSlmChips() {
 // students who reported one.
 function slmMatches(r) {
   if (!slmFilter) return true;
-  const { gpa, sat, major } = slmFilter;
+  const { gpa, weighted, sat, major } = slmFilter;
+  if (weighted && !(Math.abs(parseFloat(r.gpa_weighted) - weighted.v) <= weighted.range + 1e-9)) return false;
   if (gpa && !(Math.abs(parseFloat(r.gpa) - gpa.v) <= gpa.range + 1e-9)) return false;
   if (sat && !(parseInt(r.sat) && Math.abs(parseInt(r.sat) - sat.v) <= sat.range)) return false;
   if (major && normMajor(r.major) !== major.key) return false;
@@ -1522,7 +1628,7 @@ const STUDENT_SORTS = {
   act:      { label: 'ACT',          dir: 'desc', get: g => numOf(g, 'act') },
   major:    { label: 'Major',        dir: 'asc',  get: g => normMajor(g.major) || null },
   applied:  { label: 'Colleges applied to', dir: 'desc', get: g => g.colleges.length },
-  yes:      { label: 'Yeses',        dir: 'desc', get: g => g.colleges.filter(c => c.decision === 'Accepted').length },
+  yes:      { label: "Yes's",        dir: 'desc', get: g => g.colleges.filter(c => c.decision === 'Accepted').length },
 };
 const STUDENT_FLAGS = {
   no:          { label: "Got a no",     test: g => g.colleges.some(c => c.decision === 'Rejected') },
@@ -1631,6 +1737,17 @@ function renderEntries(rows) {
   el.innerHTML = groups.slice(0, shown).map((g, i) => {
     const bits = [g.act ? `ACT ${e(g.act)}` : '', g.class_rank ? `Rank ${e(g.class_rank)}` : '', g.essay_rating ? `Essay ${e(g.essay_rating)}/5` : '', g.first_gen === 'yes' ? 'First-gen' : ''].filter(Boolean).map(x => `<span>${x}</span>`).join('');
     const decs = g.colleges.map(c => `<li class="${c.enrolling === 'yes' ? 'is-going' : ''}">${decisionIcon(c.decision).outerHTML}<span>${isNoCollege(c) ? e(c.college_name) : `<button type="button" class="e-col" data-open-college="${e(c.college_name)}">${e(c.college_name)}</button>`}<span class="sr-only">: ${e(c.decision)}</span>${decisionExtras(c).length ? ` <small>${e(decisionExtras(c).join(', '))}</small>` : ''}</span></li>`).join('');
+    if (detail === 1) {
+      const key = studentKey(g), real = g.colleges.filter(c => !isNoCollege(c)), yes = real.filter(c => c.decision === 'Accepted').length;
+      const going = real.find(c => c.enrolling === 'yes'), open = openStudents.has(key);
+      return `<article class="entry-card is-simple" role="listitem" tabindex="-1" data-entry="${i}">
+        <div class="e-num"><span class="e-l">GPA</span><b>${gpa2(g.gpa)}</b></div>
+        <div class="e-major">${g.major ? e(g.major) : '<i>No major given</i>'}</div>
+        <div class="e-main"><p>${going ? `Going to <button type="button" class="e-col" data-open-college="${e(going.college_name)}">${e(going.college_name)}</button>` : "<i>Didn't say where they're going</i>"}</p>
+        ${real.length > 1 ? `<button type="button" class="btn-link e-open" data-open-student="${i}" aria-expanded="${open}">${yes} of ${real.length} said yes</button>` : ''}
+        ${open ? `<ul class="entry-decisions">${decs}</ul>` : ''}</div>
+      </article>`;
+    }
     return `<article class="entry-card" role="listitem" tabindex="-1" data-entry="${i}">
       <div class="e-num"><span class="e-l">GPA</span><b>${gpa2(g.gpa)}</b></div>
       <div class="e-num"><span class="e-l">Weighted</span>${g.gpa_weighted ? gpa2(g.gpa_weighted) : '<i>–</i>'}</div>
@@ -1698,6 +1815,43 @@ const isInState = r => {
 const openAttr = n => `data-open-college="${escHtml(n)}"`;
 const share = (n, total) => total >= MIN_RATE_N ? `${n} (${Math.round(n / total * 100)}%)` : String(n);
 
+// Simple level of Numbers: four plain sentences, each with its own dots.
+function inTen(n, t) {
+  if (t < MIN_RATE_N) return `${n} of ${t}`;
+  if (n === t) return 'All';
+  const k = Math.round(n / t * 10);
+  return k === 5 ? 'About half' : k === 10 ? 'Nearly all' : k === 0 ? 'Very few' : `About ${k} in 10`;
+}
+function renderFacts(allRows) {
+  const host = document.getElementById('facts'), data = allRows.filter(r => !isNoCollege(r));
+  host.hidden = !data.length;
+  if (!data.length) return;
+  const uniq = rows => new Set(rows.map(studentKey)).size;
+  const dots = (on, off) => `<div class="unit" aria-hidden="true">${'<i></i>'.repeat(on)}${'<i class="off"></i>'.repeat(off)}</div>`;
+  const fact = (title, body) => `<section class="fact"><h3>${title}</h3>${body}</section>`;
+  const going = data.filter(r => r.enrolling === 'yes'), out = [];
+  if (going.length) {
+    const by = DEST_ORDER.map(d => [d, uniq(going.filter(r => destOf(r) === d))]).filter(x => x[1]).sort((a, b) => b[1] - a[1]);
+    const t = by.reduce((s, x) => s + x[1], 0), [top, n] = by[0];
+    const noun = { 'Community college': 'community college', CSU: 'a CSU', UC: 'a UC', 'Private 4-year': 'a private college', 'Public (out of state)': 'a public college in another state', 'Trade school': 'a trade school' };
+    out.push(fact(`${inTen(n, t)} are going to ${noun[top]}.`, `<div class="unit-rows">${by.map(([d, k]) => `<div class="unit-row"><span>${TYPE_NAMES[d]}</span>${dots(k, 0)}<b>${k}</b></div>`).join('')}</div>`));
+    const placed = going.filter(r => destOf(r) !== 'Trade school'), home = uniq(placed.filter(isInState)), all = uniq(placed);
+    if (all) out.push(fact(`${inTen(home, all)} are staying in California.`, dots(home, all - home) + `<p>${home} of ${all} students</p>`));
+  }
+  const four = data.filter(r => isFourYear(r) && r.decision !== 'Pending'), yes = four.filter(r => r.decision === 'Accepted').length;
+  if (four.length) out.push(fact(`Four-year colleges said yes ${yes} of ${four.length} times.`, `<div class="unit" aria-hidden="true">${[...four].sort((a, b) => DECISION_ORDER.indexOf(a.decision) - DECISION_ORDER.indexOf(b.decision)).map(r => decisionIcon(r.decision).outerHTML).join('')}</div><p>Community colleges are left out, since they accept everyone.</p>`));
+  const majors = new Map(), seen = new Set();
+  data.forEach(r => {
+    const k = studentKey(r), m = normMajor(r.major);
+    if (seen.has(k)) return;
+    seen.add(k);
+    if (m) { const g = majors.get(m) || { n: 0, label: r.major.trim() }; g.n++; majors.set(m, g); }
+  });
+  const top = [...majors.values()].sort((a, b) => b.n - a.n || a.label.localeCompare(b.label)).slice(0, 4);
+  if (top.length) out.push(fact(`${top.length > 1 && top[0].n === top[1].n ? 'Popular majors' : `The most common major is ${escHtml(top[0].label)}`}.`, `<div class="unit-rows">${top.map(m => `<div class="unit-row"><span>${escHtml(m.label)}</span>${dots(m.n, 0)}<b>${m.n}</b></div>`).join('')}</div>`));
+  document.getElementById('facts-list').innerHTML = out.join('');
+}
+
 function renderStatsInline(allRows) {
   const quote = buildHardestRejectQuote(scatterData);
   const qEl = document.getElementById('stats-disclaimer-quote');
@@ -1709,8 +1863,8 @@ function renderStatsInline(allRows) {
   const section = document.getElementById('stats-section');
   section.hidden = !data.length;
   if (!data.length) { el.innerHTML = ''; return; }
-  const scope = activeCollegeFilter === 'All' ? 'all schools' : activeCollegeFilter;
-  document.getElementById('stats-heading').textContent = `Statistics: ${scope}`;
+  const scope = activeCollegeFilter === 'All' ? 'all schools' : categoryLabel(activeCollegeFilter);
+  document.getElementById('stats-heading').textContent = detail === 1 ? 'In short' : `Statistics: ${scope}`;
   const students = new Set(data.map(studentKey)).size;
   document.getElementById('stats-scope-note').textContent =
     `Based on ${students} student${students !== 1 ? 's' : ''} and ${data.length} decision${data.length !== 1 ? 's' : ''}${slmFilter ? ` matching ${slmParts().map(p => p.text).join(', ')}` : ''}. Percentages appear only for groups of ${MIN_RATE_N} or more.`;
@@ -1726,7 +1880,7 @@ function renderStatsInline(allRows) {
   });
   const decided = r => ['Accepted', 'Rejected', 'Waitlisted'].includes(r.decision);
   const isYes = r => r.decision === 'Accepted';
-  const fourYear = data.filter(r => !isOpenAdmission(r));
+  const fourYear = data.filter(isFourYear);
 
   // 1. Where people ended up. Enrolment is the truth where we have it;
   // otherwise acceptances, and the heading says so.
@@ -1765,7 +1919,7 @@ function renderStatsInline(allRows) {
     statBlock('Most applied to', top.map(a => barRow(a.name, a.n / top[0].n * 100, `${a.acc} of ${a.n} in`, openAttr(a.name))).join('')) +
     statBlock('Hardest to get into, with at least one yes', hardest.map(a => `<div class="pair-row"><span><button type="button" ${openAttr(a.name)}>${escHtml(a.name)}</button></span><span>${a.acc} of ${a.n} in</span><span>about ${getAcceptRate(a.name)}% overall</span></div>`).join(''),
       'Ordered by approximate overall admission rates, which are unverified estimates. <a href="/methodology.html#admission-rates">About these rates</a>') +
-    statBlock('Every decision', DECISION_ORDER.map(d => ({ d, n: data.filter(r => r.decision === d).length })).filter(x => x.n).map(x => `<div class="bar-row"><div class="bar-label">${x.d}</div><div class="bar-track" aria-hidden="true"><div class="bar-fill b-${x.d}" style="width:${x.n / data.length * 100}%"></div></div><div class="bar-val">${share(x.n, data.length)}</div></div>`).join(''));
+    statBlock('Every decision', DECISION_ORDER.map(d => ({ d, n: data.filter(r => r.decision === d).length })).filter(x => x.n).map(x => `<div class="bar-row"><div class="bar-label">${capital(DECISION_NOUN[x.d][1])}</div><div class="bar-track" aria-hidden="true"><div class="bar-fill b-${x.d}" style="width:${x.n / data.length * 100}%"></div></div><div class="bar-val">${share(x.n, data.length)}</div></div>`).join(''));
 
   // 4. Timing, money, majors. Four-year colleges only for the first two:
   // community colleges admit everyone and don't award admission scholarships.
@@ -2090,7 +2244,9 @@ const UI_ACTIONS = {
 // Shares the address of the current view. It never contains a student's own
 // GPA, scores or saved colleges.
 async function shareView(btn) {
-  const url = location.href;
+  const u = new URL(location.href);
+  if (detail > 1) u.searchParams.set('detail', detail);
+  const url = u.href;
   if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
     try { await navigator.share({ title: document.title, url }); } catch (e) {}
     return;
@@ -2134,11 +2290,11 @@ function bindUi() {
     $('slm-panel').scrollIntoView({ block: 'start', behavior: REDUCED_MOTION ? 'auto' : 'smooth' });
     $('slm-gpa').focus({ preventScroll: true });
   });
-  ['slm-gpa', 'slm-sat'].forEach(id => {
-    $(id).addEventListener('input', applySlmSoon);
+  ['slm-gpa', 'slm-weighted', 'slm-sat'].forEach(id => {
+    $(id).addEventListener('input', () => { if ($(id).value) onlyOneGpa(id.slice(4)); applySlmSoon(); });
     $(id).addEventListener('change', applySlm);
   });
-  ['slm-gpa-range', 'slm-sat-range', 'slm-major'].forEach(id => $(id).addEventListener('change', applySlm));
+  ['slm-gpa-range', 'slm-weighted-range', 'slm-sat-range', 'slm-major'].forEach(id => $(id).addEventListener('change', applySlm));
   $('slm-form').addEventListener('submit', e => { e.preventDefault(); applySlm(); });
   $('slm-active').addEventListener('click', e => {
     const b = e.target.closest('[data-slm-remove]');
@@ -2186,6 +2342,14 @@ function bindUi() {
 
   // Students
   $('entries-more').addEventListener('click', showMoreEntries);
+  $('entries').addEventListener('click', e => {
+    const b = e.target.closest('[data-open-student]');
+    if (!b) return;
+    const i = +b.dataset.openStudent, key = studentKey(studentsInView(viewRows())[i]);
+    openStudents.has(key) ? openStudents.delete(key) : openStudents.add(key);
+    renderEntries(viewRows());
+    document.querySelector(`[data-open-student="${i}"]`).focus();
+  });
   $('entries').addEventListener('click', e => { const c = e.target.closest('[data-open-college]'); if (c) openCollegeDetail(c.dataset.openCollege, { track: false }); });
   $('stu-sort').addEventListener('change', e => updateStudents({ sort: e.target.value, dir: STUDENT_SORTS[e.target.value].dir }));
   $('stu-dir').addEventListener('click', () => updateStudents({ dir: stu.dir === 'asc' ? 'desc' : 'asc' }));
@@ -2198,6 +2362,11 @@ function bindUi() {
     const f = b.dataset.flag;
     updateStudents({ flags: stu.flags.includes(f) ? stu.flags.filter(x => x !== f) : [...stu.flags, f] });
   });
+
+  // Detail level
+  $('detail').addEventListener('input', e => setDetail(e.target.value));
+  document.querySelectorAll('[data-detail-set]').forEach(b => b.addEventListener('click', () => setDetail(b.dataset.detailSet)));
+  syncDetail();
 
   // Saved colleges and chart order
   $('chart-sort').addEventListener('change', e => setChartSort(e.target.value));
@@ -2308,7 +2477,11 @@ function bindChartInteractions(chartMain) {
     const star = e.target.closest('[data-save]');
     if (star) return toggleSaved(star.dataset.save);
     const l = nameOf(e.target);
-    if (l) { focusChartItem(l); return openCollegeDetail(_chartCols[+l.dataset.col]); }
+    if (l) {
+      focusChartItem(l);
+      const row = l.closest('.c-row');
+      return row.dataset.kind === 'type' ? toggleType(row.dataset.key) : openCollegeDetail(_chartCols[+l.dataset.col]);
+    }
     const svg = e.target.closest('.c-plot svg');
     if (!svg) return;
     const d = dotOf(e.target) || nearestDot(svg, e, 24);
@@ -2336,7 +2509,7 @@ function bindChartInteractions(chartMain) {
     else if (e.key === 'End') moveTo(all.length - 1);
     else if (l) {
       if (e.key === 'ArrowRight') { const ds = dotsIn(col); if (ds.length) ds[0].focus(); }
-      else if (e.key === 's' || e.key === 'S') { if (e.metaKey || e.ctrlKey || e.altKey) return; toggleSaved(l.closest('.c-row').dataset.key); }
+      else if (e.key === 's' || e.key === 'S') { if (e.metaKey || e.ctrlKey || e.altKey) return; if (l.closest('.c-row').dataset.kind !== 'type') toggleSaved(l.closest('.c-row').dataset.key); }
       else handled = false;                       // Enter/Space are a real button's click
     } else {
       const ds = dotsIn(col), i = ds.indexOf(d);
@@ -2352,6 +2525,9 @@ function bindChartInteractions(chartMain) {
 
 // ── Init ───────────────────────────────────────────────────────────────────
 function applyUrlState(s) {
+  // Back or Forward to a view whose controls this level hides: show that level.
+  const need = s.stu.flags.length ? 3 : s.schools !== 'All' || s.q || s.decision || s.sort !== 'apps' || s.chart !== 'uw' || s.stu.college ? 2 : 1;
+  if (detail < need) { detail = need; document.documentElement.dataset.detail = need; syncDetail(); }
   activeChartType = s.chart;
   activeCollegeFilter = s.schools;
   searchFilter = s.q.toLowerCase().trim();

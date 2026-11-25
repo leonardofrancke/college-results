@@ -24,7 +24,7 @@ async function scan(p, include) {
 for (const theme of ['light', 'dark']) {
   test(`results view (${theme}): no axe violations`, async () => {
     const ctx = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 1280, height: 900 } });
-    await ctx.addInitScript(t => { localStorage.setItem('cr_stats_disclaimer_ack', '1'); localStorage.setItem('cr_theme', t); }, theme);
+    await ctx.addInitScript(t => { localStorage.setItem('cr_stats_disclaimer_ack', '1'); localStorage.setItem('cr_theme', t); if (!localStorage.getItem('cr_detail')) localStorage.setItem('cr_detail', '3'); }, theme);
     const p = await ctx.newPage();
     await p.goto(h.baseUrl + '/?schools=All');
     await p.waitForSelector('#chart-main svg');
@@ -49,6 +49,14 @@ for (const theme of ['light', 'dark']) {
     await p.keyboard.press('Escape');
     await p.click('#chat-fab');
     v.push(...await scan(p, [['#chat-panel']]));
+    await p.click('#chat-close');
+    for (const l of ['2', '1']) {
+      await p.locator('#detail').fill(l);
+      for (const t of ['colleges', 'numbers', 'students']) { await p.click(`.nav-link[data-view="${t}"]`); await p.waitForTimeout(80); v.push(...await scan(p, [['nav'], ['#page-results']])); }
+    }
+    await p.click('#nav-results');
+    await p.locator('.is-type .c-name').first().click();
+    v.push(...await scan(p, [['#page-results']]));
     await p.click('#nav-submit');
     await p.waitForSelector('#page-submit.active #cn-0');
     v.push(...await scan(p, [['#page-submit']]));

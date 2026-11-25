@@ -8,5 +8,12 @@
   var bar = document.querySelectorAll('meta[name="theme-color"]');
   for (var i = 0; i < bar.length; i++) { bar[i].removeAttribute('media'); bar[i].content = t === 'dark' ? '#122023' : '#ffffff'; }
   d.style.setProperty('--fs', [1, 1.15, 1.3, 1.5].indexOf(fs) >= 0 ? fs : 1.15);
+  // How much to show (1 simple, 2 more, 3 everything). A shared link that needs
+  // a control the simple level hides opens at the level that has it.
+  var q = new URLSearchParams(location.search), n = parseInt(q.get('detail') || get('cr_detail'), 10);
+  n = n === 2 || n === 3 ? n : 1;
+  if (n < 2 && ['schools', 'q', 'decision', 'sort', 'chart', 'at'].some(function (k) { return q.has(k); })) n = 2;
+  if (q.has('only')) n = 3;
+  d.dataset.detail = n;
   if (get('cr_submitted') === '1') d.classList.add('no-cta');
 })();

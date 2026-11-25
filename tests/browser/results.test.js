@@ -22,6 +22,7 @@ after(async () => { await browser?.close(); await h?.stop(); });
 async function page(opts = {}) {
   const ctx = await browser.newContext({ viewport: opts.viewport || { width: 1280, height: 900 }, reducedMotion: opts.reducedMotion || 'reduce' });
   if (!opts.showNotice) await ctx.addInitScript(() => { try { localStorage.setItem('cr_stats_disclaimer_ack', '1'); } catch (e) {} });
+  await ctx.addInitScript(d => { try { if (!localStorage.getItem('cr_detail')) localStorage.setItem('cr_detail', d); } catch (e) {} }, opts.detail || '3');
   const p = await ctx.newPage();
   p.errors = [];
   p.on('pageerror', e => p.errors.push(e.message));
@@ -171,7 +172,7 @@ describe('keyboard, names and states', () => {
     await p.keyboard.press('ArrowRight');
     assert.match(await p.evaluate(() => document.activeElement.getAttribute('aria-label')), /unweighted GPA \d/);
     assert.equal(await p.$eval('#dot-tooltip', t => getComputedStyle(t).display), 'block');
-    assert.ok((await p.textContent('#dot-tooltip')).includes('UW GPA'));
+    assert.match(await p.textContent('#dot-tooltip'), /GPA \d\.\d\d/);
     await p.keyboard.press('Escape');
     assert.equal(await p.$eval('#dot-tooltip', t => getComputedStyle(t).display), 'none');
     assert.equal(await active(p), name);
@@ -235,6 +236,122 @@ describe('keyboard, names and states', () => {
     assert.ok(v < 3.25 && v > 1, 'dragged to ' + v);
     assert.equal(await p.$$eval('.slm-chip', c => c.length), 1);
     assert.deepEqual(p.errors, []);
+    await p.context().close();
+  });
+});
+
+describe('detail level (zoom)', () => {
+  test('starts simple: school types that split into colleges, without losing a mark', async () => {
+    const p = await page({ detail: '1' });
+    const dots = () => p.$$eval('#chart-main .chart-dot', d => d.map(x => x.dataset.key).sort());
+    const types = await p.$$eval('#chart-main .c-row[data-kind="type"]', r => r.length);
+    assert.ok(types >= 3 && types <= 6);
+    const before = await dots();
+    const first = p.locator('.is-type .c-name').first();
+    assert.equal(await first.getAttribute('aria-expanded'), 'false');
+    const n = +(await p.textContent('.is-type .c-count')).split(' of ')[1];
+    await first.click();
+    assert.equal(await p.locator('.is-type .c-name').first().getAttribute('aria-expanded'), 'true');
+    const kids = await p.$$eval('.is-kid .chart-dot', d => d.length);
+    assert.equal(kids, n, 'the open type\'s marks are now in its colleges');
+    assert.deepEqual(await dots(), before, 'same marks as before');
+    assert.equal(await p.evaluate(() => document.activeElement.closest('.c-row').dataset.kind), 'type', 'focus stays on the row');
+    await p.keyboard.press('ArrowDown');
+    await p.keyboard.press('Enter');
+    await p.waitForSelector('#college-modal.open');
+    await p.keyboard.press('Escape');
+    for (const l of ['2', '3']) { await p.locator('#detail').fill(l); const more = p.locator('#chart-more'); if (await more.isVisible() && /more/.test(await more.textContent())) await more.click(); assert.deepEqual(await dots(), before, 'level ' + l); }
+    assert.deepEqual(p.errors, []);
+    await p.context().close();
+  });
+
+  test('is a labelled slider, remembered in this browser, and never in the address unless shared', async () => {
+    const p = await page({ detail: '1' });
+    assert.equal(await p.$eval('#detail', e => e.labels[0].textContent), 'Detail: Simple');
+    await p.focus('#detail');
+    await p.keyboard.press('ArrowRight');
+    assert.equal(await p.getAttribute('#detail', 'aria-valuetext'), 'More');
+    assert.equal(await p.getAttribute('html', 'data-detail'), '2');
+    assert.equal(new URL(p.url()).search, '');
+    await p.reload();
+    await p.waitForSelector('#chart-main .chart-dot');
+    assert.equal(await p.getAttribute('html', 'data-detail'), '2');
+    await p.context().close();
+    const q = await page({ detail: '1', path: '/?detail=3' });
+    assert.equal(await q.getAttribute('html', 'data-detail'), '3');
+    await q.context().close();
+    const r = await page({ detail: '1', path: '/?schools=UCs' });
+    assert.equal(await r.getAttribute('html', 'data-detail'), '2', 'a shared filter opens where its control is visible');
+    await r.context().close();
+  });
+
+  test('nothing hidden keeps filtering when zooming out', async () => {
+    const p = await page();
+    await p.click('[data-schools="UCs"]');
+    await p.click('[data-metric="sat"]');
+    await p.fill('#slm-sat', '1300');
+    await p.waitForSelector('.slm-chip');
+    await p.fill('#college-search', 'davis');
+    await p.locator('#detail').fill('1');
+    assert.deepEqual(await p.evaluate(() => [activeCollegeFilter, activeChartType, searchFilter, chartSort, slmFilter, savedOnly]), ['All', 'uw', '', 'apps', null, false]);
+    assert.equal(new URL(p.url()).search, '');
+    await p.fill('#slm-gpa', '3.4').catch(() => {});
+    await p.evaluate(() => { document.getElementById('slm-gpa').value = '3.4'; applySlm(); });
+    assert.ok(await p.isVisible('.slm-chip'), 'a GPA filter stays visible and removable');
+    await p.evaluate(() => setDetail(2));
+    await p.selectOption('#chart-sort', 'high');
+    await p.evaluate(() => setDetail(1));
+    await p.goBack();
+    const back = await p.evaluate(() => [detail, chartSort]);
+    assert.ok(back[1] === 'apps' || back[0] > 1, 'Back never applies a sort the level hides: ' + back);
+    await p.context().close();
+  });
+
+  test('simple Numbers and Students say it in words and agree with the full views', async () => {
+    const p = await page({ detail: '1' });
+    await p.click('.nav-link[data-view="numbers"]');
+    const t = await p.textContent('#facts');
+    const yes = t.match(/Four-year colleges said yes (\d+) of (\d+) times/);
+    assert.ok(yes, t);
+    assert.equal(await p.isVisible('#stats-inline'), false);
+    await p.click('[data-detail-set="2"]');
+    assert.ok(await p.isVisible('#stats-inline'));
+    assert.match(await p.textContent('#s2'), new RegExp(`^${yes[1]} of ${yes[2]}$`));
+    await p.locator('#detail').fill('1');
+    await p.click('.nav-link[data-view="students"]');
+    assert.equal(await p.$$eval('.entry-card.is-simple', n => n.length), 10);
+    const b = p.locator('[data-open-student]').first();
+    const said = (await b.textContent()).match(/(\d+) of (\d+) said yes/);
+    await b.click();
+    assert.equal(await p.locator('.is-simple').filter({ has: p.locator('[aria-expanded="true"]') }).locator('.entry-decisions li').count(), +said[2]);
+    await p.context().close();
+  });
+
+  test('"You" can be dragged on GPA, weighted GPA and SAT; the two GPAs replace each other', async () => {
+    const p = await page();
+    for (const [metric, id] of [['uw', 'slm-gpa'], ['gpa', 'slm-weighted'], ['sat', 'slm-sat']]) {
+      await p.click(`[data-metric="${metric}"]`);
+      const b = await p.locator('.c-you').boundingBox();
+      await p.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+      await p.mouse.down();
+      await p.mouse.move(b.x + b.width / 2 - 40, b.y + b.height / 2, { steps: 4 });
+      await p.mouse.up();
+      assert.ok(+(await p.inputValue('#' + id)) > 1, metric);
+      const plotted = await p.$$eval('#chart-main .chart-dot', d => d.length);
+      assert.ok(plotted > 0);
+    }
+    assert.equal(await p.inputValue('#slm-gpa'), '', 'unweighted was replaced by weighted');
+    assert.deepEqual(p.errors, []);
+    await p.context().close();
+  });
+
+  test('counts are of decisions, and say so', async () => {
+    const p = await page();
+    const legend = await p.textContent('#legend');
+    assert.match(legend, /\d+ acceptances/);
+    assert.doesNotMatch(legend, /\d+ accepted/i);
+    assert.match(await p.textContent('#field-key'), /\d+ acceptances/);
+    assert.ok((await p.$$eval('#stu-sort option', o => o.map(x => x.textContent))).includes("Yes's"));
     await p.context().close();
   });
 });
@@ -397,7 +514,7 @@ describe('one set of filters for the whole page', () => {
     const p = await page();
     const sent = [];
     p.on('request', r => sent.push(r.url() + (r.postData() || '')));
-    for (const [id, label] of [['slm-gpa', 'Unweighted GPA'], ['slm-gpa-range', 'GPA range'], ['slm-sat', 'SAT'], ['slm-sat-range', 'SAT range'], ['slm-major', 'Major']])
+    for (const [id, label] of [['slm-gpa', 'Unweighted GPA'], ['slm-gpa-range', 'GPA range'], ['slm-weighted', 'Weighted GPA'], ['slm-weighted-range', 'Weighted GPA range'], ['slm-sat', 'SAT'], ['slm-sat-range', 'SAT range'], ['slm-major', 'Major']])
       assert.equal(await p.$eval('#' + id, e => e.labels[0].textContent), label);
     await p.fill('#slm-gpa', '3.41');
     await p.fill('#slm-sat', '1234');
@@ -432,7 +549,7 @@ describe('college names', () => {
   const row = (id, name, extra) => ({ id, session_id: 's' + id, college_name: name, grad_year: 2026, gpa: 3.5, gpa_weighted: 4, decision: 'Accepted', decision_type: 'RD', school_type: 'University', ...extra });
   test('variants merge, different schools do not, "None" is not a college', async () => {
     const ctx = await browser.newContext({ reducedMotion: 'reduce' });
-    await ctx.addInitScript(() => localStorage.setItem('cr_stats_disclaimer_ack', '1'));
+    await ctx.addInitScript(() => { localStorage.setItem('cr_stats_disclaimer_ack', '1'); localStorage.setItem('cr_detail', '3'); });
     const p = await ctx.newPage();
     const rows = ['CSUMB', 'Cal State Monterey Bay', 'Cal state university Monterey bay', 'Arizona State', 'University of Arizona', 'San Francisco State', 'University of San Francisco', 'grand canyon university', 'None'].map((n, i) => row(i + 1, n));
     await p.route('**/api/submissions', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(rows) }));
@@ -450,7 +567,7 @@ describe('college names', () => {
 describe('audit 2026-11-25', () => {
   const open = async rows => {
     const ctx = await browser.newContext({ reducedMotion: 'reduce' });
-    await ctx.addInitScript(() => localStorage.setItem('cr_stats_disclaimer_ack', '1'));
+    await ctx.addInitScript(() => { localStorage.setItem('cr_stats_disclaimer_ack', '1'); localStorage.setItem('cr_detail', '3'); });
     const p = await ctx.newPage();
     await p.route('**/api/submissions', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(rows) }));
     await p.goto(h.baseUrl + '/');
@@ -511,7 +628,7 @@ describe('audit 2026-11-25', () => {
     await p.click('[data-schools="UCs"]');
     await p.click('[data-action="share-view"]');
     const url = await p.evaluate(() => window.__c);
-    assert.match(url, /\?schools=UCs$/);
+    assert.match(url, /\?schools=UCs&detail=3$/);
     assert.match(await p.textContent('.share'), /Link copied/);
     await p.context().close();
   });
@@ -612,7 +729,7 @@ describe('scope, empty states, errors', () => {
 
   test('request failure, retry with filters kept, malformed response, stale data', async () => {
     const ctx = await browser.newContext({ reducedMotion: 'reduce' });
-    await ctx.addInitScript(() => localStorage.setItem('cr_stats_disclaimer_ack', '1'));
+    await ctx.addInitScript(() => { localStorage.setItem('cr_stats_disclaimer_ack', '1'); localStorage.setItem('cr_detail', '3'); });
     const p = await ctx.newPage();
     let mode = 'fail';
     await p.route('**/api/submissions', route => mode === 'fail'
@@ -662,7 +779,7 @@ describe('safe rendering', () => {
   ];
   test('injection-like API strings render as literal text everywhere', async () => {
     const ctx = await browser.newContext({ reducedMotion: 'reduce' });
-    await ctx.addInitScript(() => localStorage.setItem('cr_stats_disclaimer_ack', '1'));
+    await ctx.addInitScript(() => { localStorage.setItem('cr_stats_disclaimer_ack', '1'); localStorage.setItem('cr_detail', '3'); });
     const p = await ctx.newPage();
     await p.route('**/api/submissions', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(rows) }));
     await p.goto(h.baseUrl + '/');
@@ -800,7 +917,7 @@ describe('URL state and Back/Forward', () => {
 describe('restored public fields (operator decision 2026-10-17)', () => {
   test('cards and dot details show exact rank, first-gen, recruited and extracurriculars', async () => {
     const ctx = await browser.newContext({ reducedMotion: 'reduce' });
-    await ctx.addInitScript(() => localStorage.setItem('cr_stats_disclaimer_ack', '1'));
+    await ctx.addInitScript(() => { localStorage.setItem('cr_stats_disclaimer_ack', '1'); localStorage.setItem('cr_detail', '3'); });
     const p = await ctx.newPage();
     const row = { id: 1, session_id: 'g1', college_name: 'Synthetic State', grad_year: 2026, gpa: 3.5, gpa_weighted: 4.0,
       class_rank: '12', major: 'Biology', decision: 'Accepted', decision_type: 'RD', school_type: 'University',
