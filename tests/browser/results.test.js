@@ -53,26 +53,26 @@ describe('theme and text size keep the current view (audit F19)', () => {
   });
 
   test('every filter survives theme and text-size changes, including the URL', async () => {
-    const p = await page({ path: '/?schools=CSUs&chart=sat&q=state&min=2&decision=Accepted' });
-    await p.click('#slm-tab-gpa');
+    const p = await page({ path: '/?schools=CSUs&chart=sat&q=state&stats=grades&decision=Accepted' });
     await p.fill('#slm-gpa', '3.4');
-    await p.click('[data-slm-apply="gpa"]');
+    await p.waitForSelector('.slm-chip');
     const snap = async () => ({
       url: new URL(p.url()).search,
       pressed: await p.$eval('[data-schools][aria-pressed="true"]', b => b.dataset.schools),
       metric: await p.$eval('[data-metric][aria-pressed="true"]', b => b.dataset.metric),
       search: await p.inputValue('#college-search'),
-      min: await p.inputValue('#minsub-slider'),
+      tab: await p.$eval('[data-stats][aria-selected="true"]', b => b.dataset.stats),
       legend: await p.$$eval('#legend [aria-pressed="true"]', b => b.map(x => x.dataset.decision)),
       chips: await p.$$eval('.slm-chip', c => c.map(x => x.textContent)),
-      cols: await p.$$eval('#chart-main text[data-col]', t => t.map(x => x.textContent)),
+      cols: await p.$$eval('#chart-main .c-name[data-col]', t => t.map(x => x.textContent)),
       stats: await statsText(p),
       entries: await p.$eval('#entries', e => e.innerText),
     });
     const before = await snap();
     assert.equal(before.pressed, 'CSUs');
     assert.equal(before.metric, 'sat');
-    assert.equal(before.min, '2');
+    assert.equal(before.tab, 'grades');
+    assert.ok(!/3\.4/.test(before.url), 'a student\'s own GPA never goes in the URL');
     assert.deepEqual(before.legend, ['Accepted']);
     assert.equal(before.chips.length, 1);
     await p.click('#theme-toggle');
@@ -106,8 +106,7 @@ describe('keyboard, names and states', () => {
     assert.equal(await active(p), 'main-content');
     const nav = await p.$$eval('nav a.nav-link', a => a.map(x => [x.getAttribute('href'), x.getAttribute('aria-current')]));
     assert.deepEqual(nav, [['/', 'page'], ['/?page=submit', null]]);
-    assert.equal(await p.$$eval('h1', h => h.length), 1);
-    assert.equal(await p.textContent('h1'), 'College Results');
+    assert.deepEqual(await p.$$eval('h1', h => h.filter(x => x.offsetParent).map(x => x.textContent)), ['Where Live Oak got in']);
     await p.focus('#nav-submit');
     await p.keyboard.press('Enter');
     await p.waitForSelector('#page-submit.active');
@@ -115,6 +114,7 @@ describe('keyboard, names and states', () => {
     assert.equal(new URL(p.url()).search, '?page=submit');
     assert.equal(await active(p), 'main-content');
     assert.ok(await p.$eval('#page-results', el => getComputedStyle(el).display === 'none'), 'inactive view hidden');
+    assert.equal(await p.$$eval('h1', h => h.filter(x => x.offsetParent).length), 1, 'one visible h1 on the form too');
     await p.context().close();
   });
 
@@ -132,9 +132,9 @@ describe('keyboard, names and states', () => {
     const p = await page();
     const stops = await p.$$eval('#chart-main [tabindex="0"]', n => n.length);
     assert.equal(stops, 1, 'exactly one chart element in the Tab order');
-    await p.focus('#chart-main text[tabindex="0"]');
+    await p.focus('#chart-main .c-name[tabindex="0"]');
     const first = await active(p);
-    await p.keyboard.press('ArrowRight');
+    await p.keyboard.press('ArrowDown');
     const second = await active(p);
     assert.notEqual(first, second);
     assert.equal(await p.$$eval('#chart-main [tabindex="0"]', n => n.length), 1);
@@ -164,44 +164,172 @@ describe('keyboard, names and states', () => {
     await p.context().close();
   });
 
-  test('chart dots: Down arrow reaches a dot, its details show, Escape hides them', async () => {
+  test('chart marks: Right arrow reaches a mark, its details show, Escape hides them', async () => {
     const p = await page();
-    await p.focus('#chart-main text[tabindex="0"]');
-    await p.keyboard.press('ArrowDown');
-    assert.match(await p.evaluate(() => document.activeElement.getAttribute('aria-label')), /weighted GPA \d/);
+    await p.focus('#chart-main .c-name[tabindex="0"]');
+    const name = await active(p);
+    await p.keyboard.press('ArrowRight');
+    assert.match(await p.evaluate(() => document.activeElement.getAttribute('aria-label')), /unweighted GPA \d/);
     assert.equal(await p.$eval('#dot-tooltip', t => getComputedStyle(t).display), 'block');
     assert.ok((await p.textContent('#dot-tooltip')).includes('UW GPA'));
     await p.keyboard.press('Escape');
     assert.equal(await p.$eval('#dot-tooltip', t => getComputedStyle(t).display), 'none');
-    assert.match(await active(p), /^col-lbl-/);
+    assert.equal(await active(p), name);
     await p.context().close();
   });
 
-  test('legend items are toggle buttons; slider has a name and readable value', async () => {
+  test('decision buttons toggle, keep focus, and list only colleges with that decision', async () => {
     const p = await page();
+    const total = await p.textContent('#chart-col-count');
     await p.click('#legend [data-decision="Rejected"]');
     assert.equal(await p.getAttribute('#legend [data-decision="Rejected"]', 'aria-pressed'), 'true');
     assert.equal(await active(p), 'Rejected');
-    assert.equal(await p.$eval('#minsub-slider', s => s.labels[0].textContent), 'Min. submissions');
-    await p.focus('#minsub-slider');
-    await p.keyboard.press('ArrowRight');
-    await p.waitForTimeout(50);
-    const vt = await p.getAttribute('#minsub-slider', 'aria-valuetext');
-    assert.match(vt, /^At least \d submissions? per college$/);
+    assert.notEqual(await p.textContent('#chart-col-count'), total);
+    const every = await p.$$eval('#chart-main .c-row[data-key]', rows => rows.every(r => r.querySelector('.d-Rejected')));
+    assert.ok(every, 'every listed college has a rejection');
+    await p.click('#legend [data-decision="Rejected"]');
+    assert.equal(await p.textContent('#chart-col-count'), total);
     await p.context().close();
   });
 
-  test('Students-like-me tabs support arrow keys with roving focus', async () => {
+  test('statistics tabs support arrow keys with roving focus and one visible panel', async () => {
     const p = await page();
-    await p.focus('#slm-tab-gpa');
+    await p.focus('#stats-tab-destinations');
     await p.keyboard.press('ArrowRight');
-    assert.equal(await active(p), 'slm-tab-sat');
-    assert.equal(await p.getAttribute('#slm-tab-sat', 'aria-selected'), 'true');
-    assert.equal(await p.getAttribute('#slm-tab-gpa', 'tabindex'), '-1');
+    assert.equal(await active(p), 'stats-tab-grades');
+    assert.equal(await p.getAttribute('#stats-tab-grades', 'aria-selected'), 'true');
+    assert.equal(await p.getAttribute('#stats-tab-destinations', 'tabindex'), '-1');
     await p.keyboard.press('End');
-    assert.equal(await active(p), 'slm-tab-major');
-    assert.equal(await p.isVisible('#slm-sec-major'), true);
+    assert.equal(await active(p), 'stats-tab-timing');
+    assert.deepEqual(await p.$$eval('.stat-panel', n => n.filter(x => !x.hidden).map(x => x.id)), ['stats-panel-timing']);
+    assert.equal(new URL(p.url()).searchParams.get('stats'), 'timing');
     await p.context().close();
+  });
+});
+
+describe('one set of filters for the whole page', () => {
+  test('Students like me changes summary, chart, statistics and list together', async () => {
+    const p = await page();
+    const read = async () => ({ summary: await p.textContent('#summary'), counts: await p.$$eval('.c-count b', n => n.map(x => x.textContent).join()), stats: await statsText(p), list: await p.textContent('#entries-heading') });
+    const before = await read();
+    await p.fill('#slm-gpa', '3.4');
+    await p.waitForSelector('.slm-chip');
+    const after = await read();
+    for (const k of Object.keys(before)) assert.notEqual(after[k], before[k], k + ' should follow the filter');
+    const n = +(await p.textContent('#s0'));
+    assert.match(await p.textContent('#slm-status'), new RegExp(`^${n} students? match`));
+    assert.equal(await p.textContent('#entries-heading'), `${n} student${n === 1 ? '' : 's'} like you`);
+    assert.ok(await p.$('.c-you'), 'your GPA is marked on the axis');
+    // Every plotted (not faint) mark is inside the range
+    const vals = await p.$$eval('#chart-main .chart-dot', d => d.map(x => +x.getAttribute('aria-label').match(/GPA ([\d.]+)/)[1]));
+    assert.ok(vals.length && vals.every(v => v >= 3.1 - 1e-9 && v <= 3.7 + 1e-9), 'marks outside the range are faint context');
+    // Survives a category change, and the chip removes it
+    await p.click('[data-schools="UCs"]');
+    assert.equal(await p.$$eval('.slm-chip', c => c.length), 1);
+    await p.click('[data-schools="All"]');
+    await p.click('.slm-chip');
+    assert.deepEqual(await read(), before);
+    assert.deepEqual(p.errors, []);
+    await p.context().close();
+  });
+
+  test('out-of-range values are explained and do not filter', async () => {
+    const p = await page();
+    const before = await p.textContent('#summary');
+    await p.fill('#slm-gpa', '4.4');
+    await p.waitForFunction(() => /weighted GPA/.test(document.getElementById('slm-status').textContent));
+    assert.equal(await p.getAttribute('#slm-gpa', 'aria-invalid'), 'true');
+    assert.equal(await p.textContent('#summary'), before);
+    await p.context().close();
+  });
+
+  test('inputs are labelled, and nothing typed there leaves the browser', async () => {
+    const p = await page();
+    const sent = [];
+    p.on('request', r => sent.push(r.url() + (r.postData() || '')));
+    for (const [id, label] of [['slm-gpa', 'Unweighted GPA'], ['slm-gpa-range', 'GPA range'], ['slm-sat', 'SAT'], ['slm-sat-range', 'SAT range'], ['slm-major', 'Major']])
+      assert.equal(await p.$eval('#' + id, e => e.labels[0].textContent), label);
+    await p.fill('#slm-gpa', '3.41');
+    await p.fill('#slm-sat', '1234');
+    await p.waitForTimeout(600);
+    assert.deepEqual(sent, []);
+    assert.equal(new URL(p.url()).search, '');
+    await p.context().close();
+  });
+});
+
+describe('counts before percentages', () => {
+  test('no percentage is shown for a group smaller than five', async () => {
+    const p = await page();
+    await p.click('[data-stats="timing"]');
+    const all = (await p.$$eval('.stat-panel', n => n.map(x => x.textContent).join('\n'))) + await p.textContent('#summary');
+    const small = [...all.matchAll(/(\d+) of (\d+) \((\d+)%\)/g)].filter(m => +m[2] < 5);
+    assert.deepEqual(small, []);
+    await p.route('**/api/submissions', async r => {
+      const all = await (await r.fetch()).json();
+      await r.fulfill({ contentType: 'application/json', body: JSON.stringify([...all, { ...all[0], id: 9001, college_name: 'Tiny College', decision: 'Rejected' }, { ...all[1], id: 9002, college_name: 'Tiny College', decision: 'Accepted' }]) });
+    });
+    await p.goto(h.baseUrl + '/?college=Tiny%20College');
+    await p.waitForSelector('#college-modal.open');
+    const t = await p.textContent('#college-modal-content');
+    assert.match(t, /1 of 2 admitted/);
+    assert.doesNotMatch(t, /admitted \(\d+%\)/);
+    assert.match(t, /too few/);
+    await p.context().close();
+  });
+});
+
+describe('college names', () => {
+  const row = (id, name, extra) => ({ id, session_id: 's' + id, college_name: name, grad_year: 2026, gpa: 3.5, gpa_weighted: 4, decision: 'Accepted', decision_type: 'RD', school_type: 'University', ...extra });
+  test('variants merge, different schools do not, "None" is not a college', async () => {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    await ctx.addInitScript(() => localStorage.setItem('cr_stats_disclaimer_ack', '1'));
+    const p = await ctx.newPage();
+    const rows = ['CSUMB', 'Cal State Monterey Bay', 'Cal state university Monterey bay', 'Arizona State', 'University of Arizona', 'San Francisco State', 'University of San Francisco', 'grand canyon university', 'None'].map((n, i) => row(i + 1, n));
+    await p.route('**/api/submissions', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(rows) }));
+    await p.goto(h.baseUrl + '/');
+    await p.waitForSelector('#chart-main svg');
+    const names = await p.$$eval('#chart-main .c-name[data-col]', n => n.map(x => x.textContent));
+    assert.equal(names.length, 6, names.join(' | '));
+    for (const n of ['Arizona State', 'University of Arizona', 'San Francisco State', 'University of San Francisco', 'Grand Canyon University']) assert.ok(names.includes(n), n);
+    assert.ok(!names.includes('None'));
+    assert.ok((await p.textContent('#entries')).includes('grand canyon university'), 'the student list keeps names as typed');
+    await ctx.close();
+  });
+});
+
+describe('student list', () => {
+  test('pages in tens and moves focus to the first new student', async () => {
+    const p = await page();
+    assert.equal(await p.$$eval('.entry-card', n => n.length), 10);
+    await p.click('#entries-more');
+    assert.equal(await p.$$eval('.entry-card', n => n.length), 20);
+    assert.equal(await p.evaluate(() => document.activeElement.dataset.entry), '10');
+    await p.context().close();
+  });
+});
+
+describe('first paint', () => {
+  for (const [w, hgt] of [[1280, 900], [390, 844]]) test(`layout stays put while loading at ${w}px`, async () => {
+    const ctx = await browser.newContext({ viewport: { width: w, height: hgt } });
+    await ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver(l => l.getEntries().forEach(e => { if (!e.hadRecentInput) window.__cls += e.value; })).observe({ type: 'layout-shift', buffered: true }); });
+    const p = await ctx.newPage();
+    await p.goto(h.baseUrl + '/');
+    await p.waitForSelector('#chart-main svg');
+    await p.waitForTimeout(500);
+    const cls = await p.evaluate(() => window.__cls);
+    assert.ok(cls < 0.1, 'layout shift ' + cls);
+    await ctx.close();
+  });
+  test('follows the device theme until one is chosen', async () => {
+    const ctx = await browser.newContext({ colorScheme: 'dark' });
+    const p = await ctx.newPage();
+    await p.goto(h.baseUrl + '/');
+    assert.equal(await p.getAttribute('html', 'data-theme'), 'dark');
+    await p.click('#theme-toggle');
+    await p.reload();
+    assert.equal(await p.getAttribute('html', 'data-theme'), 'light');
+    await ctx.close();
   });
 });
 
@@ -237,7 +365,6 @@ describe('scope, empty states, errors', () => {
     await p.fill('#college-search', 'zz-no-such-college');
     await p.waitForSelector('#chart-main .chart-empty');
     assert.match(await p.textContent('#chart-main .chart-empty p'), /No colleges match “zz-no-such-college”/);
-    assert.match(await p.textContent('#chart-active'), /Chart filters on: search/);
     await p.waitForTimeout(600);
     assert.match(await p.textContent('#chart-status'), /No colleges match/);
     await p.click('[data-action="clear-search"]');
@@ -288,12 +415,12 @@ describe('scope, empty states, errors', () => {
     await ctx.close();
   });
 
-  test('scope notes say what each control filters', async () => {
+  test('statistics say what they are based on', async () => {
     const p = await page();
-    assert.match(await p.textContent('#minsub-note'), /not a privacy protection/);
-    assert.match(await p.textContent('#chart-scope-note'), /statistics below aren't filtered/);
-    assert.match(await p.textContent('.slm-scope'), /statistics below still describe everyone/);
-    assert.match(await p.textContent('#stats-scope-note'), /don't change these numbers/);
+    assert.match(await p.textContent('#stats-scope-note'), /^Based on \d+ students and \d+ decisions\. Percentages appear only for groups of 5 or more\.$/);
+    await p.fill('#slm-gpa', '3.4');
+    await p.waitForSelector('.slm-chip');
+    assert.match(await p.textContent('#stats-scope-note'), /matching GPA 3\.10 to 3\.70/);
     await p.context().close();
   });
 });
@@ -317,10 +444,11 @@ describe('safe rendering', () => {
     assert.ok((await p.textContent('#entries')).includes(`Evil ${INERT} College`));
     assert.ok((await p.textContent('#entries')).includes(`Art"><script>window.__pwned=2</script>`));
     assert.ok((await p.textContent('#stats-inline')).includes(`O'Brien & "Quotes" <Univ>`));
+    await p.fill('#slm-gpa', '3.5'); await p.waitForSelector('.slm-chip'); await p.click('.slm-chip');
     await p.click('#chart-main .chart-dot');
     assert.ok((await p.textContent('#dot-tooltip')).includes(`Evil ${INERT} College`) || (await p.textContent('#dot-tooltip')).includes(`O'Brien`));
     await p.keyboard.press('Escape');
-    await p.click('#chart-main text[data-col]');
+    await p.click('#chart-main .c-name[data-col]');
     await p.waitForSelector('#college-modal.open');
     const title = await p.textContent('#college-modal-title');
     assert.ok(title.includes('<'), 'heading shows the literal text');
@@ -331,7 +459,8 @@ describe('safe rendering', () => {
     assert.ok((await p.textContent('#cmp-result')).includes(`Evil ${INERT} College`));
     // Nothing executed, no element was injected
     assert.equal(await p.evaluate(() => window.__pwned), undefined);
-    assert.equal(await p.$$eval('img[src="x"], b', n => n.length), 0);
+    assert.equal(await p.$$eval('img[src="x"]', n => n.length), 0);
+    assert.equal(await p.$$eval('script', n => n.filter(x => /__pwned/.test(x.textContent)).length), 0);
     await p.keyboard.press('Escape');
     // Search text and URL college value are shown literally too
     await p.fill('#college-search', '<i>nothing</i>');
@@ -372,16 +501,18 @@ describe('layout', () => {
     for (const w of [640, 320]) {
       const p = await page({ viewport: { width: w, height: Math.round(900 * w / 1280) } });
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 0, `overflow at ${w}`);
-      // A 1280×900 window at 200%/400% is under 500px tall: the nav scrolls away instead of covering it.
-      assert.equal(await p.$eval('nav', n => getComputedStyle(n).position), 'static');
+      // A 1280×900 window at 200%/400% is under 500px tall: the filter bar scrolls away instead of covering it.
+      assert.equal(await p.$eval('#filters', n => getComputedStyle(n).position), 'static');
       await p.context().close();
     }
   });
 
   test('reduced motion turns off decorative animation', async () => {
-    const p = await page({ reducedMotion: 'reduce', path: '/?min=1' });
-    const anim = await p.evaluate(() => ['.scroll-chev', '.modal', '#chat-panel'].map(s => getComputedStyle(document.querySelector(s)).animationName));
-    assert.deepEqual(anim, ['none', 'none', 'none']);
+    const p = await page({ reducedMotion: 'reduce', path: '/' });
+    const anim = await p.evaluate(() => ['.modal', '#chat-panel'].map(s => getComputedStyle(document.querySelector(s)).animationName));
+    assert.deepEqual(anim, ['none', 'none']);
+    await p.click('[data-metric="gpa"]');
+    assert.equal(await p.evaluate(() => document.getAnimations().filter(a => a.effect.getTiming().duration > 1).length), 0, 'chart does not animate');
     await p.context().close();
   });
 });
@@ -430,7 +561,7 @@ describe('URL state and Back/Forward', () => {
     assert.equal(await p.getAttribute('[data-schools="Trade"]', 'aria-pressed'), 'false');
     assert.ok(await p.$('#chart-main svg'), 'UC chart shown again');
     assert.equal(await p.textContent('#stats-heading'), 'Statistics: UCs');
-    assert.match(await p.textContent('#page-meta'), /· UCs$/);
+    assert.equal(await p.textContent('#page-meta'), 'Class of 2026, UCs');
     const p2 = await page({ path: '/?college=UC%20Davis' });
     await p2.waitForSelector('#college-modal.open');
     assert.equal(await p2.textContent('#college-modal-title'), 'UC Davis');
@@ -453,13 +584,13 @@ describe('restored public fields (operator decision 2026-10-17)', () => {
     const card = await p.textContent('#entries');
     assert.ok(card.includes('Rank 12'));
     assert.ok(card.includes('First-gen'));
-    assert.ok(card.includes('🏅'));
+    assert.ok(card.includes('Recruited'));
     assert.ok(card.includes('Synthetic robotics club <b>lead</b>'), 'EC text shown literally');
-    assert.equal(await p.$$eval('#entries b', n => n.length), 0);
-    assert.match(await p.$eval('.entry-ecs', e => e.innerText), /lead<\/b>\nChoir/, 'line break kept');
+    assert.ok(!(await p.$$eval('#entries b', n => n.map(x => x.textContent))).includes('lead'), 'no markup created from student text');
+    assert.match(await p.$eval('.entry-ecs p', e => e.innerText), /lead<\/b>\nChoir/, 'line break kept');
     await p.click('#chart-main .chart-dot');
     const tip = await p.textContent('#dot-tooltip');
-    for (const t of ['Rank 12', 'First-generation student', '🏅 Recruited', 'Extracurriculars']) assert.ok(tip.includes(t), t);
+    for (const t of ['Rank 12', 'First-generation student', 'Recruited', 'Extracurriculars']) assert.ok(tip.includes(t), t);
     await ctx.close();
   });
 });

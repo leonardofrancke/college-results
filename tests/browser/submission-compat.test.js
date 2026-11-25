@@ -1,4 +1,4 @@
-// The submission form was deliberately left untouched. These tests drive it
+// The submission form was restyled and labelled on 2026-11-25; what it sends was not changed. These tests drive it
 // the way a student would and capture the requests it makes (mocked, so no
 // record is written anywhere), proving the save/load/delete contract is the
 // same as the audited version: same endpoints, methods, payload shape and

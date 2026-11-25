@@ -40,7 +40,7 @@ test('unknown paths are 404 with a small page, never the app', async () => {
 
 test('app URLs, query views, pages and assets still load', async () => {
   for (const p of ['/', '/?page=submit', '/?schools=UCs&chart=sat&q=davis&min=2&decision=Accepted&college=UC%20Davis', '/index.html',
-                   '/privacy.html', '/about.html', '/methodology.html', '/accessibility.html', '/terms-draft.html', '/admin.html', '/info.css', '/fonts/fonts.css']) {
+                   '/privacy.html', '/about.html', '/methodology.html', '/accessibility.html', '/terms-draft.html', '/admin.html', '/info.css', '/app.css', '/app.js', '/boot.js', '/fonts/fonts.css']) {
     assert.equal((await get(p)).status, 200, p);
   }
 });
@@ -54,11 +54,16 @@ test('security headers kept everywhere; cache and robots headers by response cla
     assert.equal(r.headers.get('referrer-policy'), 'no-referrer', p);
   }
   assert.equal((await get('/')).headers.get('cache-control'), 'no-cache');
+  for (const p of ['/app.css', '/app.js', '/boot.js']) assert.equal((await get(p)).headers.get('cache-control'), 'no-cache', p);
   assert.equal((await get('/fonts/inter-latin-bec94a4d.woff2')).headers.get('cache-control'), 'public, max-age=31536000, immutable');
   assert.equal((await get('/api/submissions')).headers.get('cache-control'), null, 'API caching left unchanged');
   assert.equal((await get('/terms-draft.html')).headers.get('x-robots-tag'), 'noindex, nofollow');
   assert.equal((await get('/admin.html')).headers.get('x-robots-tag'), 'noindex, nofollow');
   assert.equal((await get('/')).headers.get('x-robots-tag'), null, 'results page indexing policy unchanged');
+});
+
+test('CSS, scripts and the results feed are compressed', async () => {
+  for (const p of ['/', '/app.css', '/app.js']) assert.equal((await get(p, { headers: { 'Accept-Encoding': 'gzip' } })).headers.get('content-encoding'), 'gzip', p);
 });
 
 test('submission API requests pass through unchanged', async () => {

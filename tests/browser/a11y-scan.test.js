@@ -1,4 +1,5 @@
-// Automated axe-core scan of the results view and info pages, light and dark.
+// Automated axe-core scan of the results view, the submission form and the info
+// pages, light and dark.
 // A pass here is necessary, not sufficient: see the manual checks in the
 // accessibility verification report.
 const { test, before, after } = require('node:test');
@@ -15,7 +16,7 @@ after(async () => { await browser?.close(); await h?.stop(); });
 async function scan(p, include) {
   await p.addScriptTag({ content: AXE });
   return p.evaluate(async inc => {
-    const r = await axe.run(inc ? { include: inc } : document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] } });
+    const r = await axe.run(inc ? { include: inc } : document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] } });
     return r.violations.map(v => `${v.id}: ${v.nodes.length} × ${v.nodes.slice(0, 3).map(n => n.target.join(' ')).join(' | ')}`);
   }, include);
 }
@@ -27,9 +28,13 @@ for (const theme of ['light', 'dark']) {
     const p = await ctx.newPage();
     await p.goto(h.baseUrl + '/?schools=All');
     await p.waitForSelector('#chart-main svg');
-    // The submission view is hidden here and is out of scope (unchanged).
-    const v = [...await scan(p, [['nav'], ['#page-results'], ['footer']])];
-    await p.click('#chart-main text[data-col]');
+    const v = await scan(p, [['nav'], ['#page-results'], ['footer']]);
+    for (const t of ['grades', 'colleges', 'timing']) { await p.click(`[data-stats="${t}"]`); v.push(...await scan(p, [['#stats-section']])); }
+    await p.fill('#slm-gpa', '3.4');
+    await p.waitForSelector('.slm-chip');
+    await p.click('#legend [data-decision]');
+    v.push(...await scan(p, [['#page-results']]));
+    await p.click('#chart-main .c-name[data-col]');
     await p.waitForSelector('#college-modal.open');
     v.push(...await scan(p, [['#college-modal']]));
     await p.keyboard.press('Escape');
@@ -39,6 +44,9 @@ for (const theme of ['light', 'dark']) {
     await p.keyboard.press('Escape');
     await p.click('#chat-fab');
     v.push(...await scan(p, [['#chat-panel']]));
+    await p.click('#nav-submit');
+    await p.waitForSelector('#page-submit.active #cn-0');
+    v.push(...await scan(p, [['#page-submit']]));
     assert.deepEqual(v, []);
     await ctx.close();
   });
@@ -48,7 +56,7 @@ test('info pages: no axe violations', async () => {
   for (const scheme of ['light', 'dark']) {
     const ctx = await browser.newContext({ colorScheme: scheme });
     const p = await ctx.newPage();
-    for (const path of ['/about.html', '/methodology.html', '/accessibility.html', '/terms-draft.html', '/nope']) {
+    for (const path of ['/about.html', '/methodology.html', '/accessibility.html', '/privacy.html', '/terms-draft.html', '/nope']) {
       await p.goto(h.baseUrl + path);
       assert.deepEqual(await scan(p), [], `${path} (${scheme})`);
     }

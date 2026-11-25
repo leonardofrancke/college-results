@@ -1,7 +1,9 @@
 // Extracts the parts of the app that student submissions depend on, so a test
 // can prove they are byte-for-byte unchanged by presentation work elsewhere.
-// The baseline in fixtures/protected-baseline.json was generated from commit
-// 919242b (the version the 2026-10-16 readiness audit inspected).
+// The page is index.html (markup), app.js and app.css. The baseline in
+// fixtures/protected-baseline.json was regenerated on 2026-11-25 for the
+// redesign: the form's markup and styles and addCollege()'s labels changed on
+// purpose; every other protected function is identical to commit 48811be.
 //
 // If one of these regions has to change on purpose, regenerate the baseline
 // with `node tests/helpers/protected-regions.js --write` in the same commit and
@@ -46,14 +48,14 @@ const PROTECTED_FUNCTIONS = [
 // Any style rule naming one of these classes styles the submission form.
 const FORM_CSS = /\.(form-|college-row|add-college|delete-|privacy-note|sug-|anon-note|success-msg|req\b|major-wrap|cel-)|#celebration/;
 
-function indexRegions(html) {
+function indexRegions(html, js, css) {
   const out = {};
   out['markup:#page-submit'] = between(html, '<!-- ── SUBMIT PAGE ── -->', '</div><!-- .content -->');
   out['markup:#celebration-overlay'] = between(html, '<!-- Celebration overlay -->', '</body>');
-  out['css:submission-form-rules'] = html.split('\n').filter(l => FORM_CSS.test(l)).join('\n');
-  out['js:session-id'] = between(html, 'const SESSION_ID', '// ── State');
-  out['js:page-view-track-call'] = html.split('\n').filter(l => l.includes("fetch('/api/track'")).join('\n');
-  PROTECTED_FUNCTIONS.forEach(n => { out[`js:${n}`] = fnSource(html, n); });
+  out['css:submission-form-rules'] = css.split('\n').filter(l => FORM_CSS.test(l)).join('\n');
+  out['js:session-id'] = between(js, 'const SESSION_ID', '// ── Chart metrics');
+  out['js:page-view-track-call'] = js.split('\n').filter(l => l.includes("fetch('/api/track'")).join('\n');
+  PROTECTED_FUNCTIONS.forEach(n => { out[`js:${n}`] = fnSource(js, n); });
   return out;
 }
 
@@ -66,9 +68,8 @@ function serverRegions(js) {
 }
 
 function hashAll(root) {
-  const html = fs.readFileSync(path.join(root, 'html/index.html'), 'utf8');
-  const server = fs.readFileSync(path.join(root, 'api/server.js'), 'utf8');
-  const regions = { ...indexRegions(html), ...serverRegions(server) };
+  const read = f => fs.readFileSync(path.join(root, f), 'utf8');
+  const regions = { ...indexRegions(read('html/index.html'), read('html/app.js'), read('html/app.css')), ...serverRegions(read('api/server.js')) };
   return Object.fromEntries(Object.entries(regions).map(([k, v]) => [k, sha(v)]));
 }
 

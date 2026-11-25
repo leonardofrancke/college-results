@@ -5,13 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <title>How the numbers work — College Results</title>
+<link rel="stylesheet" href="/fonts/fonts.css">
 <link rel="stylesheet" href="/info.css">
 </head>
 <body>
 <main>
   <a class="back" href="/">← Back to College Results</a>
   <h1>How the numbers work</h1>
-  <p class="meta">What each figure on the results page counts, and why none of it is a prediction. Describes the site as of October 2026.</p>
+  <p class="meta">What each figure on the results page counts, and why none of it is a prediction. Describes the site as of November 25, 2026.</p>
 
   <div class="box">
     <p><strong>In short:</strong> every number comes from voluntary, self-reported submissions. Nobody checks them against school records, the students who share are not a random sample, and many groups are tiny. Treat the results as stories from classmates, not odds.</p>
@@ -40,21 +41,24 @@
     <caption class="sr-only">Figures on the results page and what they count</caption>
     <thead><tr><th scope="col">Figure</th><th scope="col">Counts</th><th scope="col">How it's calculated</th></tr></thead>
     <tbody>
-      <tr><td>Students</td><td>Students</td><td>Submission groups in the selected school category.</td></tr>
-      <tr><td>Got in somewhere</td><td>Students</td><td>Groups with at least one "Accepted" in the selected category.</td></tr>
-      <tr><td>4-yr accept rate</td><td>Applications</td><td>Accepted ÷ (accepted + rejected + waitlisted), at colleges that aren't open admission. Pending decisions are left out. Community colleges are left out because they admit everyone.</td></tr>
-      <tr><td>Avg UW GPA</td><td>Students</td><td>Average unweighted GPA, one value per group.</td></tr>
-      <tr><td>College details: Rate</td><td>Applications</td><td>Accepted ÷ all decisions reported for that college, <em>including</em> waitlisted and pending ones.</td></tr>
-      <tr><td>Compare</td><td>Applications</td><td>Same as college details, plus averages over accepted applications only.</td></tr>
-      <tr><td>Where people ended up</td><td>Students</td><td>Students reporting "enrolling" at each type of school. If nobody in the view has marked enrolling, acceptances are used instead, and the heading says so.</td></tr>
-      <tr><td>GPA range by destination</td><td>Applications</td><td>Middle half (25th–75th percentile) and median unweighted GPA of the rows behind "Where people ended up". Only shown with two or more values.</td></tr>
-      <tr><td>Acceptance rate by weighted GPA</td><td>Applications</td><td>Accepted ÷ all decisions in each GPA band at non-open-admission colleges. Pending decisions count in the denominator here.</td></tr>
+      <tr><td>Students who shared</td><td>Students</td><td>Submission groups in the current view (school category and Students like me).</td></tr>
+      <tr><td>Got into at least one</td><td>Students</td><td>Groups with at least one "Accepted" in the current view.</td></tr>
+      <tr><td>Four-year colleges said yes to</td><td>Applications</td><td>Accepted ÷ (accepted + rejected + waitlisted), at colleges that aren't open admission. Pending decisions are left out. Community colleges are left out because they admit everyone.</td></tr>
+      <tr><td>Average unweighted GPA</td><td>Students</td><td>One value per group. Groups without one are left out.</td></tr>
+      <tr><td>Marks at the top of the page</td><td>Applications</td><td>Every reported decision, one mark each. Entries with no college ("None") are left out of the marks, the chart and the statistics.</td></tr>
+      <tr><td>Chart and college details: admitted</td><td>Applications</td><td>Accepted out of all decisions reported for that college, <em>including</em> waitlisted and pending ones. With the SAT axis, only students who reported an SAT score.</td></tr>
+      <tr><td>Compare</td><td>Applications</td><td>Same as college details, plus ranges over accepted applications only.</td></tr>
+      <tr><td>Where did people go?</td><td>Students</td><td>Students reporting "enrolling" at each type of school. If nobody in the view has marked enrolling, acceptances are used instead, and the heading says so.</td></tr>
+      <tr><td>GPA range by destination</td><td>Applications</td><td>Middle half (25th–75th percentile) and median unweighted GPA of the rows behind "Where did people go?". Only shown with five or more values.</td></tr>
+      <tr><td>Four-year admissions by weighted GPA</td><td>Applications</td><td>Accepted ÷ all decisions in each GPA band at non-open-admission colleges. Pending decisions count in the denominator here.</td></tr>
       <tr><td>Early vs Regular</td><td>Applications</td><td>Accepted ÷ (accepted + rejected + waitlisted) at non-open-admission colleges, by EA/ED vs RD.</td></tr>
       <tr><td>Most applied schools</td><td>Applications</td><td>Colleges with two or more reported decisions, spelling variants grouped.</td></tr>
-      <tr><td>Popular majors</td><td>Students</td><td>Intended major as typed, one per group.</td></tr>
+      <tr><td>Popular majors</td><td>Students</td><td>Intended major, one per group, ignoring capitals and punctuation.</td></tr>
     </tbody>
   </table>
   </div>
+
+  <p><strong>Percentages need at least five.</strong> Groups smaller than five show counts only ("2 of 3"), because a percentage from so few says almost nothing. This is about clarity; it is not a privacy protection, since individual entries are public anyway.</p>
 
   <h2 id="outcomes">Waitlists, pending decisions and missing values</h2>
   <ul>
@@ -74,7 +78,7 @@
 
   <h2 id="not-chances">Why these aren't your chances</h2>
   <ul>
-    <li>Groups are small. A 100% rate from two applications says almost nothing.</li>
+    <li>Groups are small. Two yeses out of two applications says almost nothing.</li>
     <li>Students who apply to a selective school are already a selected group, so a GPA band with a lower acceptance rate usually reflects where those students applied, not that GPA hurt them.</li>
     <li>Colleges read essays, recommendations, activities, course rigor, major choice and more. None of that is here.</li>
     <li>Results are from one class at one school, self-reported. Use them to start conversations with a counselor, not to decide where to apply.</li>
@@ -82,17 +86,17 @@
 
   <h2 id="filters">Which controls change what</h2>
   <ul>
-    <li><strong>School category</strong> (UCs, CSUs, …): changes everything on the results page.</li>
-    <li><strong>Search, minimum submissions, decision highlight</strong>: change the chart and its table only. The minimum hides colleges with few submissions from the chart. It's a display setting, not a privacy protection.</li>
-    <li><strong>Students like me</strong>: narrows the chart and the student list. The statistics cards keep describing the whole category.</li>
+    <li><strong>School category</strong> (UCs, CSUs, …) and <strong>Students like me</strong> (GPA, SAT, major): change everything on the results page. In the chart, students outside the Students-like-me range stay as faint marks and aren't counted.</li>
+    <li><strong>GPA / Weighted / SAT</strong>, <strong>Find a college</strong> and the <strong>decision buttons</strong> above the chart: change the chart and its table only. Picking a decision lists just the colleges that have one.</li>
+    <li>Colleges with one report are folded away at first when there are many; "Show more colleges" lists them all. That's for length, not privacy.</li>
+    <li>What you type into Students like me stays in your browser. It isn't sent anywhere or put in the page's address.</li>
   </ul>
 
   <h2 id="known-issues">Known inconsistencies</h2>
   <p>These are documented rather than "fixed" because fixing them means changing how existing submissions are grouped or counted, which is under review:</p>
   <ul>
-    <li>The chart and college details merge spelling variants of a college; Compare, "Where we're enrolling" and majors use the exact text typed, so the same school can show different counts in different places.</li>
+    <li>Spelling variants of a college are merged by name everywhere except the student list, which shows exactly what was typed. A spelling too different from the others ("SJSU" and "San Jose State") is still counted as a separate college.</li>
     <li>Rates use different denominators (with or without pending and waitlisted decisions), as listed above.</li>
-    <li>The average GPA tile treats a group with no unweighted GPA as 0. GPA is required on the form, so this should be rare.</li>
     <li>Category lists match exact names, so some colleges are missing from T20, Ivies or LACs.</li>
   </ul>
 
