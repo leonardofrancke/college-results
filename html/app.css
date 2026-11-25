@@ -155,22 +155,24 @@ nav { position: sticky; top: 0; z-index: 70; min-height: 64px; background: var(-
 .top { max-width: 86rem; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 1.5rem; }
 .top .filters { padding: 0; grid-column: 1; grid-row: 1; }
 .lede { grid-column: 1; grid-row: 1; font-size: 1.05rem; line-height: 1.45; max-width: 62ch; padding: 1rem 0; color: var(--text-2); text-wrap: pretty; }
-.zoom { grid-column: 2; grid-row: 1; display: flex; align-items: center; gap: .8rem; padding: .35rem 0; }
-.zoom-glyph { width: 2.5rem; height: 2.5rem; flex: none; overflow: visible; fill: var(--accent); }
-.zoom-glyph circle { transition: transform .5s var(--ease-out); }
-[data-detail="1"] .zoom-glyph circle { transform: scale(3); }
-[data-detail="2"] .zoom-glyph circle, .zoom.peek .zoom-glyph circle { transform: translate(var(--x2), var(--y2)) scale(1.5); }
-[data-detail="3"] .zoom-glyph circle { transform: translate(var(--x3), var(--y3)); }
-.zoom-main { display: grid; gap: .15rem; width: 9.5rem; }
-.zoom-main label { font-size: .85rem; color: var(--text-3); }
-.zoom-main b { color: var(--text); }
-#detail { -webkit-appearance: none; appearance: none; width: 100%; height: 26px; margin: 0; background: none; cursor: pointer; }
-#detail::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: radial-gradient(circle at 10px 50%, var(--border-2) 3px, transparent 3.5px), radial-gradient(circle at 50% 50%, var(--border-2) 3px, transparent 3.5px), radial-gradient(circle at calc(100% - 10px) 50%, var(--border-2) 3px, transparent 3.5px), var(--line); }
-#detail::-moz-range-track { height: 6px; border-radius: 3px; background: radial-gradient(circle at 10px 50%, var(--border-2) 3px, transparent 3.5px), radial-gradient(circle at 50% 50%, var(--border-2) 3px, transparent 3.5px), radial-gradient(circle at calc(100% - 10px) 50%, var(--border-2) 3px, transparent 3.5px), var(--line); }
-#detail::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); border: 3px solid var(--surface); box-shadow: 0 1px 4px rgba(16, 41, 44, .35); margin-top: -8px; }
-#detail::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid var(--surface); box-shadow: 0 1px 4px rgba(16, 41, 44, .35); }
+.zoom { grid-column: 2; grid-row: 1; position: relative; display: grid; justify-items: end; gap: .3rem; padding: .7rem 0; }
+.levels { display: inline-flex; background: var(--surface); border-radius: 12px; padding: .25rem; box-shadow: var(--lift); }
+.level { display: inline-flex; align-items: center; gap: .45rem; min-height: 2.5rem; padding: 0 .95rem .0 .75rem; border-radius: 9px; font-weight: 650; font-size: .92rem; color: var(--text-3); transition: background-color .15s ease, color .15s ease; }
+.level svg { width: 1.15rem; height: 1.15rem; fill: currentColor; flex: none; transition: transform .3s var(--ease-out); }
+.level[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.level[aria-pressed="true"] svg { transform: scale(1.12); }
+.level:active { transform: scale(.97); }
+@media (hover: hover) and (pointer: fine) { .level:hover:not([aria-pressed="true"]) { background: var(--sunk); color: var(--text); } }
+.level-caption { font-size: .85rem; color: var(--text-3); text-align: right; }
+.tip { display: none; position: relative; margin-top: .55rem; width: 23rem; max-width: 100%; background: var(--text); color: var(--bg); border-radius: 12px; padding: .9rem 1rem 1rem; gap: .7rem; justify-items: start; font-size: .92rem; line-height: 1.45; animation: tipIn .35s var(--ease-out) .5s backwards; }
+.first-visit .tip { display: grid; }
+@keyframes tipIn { from { opacity: 0; transform: translateY(6px); } }
+.tip::before { content: ''; position: absolute; top: -6px; right: 9.6rem; width: 13px; height: 13px; background: inherit; transform: rotate(45deg); border-radius: 2px; }
+.tip b { color: inherit; }
+.tip .btn-main { background: var(--bg); color: var(--text); min-height: 2.2rem; }
+.tip :focus-visible { outline-color: var(--bg); }
 /* What each level leaves out */
-[data-detail="1"] :is(.filters-in, .aside, .chart-tools > :not(#legend), .chart-tools-end, .chart-table-wrap, .chart-note, #stats-inline, #stats-scope-note, .stu-flags, .stu-tools [for="stu-college"], .e-head),
+[data-detail="1"] :is(.filters-in, .aside, .chart-tools > :not(#legend):not(.seg), .chart-tools-end, .chart-table-wrap, .chart-note, #stats-inline, #stats-scope-note, .stu-flags, .stu-tools [for="stu-college"], .e-head),
 html:not([data-detail="1"]) :is(.lede, #facts),
 html:not([data-detail="3"]) :is(#saved-filter, #compare-open, .slm-l3, .stu-flags, .btn-save, .chart-table-wrap) { display: none !important; }
 [data-detail="1"] .layout { grid-template-columns: minmax(0, 1fr); max-width: 72rem; }
@@ -539,6 +541,9 @@ footer strong, footer a { color: var(--text); }
 @media (max-width: 1080px) {
   .top { grid-template-columns: minmax(0, 1fr); padding-top: .5rem; }
   .zoom, .lede, .top .filters { grid-column: 1; grid-row: auto; }
+  .zoom { justify-items: start; }
+  .level-caption { text-align: left; }
+  .tip::before { right: auto; left: 8.6rem; }
   .lede { padding: .3rem 0 .9rem; }
   .layout { grid-template-columns: minmax(0, 1fr); }
   .aside { position: static; max-height: none; display: contents; }
@@ -590,7 +595,11 @@ footer strong, footer a { color: var(--text); }
   #chat-fab span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   html:not([data-detail="1"]) .filters { padding: 0 .8rem; }
   .zoom, .lede, [data-detail="1"] .slm-active { margin: 0 1rem; }
-  .zoom-main { flex: 1; width: auto; }
+  .zoom { min-width: 0; }
+  .levels { display: flex; width: 100%; }
+  .level { flex: 1 1 0; min-width: 0; flex-direction: column; justify-content: center; gap: .15rem; padding: .35rem .2rem; min-height: 52px; font-size: .82rem; line-height: 1.1; text-align: center; overflow-wrap: anywhere; }
+  .tip { width: auto; }
+  .tip::before { left: 50%; margin-left: -6px; }
   .unit-row { grid-template-columns: 7rem minmax(0, 1fr) 1.6rem; }
   .fact h3 { font-size: 1.3rem; }
   html[data-detail="1"] .c-row { grid-template-columns: 1.7rem minmax(0, 1fr) auto; }

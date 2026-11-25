@@ -314,7 +314,12 @@ let view = 'colleges';        // colleges | numbers | students
 let detail = +document.documentElement.dataset.detail || 1;   // 1 simple, 2 more, 3 everything
 const openTypes = new Set();  // school types unfolded at the simple level
 const openStudents = new Set();
-const DETAIL_NAMES = { 1: 'Simple', 2: 'More', 3: 'Everything' };
+const DETAIL_NAMES = { 1: 'Simple', 2: 'Detailed', 3: 'Everything' };
+const DETAIL_CAPTIONS = {
+  colleges: { 1: 'Kinds of school. Tap one to see its colleges.', 2: 'Every college, with sorting and filters.', 3: 'Everything, including Compare and saved colleges.' },
+  numbers: { 1: 'The main takeaways, in plain words.', 2: 'Every figure.', 3: 'Every figure, with the fine print.' },
+  students: { 1: 'Where each student is going.', 2: 'Sort and search every student.', 3: 'Every detail, with filters.' },
+};
 // Counts are of decisions, not people: one student can have several.
 const DECISION_NOUN = { Accepted: ['acceptance', 'acceptances'], Waitlisted: ['waitlist', 'waitlists'], Rejected: ['rejection', 'rejections'], Pending: ['pending', 'pending'] };
 const nounFor = (d, n) => DECISION_NOUN[d][n === 1 ? 0 : 1];
@@ -645,7 +650,7 @@ function renderSummary(rows) {
   }
   const answers = rows.filter(r => !isNoCollege(r)).length;
   document.getElementById('lede').textContent = !n ? el.textContent
-    : `${n} student${n !== 1 ? 's' : ''}${slmFilter ? ' like you' : ''}, ${answers} answer${answers !== 1 ? 's' : ''} from colleges. Each dot is one answer, placed by that student's GPA.`;
+    : `${n} student${n !== 1 ? 's' : ''}${slmFilter ? ' like you' : ''}, ${answers} answer${answers !== 1 ? 's' : ''} from colleges. Each dot is one answer, placed by that student's ${METRICS[activeChartType].label}.`;
   document.getElementById('page-meta').textContent =
     `Class of 2026${all ? '' : ', ' + categoryLabel(activeCollegeFilter)}${slmFilter ? ', ' + slmParts().map(p => p.text).join(', ') : ''}`;
 }
@@ -813,25 +818,35 @@ function setDetail(n) {
   try { localStorage.setItem('cr_detail', String(n)); } catch (e) {}
   if (n < 3) { savedOnly = false; stu.flags = []; }
   if (n < 2) {
-    activeCollegeFilter = 'All'; activeChartType = 'uw'; chartSort = 'apps'; searchFilter = ''; activeFilter = null;
+    activeCollegeFilter = 'All'; chartSort = 'apps'; searchFilter = ''; activeFilter = null;
     stu = { ...STUDENT_DEFAULTS, flags: [], sort: stu.sort, dir: stu.dir };
-    ['weighted', 'sat', 'major'].forEach(k => { document.getElementById('slm-' + k).value = ''; });
+    document.getElementById('slm-major').value = '';
     document.getElementById('college-search').value = '';
     slmFilter = readSlm().filter;
     openTypes.clear();
   }
   syncDetail();
+  hideDetailTip();
   syncControlsToState();
   writeUrlState(false);
   if (_dataLoadedAt) renderResults({ motion: true, morph: true });
   document.getElementById('chart-status').textContent = `${DETAIL_NAMES[n]} view.`;
 }
 function syncDetail() {
-  const r = document.getElementById('detail');
-  r.value = detail;
-  r.setAttribute('aria-valuetext', DETAIL_NAMES[detail]);
-  document.getElementById('detail-name').textContent = DETAIL_NAMES[detail];
+  document.getElementById('detail-caption').textContent = DETAIL_CAPTIONS[view][detail];
   document.querySelectorAll('[data-detail-set]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.detailSet === detail ? 'true' : 'false'));
+}
+
+// A one-time note under the levels on a first visit. It takes no focus, covers
+// nothing, and goes away for good once dismissed or a level is picked.
+const TIP_KEY = 'cr_detail_tip';
+function hideDetailTip() {
+  const root = document.documentElement;
+  if (!root.classList.contains('first-visit')) return;
+  const tip = document.getElementById('detail-tip'), had = tip.contains(document.activeElement);
+  root.classList.remove('first-visit');
+  try { localStorage.setItem(TIP_KEY, '1'); } catch (e) {}
+  if (had) document.querySelector('.level[aria-pressed="true"]').focus();
 }
 
 // First paint only: marks arrive left to right along the GPA axis, then the
@@ -921,6 +936,8 @@ function buildChart(opts) {
     cols = types.flatMap(t => t.open ? [t, ...t.kids.map(k => ({ ...k, kid: true }))] : [t]);
   }
   document.getElementById('chart-heading').textContent = simple ? 'What colleges said' : 'Every decision, by college';
+  const lede = document.getElementById('lede');
+  if (/placed by that student's /.test(lede.textContent)) lede.textContent = lede.textContent.replace(/placed by that student's .*$/, `placed by that student's ${m.label}.`);
 
   document.getElementById('chart-col-count').textContent = simple ? 'Tap a row to see its colleges' : total ? `${total} college${total !== 1 ? 's' : ''}` : '';
   document.getElementById('chart-axis-title').textContent = m.title;
@@ -2364,7 +2381,15 @@ function bindUi() {
   });
 
   // Detail level
-  $('detail').addEventListener('input', e => setDetail(e.target.value));
+  $('detail-tip-ok').addEventListener('click', () => hideDetailTip());
+  $('detail-tip').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); hideDetailTip(); } });
+  $('detail').addEventListener('keydown', e => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    setDetail(detail + step);
+    $('detail').querySelector(`[data-detail-set="${detail}"]`).focus();
+  });
   document.querySelectorAll('[data-detail-set]').forEach(b => b.addEventListener('click', () => setDetail(b.dataset.detailSet)));
   syncDetail();
 
@@ -2444,6 +2469,7 @@ function setView(v, opts) {
   window.scrollTo(0, 0);
 }
 function syncView() {
+  if (document.getElementById('detail-caption')) document.getElementById('detail-caption').textContent = DETAIL_CAPTIONS[view][detail];
   document.getElementById('page-results').dataset.view = view;
   document.querySelectorAll('.nav-link[data-view]').forEach(a => {
     const on = currentPage === 'results' && a.dataset.view === view;
@@ -2526,7 +2552,7 @@ function bindChartInteractions(chartMain) {
 // ── Init ───────────────────────────────────────────────────────────────────
 function applyUrlState(s) {
   // Back or Forward to a view whose controls this level hides: show that level.
-  const need = s.stu.flags.length ? 3 : s.schools !== 'All' || s.q || s.decision || s.sort !== 'apps' || s.chart !== 'uw' || s.stu.college ? 2 : 1;
+  const need = s.stu.flags.length ? 3 : s.schools !== 'All' || s.q || s.decision || s.sort !== 'apps' || s.stu.college ? 2 : 1;
   if (detail < need) { detail = need; document.documentElement.dataset.detail = need; syncDetail(); }
   activeChartType = s.chart;
   activeCollegeFilter = s.schools;

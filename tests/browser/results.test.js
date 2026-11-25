@@ -241,6 +241,26 @@ describe('keyboard, names and states', () => {
 });
 
 describe('detail level (zoom)', () => {
+  test('first visit: a note explains the levels, covers nothing, and goes away for good', async () => {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 390, height: 844 } });
+    const p = await ctx.newPage();
+    await p.goto(h.baseUrl + '/');
+    await p.waitForSelector('#chart-main .chart-dot');
+    assert.ok(await p.isVisible('#detail-tip'));
+    assert.match(await p.textContent('#detail-tip'), /Detailed.*Everything/s);
+    await p.click('[data-metric="gpa"]', { timeout: 2000 });
+    await p.click('#detail-tip-ok');
+    assert.equal(await p.isVisible('#detail-tip'), false);
+    await p.reload();
+    await p.waitForSelector('#chart-main .chart-dot');
+    assert.equal(await p.isVisible('#detail-tip'), false);
+    await ctx.close();
+    const q = await page({ detail: '2' });
+    assert.equal(await q.isVisible('#detail-tip'), false, 'not shown to someone who already picked a level');
+    await q.context().close();
+  });
+
+
   test('starts simple: school types that split into colleges, without losing a mark', async () => {
     const p = await page({ detail: '1' });
     const dots = () => p.$$eval('#chart-main .chart-dot', d => d.map(x => x.dataset.key).sort());
@@ -260,17 +280,20 @@ describe('detail level (zoom)', () => {
     await p.keyboard.press('Enter');
     await p.waitForSelector('#college-modal.open');
     await p.keyboard.press('Escape');
-    for (const l of ['2', '3']) { await p.locator('#detail').fill(l); const more = p.locator('#chart-more'); if (await more.isVisible() && /more/.test(await more.textContent())) await more.click(); assert.deepEqual(await dots(), before, 'level ' + l); }
+    for (const l of ['2', '3']) { await p.click(`[data-detail-set=\"${l}\"]`); const more = p.locator('#chart-more'); if (await more.isVisible() && /more/.test(await more.textContent())) await more.click(); assert.deepEqual(await dots(), before, 'level ' + l); }
     assert.deepEqual(p.errors, []);
     await p.context().close();
   });
 
   test('is a labelled slider, remembered in this browser, and never in the address unless shared', async () => {
     const p = await page({ detail: '1' });
-    assert.equal(await p.$eval('#detail', e => e.labels[0].textContent), 'Detail: Simple');
-    await p.focus('#detail');
+    assert.equal(await p.getAttribute('#detail', 'aria-label'), 'How much to show');
+    assert.deepEqual(await p.$$eval('.level', b => b.map(x => [x.textContent.trim(), x.getAttribute('aria-pressed')])), [['Simple', 'true'], ['Detailed', 'false'], ['Everything', 'false']]);
+    assert.match(await p.textContent('#detail-caption'), /Kinds of school/);
+    await p.focus('.level[aria-pressed="true"]');
     await p.keyboard.press('ArrowRight');
-    assert.equal(await p.getAttribute('#detail', 'aria-valuetext'), 'More');
+    assert.equal(await p.evaluate(() => document.activeElement.textContent.trim()), 'Detailed');
+    assert.match(await p.textContent('#detail-caption'), /Every college/);
     assert.equal(await p.getAttribute('html', 'data-detail'), '2');
     assert.equal(new URL(p.url()).search, '');
     await p.reload();
@@ -292,9 +315,11 @@ describe('detail level (zoom)', () => {
     await p.fill('#slm-sat', '1300');
     await p.waitForSelector('.slm-chip');
     await p.fill('#college-search', 'davis');
-    await p.locator('#detail').fill('1');
-    assert.deepEqual(await p.evaluate(() => [activeCollegeFilter, activeChartType, searchFilter, chartSort, slmFilter, savedOnly]), ['All', 'uw', '', 'apps', null, false]);
-    assert.equal(new URL(p.url()).search, '');
+    await p.click(`[data-detail-set=\"${'1'}\"]`);
+    assert.deepEqual(await p.evaluate(() => [activeCollegeFilter, activeChartType, searchFilter, chartSort, savedOnly]), ['All', 'sat', '', 'apps', false], 'GPA/Weighted/SAT stays: it is shown in Simple');
+    assert.ok(await p.isVisible('[data-metric="sat"]'));
+    assert.match(await p.textContent('.slm-chip'), /SAT/, 'the SAT filter stays visible and removable');
+    assert.equal(new URL(p.url()).search, '?chart=sat');
     await p.fill('#slm-gpa', '3.4').catch(() => {});
     await p.evaluate(() => { document.getElementById('slm-gpa').value = '3.4'; applySlm(); });
     assert.ok(await p.isVisible('.slm-chip'), 'a GPA filter stays visible and removable');
@@ -317,7 +342,7 @@ describe('detail level (zoom)', () => {
     await p.click('[data-detail-set="2"]');
     assert.ok(await p.isVisible('#stats-inline'));
     assert.match(await p.textContent('#s2'), new RegExp(`^${yes[1]} of ${yes[2]}$`));
-    await p.locator('#detail').fill('1');
+    await p.click(`[data-detail-set=\"${'1'}\"]`);
     await p.click('.nav-link[data-view="students"]');
     assert.equal(await p.$$eval('.entry-card.is-simple', n => n.length), 10);
     const b = p.locator('[data-open-student]').first();

@@ -12,8 +12,10 @@
   // a control the simple level hides opens at the level that has it.
   var q = new URLSearchParams(location.search), n = parseInt(q.get('detail') || get('cr_detail'), 10);
   n = n === 2 || n === 3 ? n : 1;
-  if (n < 2 && ['schools', 'q', 'decision', 'sort', 'chart', 'at'].some(function (k) { return q.has(k); })) n = 2;
+  if (n < 2 && ['schools', 'q', 'decision', 'sort', 'at'].some(function (k) { return q.has(k); })) n = 2;
   if (q.has('only')) n = 3;
   d.dataset.detail = n;
+  // First visit: the tip about levels is part of the first paint, so nothing jumps.
+  if (get('cr_detail_tip') !== '1' && !get('cr_detail') && !q.has('detail')) d.classList.add('first-visit');
   if (get('cr_submitted') === '1') d.classList.add('no-cta');
 })();

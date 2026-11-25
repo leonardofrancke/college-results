@@ -20,8 +20,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/schibsted-grotesk-latin-4c8b93f4.woff2" as="font" type="font/woff2" crossorigin>
 <link href="/fonts/fonts.css?v=30ee7434" rel="stylesheet">
-<link href="/app.css?v=fd7bf99f" rel="stylesheet">
-<script src="/boot.js?v=6bbe7cde"></script>
+<link href="/app.css?v=1cb3d65b" rel="stylesheet">
+<script src="/boot.js?v=8156a371"></script>
 </head>
 <body>
 
@@ -116,10 +116,13 @@
     <div class="top">
     <p class="lede" id="lede">Loading results…</p>
     <div class="zoom" id="zoom">
-      <svg class="zoom-glyph" viewBox="-14 -14 28 28" aria-hidden="true"><circle r="3" style="--x2:-6px;--y2:-6px;--x3:-9px;--y3:-9px"/><circle r="3" style="--x2:6px;--y2:-6px;--x3:0px;--y3:-9px"/><circle r="3" style="--x2:-6px;--y2:6px;--x3:9px;--y3:-9px"/><circle r="3" style="--x2:6px;--y2:6px;--x3:-9px;--y3:0px"/><circle r="3" style="--x2:-6px;--y2:-6px;--x3:0px;--y3:0px"/><circle r="3" style="--x2:6px;--y2:-6px;--x3:9px;--y3:0px"/><circle r="3" style="--x2:-6px;--y2:6px;--x3:-9px;--y3:9px"/><circle r="3" style="--x2:6px;--y2:6px;--x3:0px;--y3:9px"/><circle r="3" style="--x2:-6px;--y2:-6px;--x3:9px;--y3:9px"/></svg>
-      <div class="zoom-main">
-        <label for="detail">Detail: <b id="detail-name">Simple</b></label>
-        <input type="range" id="detail" min="1" max="3" step="1" value="1" aria-valuetext="Simple">
+      <div class="levels" id="detail" role="group" aria-label="How much to show" aria-describedby="detail-caption">
+        <button type="button" class="level" data-detail-set="1" aria-pressed="true"><svg viewBox="-8 -8 16 16" aria-hidden="true"><circle cx="0" cy="0" r="4.6"/></svg><span>Simple</span></button><button type="button" class="level" data-detail-set="2" aria-pressed="false"><svg viewBox="-8 -8 16 16" aria-hidden="true"><circle cx="-3.4" cy="-3.4" r="2.4"/><circle cx="3.4" cy="-3.4" r="2.4"/><circle cx="-3.4" cy="3.4" r="2.4"/><circle cx="3.4" cy="3.4" r="2.4"/></svg><span>Detailed</span></button><button type="button" class="level" data-detail-set="3" aria-pressed="false"><svg viewBox="-8 -8 16 16" aria-hidden="true"><circle cx="-4.6" cy="-4.6" r="1.75"/><circle cx="0.0" cy="-4.6" r="1.75"/><circle cx="4.6" cy="-4.6" r="1.75"/><circle cx="-4.6" cy="0.0" r="1.75"/><circle cx="0.0" cy="0.0" r="1.75"/><circle cx="4.6" cy="0.0" r="1.75"/><circle cx="-4.6" cy="4.6" r="1.75"/><circle cx="0.0" cy="4.6" r="1.75"/><circle cx="4.6" cy="4.6" r="1.75"/></svg><span>Everything</span></button>
+      </div>
+      <p class="level-caption" id="detail-caption">Kinds of school. Tap one to see its colleges.</p>
+      <div class="tip" id="detail-tip" role="region" aria-labelledby="detail-tip-title">
+        <p><b id="detail-tip-title">See as much as you want.</b> This starts simple. Switch to <b>Detailed</b> for every college, sorting and filters, or <b>Everything</b> for every tool. You can come back anytime.</p>
+        <button type="button" class="btn-main" id="detail-tip-ok">Got it</button>
       </div>
     </div>
     <div class="filters" id="filters">
@@ -174,7 +177,7 @@
             <h2 id="stats-heading" tabindex="-1">Statistics</h2>
             <p class="scope-note" id="stats-scope-note"></p>
           </div>
-          <div id="facts"><div id="facts-list"></div><p class="scope-note">These are only the students who chose to share. They aren't anyone's odds of getting in. <button type="button" class="btn-link" data-detail-set="2">Show all the numbers</button></p></div>
+          <div id="facts"><div id="facts-list"></div><p class="scope-note">These are only the students who chose to share. They aren't anyone's odds of getting in. <button type="button" class="btn-link" data-detail-set="2">Show every figure</button></p></div>
           <div id="stats-inline"></div>
         </section>
 
@@ -356,7 +359,7 @@
   </div>
 </footer>
 
-<script src="/app.js?v=21de6d4c"></script>
+<script src="/app.js?v=490b4bd0"></script>
 
 <!-- Celebration overlay -->
 <div id="celebration-overlay" aria-hidden="true">

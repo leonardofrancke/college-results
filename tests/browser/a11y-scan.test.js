@@ -51,7 +51,7 @@ for (const theme of ['light', 'dark']) {
     v.push(...await scan(p, [['#chat-panel']]));
     await p.click('#chat-close');
     for (const l of ['2', '1']) {
-      await p.locator('#detail').fill(l);
+      await p.click(`[data-detail-set=\"${l}\"]`);
       for (const t of ['colleges', 'numbers', 'students']) { await p.click(`.nav-link[data-view="${t}"]`); await p.waitForTimeout(80); v.push(...await scan(p, [['nav'], ['#page-results']])); }
     }
     await p.click('#nav-results');
